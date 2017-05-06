@@ -23,58 +23,65 @@ namespace CoOpBot
             bot = new DiscordClient(x =>
             {
                 x.LogLevel = LogSeverity.Info;
-                //x.LogHandler = Log;
+                x.LogHandler = Log;
             });
 
             bot.UsingCommands(x =>
             {
                 x.PrefixChar = '!';
                 x.AllowMentionPrefix = true;
-
             });
 
             commands = bot.GetService<CommandService>();
-
-
+            
             RegisterRollDiceCommand();
+            RegisterHelloCommand();
+            RegisterAddMeCommand();
 
             //commands.CreateCommand("SteamMe") // Command name
             //        .Parameter("SteamProfile", ParameterType.Required) // Steam name
-            commands.CreateCommand("Hello") // Command name
-                    .Do(async (e) =>
-                    {
-                        await e.Channel.SendMessage("Hello world" + e.User.Mention);
-                    });
-
-            commands.CreateCommand("Addme") // Command name
-                    .Parameter("GroupName", ParameterType.Required)
-                    .Do(async (e) =>
-                        {
-                            var groupName = e.GetArg("GroupName");
-                            if (e.Server.FindRoles(groupName).Count() < 1)
-                            {
-                                await e.Channel.SendMessage("Could not find "+groupName);
-                                var newRole = await e.Server.CreateRole(groupName);
-                                await e.User.AddRoles(newRole);
-                            }
-                            else
-                            {
-                                await e.Channel.SendMessage("Found " + groupName);
-                                Role roleExists = e.Server.FindRoles(groupName).First();
-                                await e.User.AddRoles(roleExists);
-                            }
-                            await e.Channel.SendMessage("I have added you to group " + groupName + " " + e.User.Mention);
-                        });
-
+            
             bot.ExecuteAndWait(async () =>
             {
                 await bot.Connect("MzA5Nzg4NjU2MDAzMDU1NjE2.C-0k9A.7_v7ulouST3I358v2oMThI6yCPE", TokenType.Bot);
             });
         }
 
+        private void RegisterHelloCommand()
+        {
+            commands.CreateCommand("Hello") // Command name
+                    .Do(async (e) =>
+                    {
+                        await e.Channel.SendMessage("Hello world" + e.User.Mention);
+                    });
+        }
+
+        private void RegisterAddMeCommand()
+        {
+            commands.CreateCommand("Addme") // Command name
+                    .Parameter("GroupName", ParameterType.Required)
+                    .Do(async (e) =>
+                    {
+                        var groupName = e.GetArg("GroupName");
+                        if (e.Server.FindRoles(groupName).Count() < 1)
+                        {
+                            await e.Channel.SendMessage("Could not find " + groupName);
+                            var newRole = await e.Server.CreateRole(groupName);
+                            await e.User.AddRoles(newRole);
+                        }
+                        else
+                        {
+                            await e.Channel.SendMessage("Found " + groupName);
+                            Role roleExists = e.Server.FindRoles(groupName).First();
+                            await e.User.AddRoles(roleExists);
+                        }
+                        await e.Channel.SendMessage("I have added you to group " + groupName + " " + e.User.Mention);
+                    });
+        }
+
         private void RegisterRollDiceCommand()
         {
-            commands.CreateCommand("roll")
+            commands.CreateCommand("roll") // Command name
                 .Parameter("modifier", ParameterType.Optional)
                 .Do(async (e) =>
                 {
@@ -136,6 +143,11 @@ namespace CoOpBot
             output = string.Format("You rolled {0}d{1} and got {2}", numberOfDice, sidesOnDice, totalRoll);
 
             return output;
+        }
+
+        private void Log(object sender, LogMessageEventArgs e)
+        {
+            Console.WriteLine(e.Message);
         }
     }
 }
