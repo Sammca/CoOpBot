@@ -20,7 +20,6 @@ namespace CoOpBot
 
         public Program()
         {
-            //var bot = new DiscordClient();
             bot = new DiscordClient(x =>
             {
                 x.LogLevel = LogSeverity.Info;
@@ -33,9 +32,6 @@ namespace CoOpBot
                 x.AllowMentionPrefix = true;
 
             });
-
-            
-
 
             commands = bot.GetService<CommandService>();
 
@@ -55,17 +51,17 @@ namespace CoOpBot
                     .Do(async (e) =>
                         {
                             var groupName = e.GetArg("GroupName");
-                            //Console.WriteLine(e.Server.FindRoles(groupName,true));
-                            var roleExists = e.Server.FindRoles(groupName, true);
-
-                            if (e.Server.FindRoles(groupName).Count() != 1)
+                            if (e.Server.FindRoles(groupName).Count() < 1)
                             {
                                 await e.Channel.SendMessage("Could not find "+groupName);
-                                await e.Server.CreateRole(groupName);
-                            } else
+                                var newRole = await e.Server.CreateRole(groupName);
+                                await e.User.AddRoles(newRole);
+                            }
+                            else
                             {
                                 await e.Channel.SendMessage("Found " + groupName);
-                                await e.User.AddRoles(e.Server.FindRoles(groupName).First());
+                                Role roleExists = e.Server.FindRoles(groupName).First();
+                                await e.User.AddRoles(roleExists);
                             }
                             await e.Channel.SendMessage("I have added you to group " + groupName + " " + e.User.Mention);
                         });
