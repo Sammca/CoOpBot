@@ -38,6 +38,7 @@ namespace CoOpBot
             RegisterRollDiceCommand();
             RegisterHelloCommand();
             RegisterAddMeCommand();
+            RegisterRoleListCommand();
             RegisterNonStandardCommands();
 
             //commands.CreateCommand("SteamMe") // Command name
@@ -112,6 +113,42 @@ namespace CoOpBot
                 });
         }
 
+        private void RegisterRoleListCommand()
+        {
+            commands.CreateCommand("Whois") // Command name
+                .Parameter("RoleName", ParameterType.Required)
+                .Do(async (e) =>
+                {
+                    string roleName;
+                    Role role;
+                    string output = "";
+
+                    roleName = e.GetArg("RoleName");
+
+                    if (e.Server.FindRoles(roleName).Count() < 1)
+                    {
+                        await e.Channel.SendMessage(string.Format("Role {0} not found", roleName));
+                    }
+                    else
+                    {
+                        role = e.Server.FindRoles(roleName).First();
+                        foreach (User user in role.Members)
+                        {
+                            if (user.Nickname != null)
+                            {
+                                output += user.Nickname + "\r\n";
+                            }
+                            else
+                            {
+                                output += user.Name + "\r\n";
+                            }
+                        }
+
+                        await e.Channel.SendMessage(output);
+                    }
+                });
+        }
+        
         private void RegisterNonStandardCommands()
         {
             bot.MessageReceived += async (s, e) => 
@@ -119,7 +156,7 @@ namespace CoOpBot
                 // Check to make sure that the bot is not the author
                 if (!e.Message.IsAuthor)
                 {
-                    if (e.Message.RawText == "ayyy")
+                    if (e.Message.RawText.ToLower() == "ayyy")
                     {
                         await e.Channel.SendMessage("Ayyy, lmao");
                     }
@@ -148,7 +185,7 @@ namespace CoOpBot
 
                                         if (e.Server.FindRoles(newRoleName).Count() < 1)
                                         {
-                                            role = await e.Server.CreateRole(newRoleName);
+                                            role = await e.Server.CreateRole(newRoleName,null,null,false,true);
                                         }
                                         else
                                         {
@@ -181,31 +218,6 @@ namespace CoOpBot
                     }
                 }
             };
-                
-            /*if (e.message.slice(0, 1) == trigger)
-            {
-                var cmd = message.substr(1, message.indexOf(' ') - 1).toLowerCase();
-                // Get what command the user is trying to trigger
-                if (commands.indexOf(cmd) > -1)
-                {
-                    // Check if the command exists in the commands array
-                    var words = message.split(" ");
-                    // Get all arguments
-                    switch (cmd)
-                    {
-                        // Do stuff
-                        case "help":
-                            console.log(cmd); // help
-                            console.log(words[1]); // 123
-                            console.log(words[2]); // 456
-                            console.log(words[3]); // 789
-                            break;
-                        case "random":
-                            console.log("Hey, someone hit !random");
-                            break;
-                    }
-                }
-            }*/
         }
         
         private string RollDice(string inputMessage)
