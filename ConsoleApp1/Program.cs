@@ -12,6 +12,7 @@ namespace CoOpBot
     {
         DiscordClient bot;
         CommandService commands;
+        char prefixCharacter = '!';
 
         static void Main(string[] args)
         {
@@ -28,19 +29,20 @@ namespace CoOpBot
 
             bot.UsingCommands(x =>
             {
-                x.PrefixChar = '!';
+                x.PrefixChar = prefixCharacter;
                 x.AllowMentionPrefix = true;
             });
-
+            
             commands = bot.GetService<CommandService>();
             
             RegisterRollDiceCommand();
             RegisterHelloCommand();
             RegisterAddMeCommand();
+            RegisterNonStandardCommands();
 
             //commands.CreateCommand("SteamMe") // Command name
             //        .Parameter("SteamProfile", ParameterType.Required) // Steam name
-            
+
             bot.ExecuteAndWait(async () =>
             {
                 await bot.Connect("MzA5Nzg4NjU2MDAzMDU1NjE2.C-0k9A.7_v7ulouST3I358v2oMThI6yCPE", TokenType.Bot);
@@ -50,17 +52,19 @@ namespace CoOpBot
         private void RegisterHelloCommand()
         {
             commands.CreateCommand("Hello") // Command name
-                    .Do(async (e) =>
-                    {
-                        await e.Channel.SendMessage("Hello world" + e.User.Mention);
-                    });
+                .Do(async (e) =>
+                {
+                    await e.Channel.SendMessage("Hello world" + e.User.Mention);
+                });
         }
 
         private void RegisterAddMeCommand()
         {
             commands.CreateCommand("Addme") // Command name
-                    .Parameter("GroupName", ParameterType.Required)
-                    .Do(async (e) =>
+                .Parameter("GroupName", ParameterType.Required)
+                .Do(async (e) =>
+                {
+                    try
                     {
                         var groupName = e.GetArg("GroupName");
                         if (e.Server.FindRoles(groupName).Count() < 1)
@@ -71,12 +75,17 @@ namespace CoOpBot
                         }
                         else
                         {
-                            await e.Channel.SendMessage("Found " + groupName);
-                            Role roleExists = e.Server.FindRoles(groupName).First();
-                            await e.User.AddRoles(roleExists);
+                                await e.Channel.SendMessage("Found " + groupName);
+                                Role roleExists = e.Server.FindRoles(groupName).First();
+                                await e.User.AddRoles(roleExists);
                         }
                         await e.Channel.SendMessage("I have added you to group " + groupName + " " + e.User.Mention);
-                    });
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                });
         }
 
         private void RegisterRollDiceCommand()
@@ -85,17 +94,120 @@ namespace CoOpBot
                 .Parameter("modifier", ParameterType.Optional)
                 .Do(async (e) =>
                 {
-                    string modifier;
-                    string output;
+                    try
+                    {
+                        string modifier;
+                        string output;
 
-                    modifier = e.GetArg("modifier");
-                    modifier = modifier == "" ? "NOTHING" : modifier;
-                    output = RollDice(modifier);
+                        modifier = e.GetArg("modifier");
+                        modifier = modifier == "" ? "NOTHING" : modifier;
+                        output = RollDice(modifier);
 
-                    await e.Channel.SendMessage(output);
+                        await e.Channel.SendMessage(output);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
                 });
         }
 
+        private void RegisterNonStandardCommands()
+        {
+            bot.MessageReceived += async (s, e) => 
+            {
+                // Check to make sure that the bot is not the author
+                if (!e.Message.IsAuthor)
+                {
+                    if (e.Message.RawText == "ayyy")
+                    {
+                        await e.Channel.SendMessage("Ayyy, lmao");
+                    }
+                    // Message starts with "!"
+                    if (e.Message.RawText.Substring(0,1) == prefixCharacter.ToString())
+                    {
+                        string[] messageArray;
+                        string command;
+                        ChannelPermissions userPermissions;
+
+                        userPermissions = e.Message.User.GetPermissions(e.Message.Channel);
+                        messageArray = e.Message.RawText.Split(' ');
+                        command = messageArray[0].Substring(1);
+                        switch (command.ToLower())
+                        {
+                            case "newrole":
+                                try
+                                {
+                                    if (userPermissions.ManagePermissions)
+                                    {
+                                        string newRoleName;
+                                        Role role;
+                                        int addedUsers = 0;
+
+                                        newRoleName = messageArray[1];
+
+                                        if (e.Server.FindRoles(newRoleName).Count() < 1)
+                                        {
+                                            role = await e.Server.CreateRole(newRoleName);
+                                        }
+                                        else
+                                        {
+                                            role = e.Server.FindRoles(newRoleName).First();
+                                        }
+                                        foreach (User userToAdd in e.Message.MentionedUsers)
+                                        {
+                                            if (!userToAdd.HasRole(role))
+                                            {
+                                                await userToAdd.AddRoles(role);
+                                                addedUsers++;
+                                            }
+                                        }
+
+                                        await e.Channel.SendMessage(string.Format("Added {0} users to role {1}", addedUsers, newRoleName));
+                                    }
+                                    else
+                                    {
+                                        await e.Channel.SendMessage("You are not authorised to do that");
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            };
+                
+            /*if (e.message.slice(0, 1) == trigger)
+            {
+                var cmd = message.substr(1, message.indexOf(' ') - 1).toLowerCase();
+                // Get what command the user is trying to trigger
+                if (commands.indexOf(cmd) > -1)
+                {
+                    // Check if the command exists in the commands array
+                    var words = message.split(" ");
+                    // Get all arguments
+                    switch (cmd)
+                    {
+                        // Do stuff
+                        case "help":
+                            console.log(cmd); // help
+                            console.log(words[1]); // 123
+                            console.log(words[2]); // 456
+                            console.log(words[3]); // 789
+                            break;
+                        case "random":
+                            console.log("Hey, someone hit !random");
+                            break;
+                    }
+                }
+            }*/
+        }
+        
         private string RollDice(string inputMessage)
         {
             string output;
@@ -141,7 +253,7 @@ namespace CoOpBot
             }
 
             output = string.Format("You rolled {0}d{1} and got {2}", numberOfDice, sidesOnDice, totalRoll);
-
+            
             return output;
         }
 
