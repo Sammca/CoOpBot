@@ -280,8 +280,8 @@ namespace CoOpBot
                                     {
                                         await userToAdd.AddRoles(roleObj);
                                         addedUsers++;
-                                    } else
-                                    /*{ // removed, to be replaced with one message at the end of function
+                                    } /*else
+                                    { // removed, to be replaced with one message at the end of function
                                         await e.Channel.SendMessage(userToAdd.Nickname + " is already in role " + RoleName);
                                     }*/
                                 }
