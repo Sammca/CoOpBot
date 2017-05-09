@@ -32,12 +32,13 @@ namespace CoOpBot
             {
                 x.PrefixChar = prefixCharacter;
                 x.AllowMentionPrefix = true;
+                x.HelpMode = HelpMode.Public;
             });
             
             commands = bot.GetService<CommandService>();
             
             RegisterRollDiceCommand();
-            RegisterHelloCommand();
+            //RegisterHelloCommand();
             RegisterAddMeCommand();
             RegisterRoleListCommand();
             RegisterMakeTeamsCommand();
@@ -54,19 +55,21 @@ namespace CoOpBot
             });
         }
 
-        private void RegisterHelloCommand()
+        // Good command template, but basically useless.
+        /*private void RegisterHelloCommand() 
         {
             commands.CreateCommand("Hello") // Command name
                 .Do(async (e) =>
                 {
                     await e.Channel.SendMessage("Hello world" + e.User.Mention);
                 });
-        }
+        }*/
 
         private void RegisterCountdownCommand()
         {
             commands.CreateCommand("Countdown") // Command name
                 .Parameter("time", ParameterType.Required)
+                .Description("Sends a message counting down every second, maximum of 5 Seconds.")
                 .Do(async (e) =>
                 {
                     int maxAllowed = 5;
@@ -90,6 +93,7 @@ namespace CoOpBot
         private void RegisterRemoveTeamChannelsCommand()
         {
             commands.CreateCommand("removeTeams") // Command name
+                .Description("Removes any channels created by the MakeTeams command. Cleanup your toys when your done playing!")
                 .Do(async (e) =>
                 {
                     Channel[] serverChannelList;
@@ -109,7 +113,7 @@ namespace CoOpBot
         {
             commands.CreateCommand("MakeTeams") // Command name
                 .Parameter("NumberOfTeams",ParameterType.Required)
-                .Description("Split the current channel into teams")
+                .Description("Split the current channel into number of teams specified, and moves them into their own channel.")
                 .Do(async (e) =>
                 {
                     try
@@ -240,25 +244,66 @@ namespace CoOpBot
         private void RegisterAddMeCommand()
         {
             commands.CreateCommand("Addme") // Command name
-                .Parameter("GroupName", ParameterType.Required)
+                .Parameter("RoleName", ParameterType.Required)
+                .Parameter("users",ParameterType.Multiple)
+                .Description("Adds the user to the requested Role.")
                 .Do(async (e) =>
                 {
                     try
                     {
-                        var groupName = e.GetArg("GroupName");
-                        if (e.Server.FindRoles(groupName).Count() < 1)
+                        var RoleName = e.GetArg("RoleName");
+                        var mentionedUsers = e.Args.Length > 1 ? true : false;
+                        
+                        Role roleObj;
+                        int addedUsers = 0;
+
+                        ChannelPermissions userPermissions;
+                        userPermissions = e.Message.User.GetPermissions(e.Message.Channel);
+                        if (userPermissions.ManagePermissions)
                         {
-                            await e.Channel.SendMessage("Could not find " + groupName);
-                            var newRole = await e.Server.CreateRole(groupName);
-                            await e.User.AddRoles(newRole);
+
+                            if (e.Server.FindRoles(RoleName).Count() < 1)
+                            {
+                                await e.Channel.SendMessage("New role " + RoleName + " created.");
+                                roleObj = await e.Server.CreateRole(RoleName, null, null, false, true);
+                            }
+                            else
+                            {
+                                roleObj = e.Server.FindRoles(RoleName).First();
+                            }
+
+                            if (mentionedUsers)
+                            {
+                                foreach (User userToAdd in e.Message.MentionedUsers)
+                                {
+                                    if (!userToAdd.HasRole(roleObj))
+                                    {
+                                        await userToAdd.AddRoles(roleObj);
+                                        addedUsers++;
+                                    } else
+                                    /*{ // removed, to be replaced with one message at the end of function
+                                        await e.Channel.SendMessage(userToAdd.Nickname + " is already in role " + RoleName);
+                                    }*/
+                                }
+                            }
+                            else
+                            {
+                                if (!e.User.HasRole(roleObj))
+                                {
+                                    await e.User.AddRoles(roleObj);
+                                    addedUsers++;
+                                } 
+                                else
+                                {
+                                    await e.Channel.SendMessage("You are already in " + RoleName);
+                                }
+                            }
+                            await e.Channel.SendMessage(string.Format("Added {0} users to role {1}", addedUsers, RoleName));
                         }
                         else
                         {
-                                await e.Channel.SendMessage("Found " + groupName);
-                                Role roleExists = e.Server.FindRoles(groupName).First();
-                                await e.User.AddRoles(roleExists);
+                            await e.Channel.SendMessage("You are not authorised to do that");
                         }
-                        await e.Channel.SendMessage("I have added you to group " + groupName + " " + e.User.Mention);
                     }
                     catch (Exception ex)
                     {
@@ -270,6 +315,7 @@ namespace CoOpBot
         private void RegisterRollDiceCommand()
         {
             commands.CreateCommand("roll") // Command name
+                .Description("Rolls a specified number of dice, with a specified number of sides. Time to Die.")
                 .Parameter("modifier", ParameterType.Optional)
                 .Do(async (e) =>
                 {
@@ -294,6 +340,7 @@ namespace CoOpBot
         private void RegisterRoleListCommand()
         {
             commands.CreateCommand("Whois") // Command name
+                .Description("Returns a list of users with requested Roles. Roleplay is not permitted.")
                 .Parameter("RoleName", ParameterType.Required)
                 .Do(async (e) =>
                 {
@@ -342,62 +389,6 @@ namespace CoOpBot
                     if (e.Message.RawText.ToLower() == "winner winner")
                     {
                         await e.Channel.SendMessage("Chicken dinner");
-                    }
-                    // Message starts with "!"
-                    if (e.Message.RawText.Substring(0,1) == prefixCharacter.ToString())
-                    {
-                        string[] messageArray;
-                        string command;
-                        ChannelPermissions userPermissions;
-
-                        userPermissions = e.Message.User.GetPermissions(e.Message.Channel);
-                        messageArray = e.Message.RawText.Split(' ');
-                        command = messageArray[0].Substring(1);
-                        switch (command.ToLower())
-                        {
-                            case "newrole":
-                                try
-                                {
-                                    if (userPermissions.ManagePermissions)
-                                    {
-                                        string newRoleName;
-                                        Role role;
-                                        int addedUsers = 0;
-
-                                        newRoleName = messageArray[1];
-
-                                        if (e.Server.FindRoles(newRoleName).Count() < 1)
-                                        {
-                                            role = await e.Server.CreateRole(newRoleName,null,null,false,true);
-                                        }
-                                        else
-                                        {
-                                            role = e.Server.FindRoles(newRoleName).First();
-                                        }
-                                        foreach (User userToAdd in e.Message.MentionedUsers)
-                                        {
-                                            if (!userToAdd.HasRole(role))
-                                            {
-                                                await userToAdd.AddRoles(role);
-                                                addedUsers++;
-                                            }
-                                        }
-
-                                        await e.Channel.SendMessage(string.Format("Added {0} users to role {1}", addedUsers, newRoleName));
-                                    }
-                                    else
-                                    {
-                                        await e.Channel.SendMessage("You are not authorised to do that");
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine(ex.Message);
-                                }
-                                break;
-                            default:
-                                break;
-                        }
                     }
                 }
             };
