@@ -6,14 +6,17 @@ using System.Linq;
 using System.Threading;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Specialized;
 
 namespace CoOpBot
 {
     class Program
     {
+        // Define & initialise variables
         DiscordClient bot;
         CommandService commands;
         char prefixCharacter = '!';
+        NameValueCollection userRecentMessageCounter = new NameValueCollection();
 
         static void Main(string[] args)
         {
@@ -42,9 +45,10 @@ namespace CoOpBot
             RegisterAddMeCommand();
             RegisterRoleListCommand();
             RegisterMakeTeamsCommand();
-            RegisterNonStandardCommands();
+            RegisterNoveltyResponseCommands();
             RegisterCountdownCommand();
             RegisterRemoveTeamChannelsCommand();
+            RegisterAntiSpamFunctionality();
 
             //commands.CreateCommand("SteamMe") // Command name
             //        .Parameter("SteamProfile", ParameterType.Required) // Steam name
@@ -244,6 +248,7 @@ namespace CoOpBot
         private void RegisterAddMeCommand()
         {
             commands.CreateCommand("Addme") // Command name
+                .Alias("AddRole", "ar") // Alternate command names
                 .Parameter("RoleName", ParameterType.Required)
                 .Parameter("users",ParameterType.Multiple)
                 .Description("Adds the user to the requested Role.")
@@ -373,27 +378,71 @@ namespace CoOpBot
                     }
                 });
         }
-        
-        private void RegisterNonStandardCommands()
+
+        private void RegisterNoveltyResponseCommands()
         {
-            bot.MessageReceived += async (s, e) => 
+            // Define variables
+            string messageTextLowercase;
+
+            bot.MessageReceived += async (s, e) =>
             {
                 // Check to make sure that the bot is not the author
                 if (!e.Message.IsAuthor)
                 {
-                    if (e.Message.RawText.ToLower() == "ayyy")
+                    messageTextLowercase = e.Message.RawText.ToLower();
+
+                    if (messageTextLowercase.Substring(0, 1) != prefixCharacter.ToString())
                     {
-                        await e.Channel.SendMessage("Ayyy, lmao");
-                    }
-                    // Messa
-                    if (e.Message.RawText.ToLower() == "winner winner")
-                    {
-                        await e.Channel.SendMessage("Chicken dinner");
+                        if (messageTextLowercase == "ayyy")
+                        {
+                            await e.Channel.SendMessage("Ayyy, lmao");
+                        }
+                        if (messageTextLowercase == "winner winner")
+                        {
+                            await e.Channel.SendMessage("Chicken dinner");
+                        }
                     }
                 }
             };
         }
-        
+
+        private void RegisterAntiSpamFunctionality()
+        {
+            bot.MessageReceived += async (s, e) =>
+            {
+                User messageSender;
+                int messageCount;
+                ChannelPermissionOverrides channelPermissionOverrides;
+
+                messageSender = e.Message.User;
+                
+                // Check to make sure that a bot is not the author
+                // Also check if admin, since admins ignore the channel permission override
+                if (!messageSender.ServerPermissions.Administrator && !messageSender.IsBot)
+                {
+                    channelPermissionOverrides = new ChannelPermissionOverrides(sendMessages: PermValue.Deny);
+                    
+                    if (userRecentMessageCounter[messageSender.Name] == null)
+                    {
+                        userRecentMessageCounter[messageSender.Name] = 0.ToString();
+                    }
+
+                    messageCount = countMessage(e, messageSender, 1);
+
+                    if (messageCount > 2)
+                    {
+                        await e.Channel.SendMessage("#StopCamSpam");
+                        await e.Channel.AddPermissionsRule(messageSender, channelPermissionOverrides);
+
+                        //await Task.Delay(5000).ContinueWith(t => e.Channel.SendMessage("5 seconds passed"));
+                        await Task.Delay(5000).ContinueWith(t => e.Channel.RemovePermissionsRule(messageSender));
+                    }
+
+                    await Task.Delay(5000).ContinueWith(t => countMessage(e, messageSender, -1));
+                }
+            };
+        }
+
         private string RollDice(string inputMessage)
         {
             string output;
@@ -441,6 +490,33 @@ namespace CoOpBot
             output = string.Format("You rolled {0}d{1} and got {2}", numberOfDice, sidesOnDice, totalRoll);
             
             return output;
+        }
+
+        private int countMessage(MessageEventArgs e, User messageSender, int changeAmount)
+        {
+            int messageCount;
+            string changeDirection;
+            //string output
+
+            if (userRecentMessageCounter[messageSender.Name] == null)
+            {
+                userRecentMessageCounter[messageSender.Name] = 0.ToString();
+            }
+
+            messageCount = int.Parse(userRecentMessageCounter[messageSender.Name]) + changeAmount;
+            userRecentMessageCounter[messageSender.Name] = messageCount.ToString();
+
+            changeDirection = changeAmount > 0 ? "increased" : "decreased";
+
+            //output = string.Format("{0} recent message count {1} to {2}", messageSender.Name, changeDirection, messageCount);
+
+            return messageCount;
+
+            /*Thread.Sleep(5000);
+            messageCount = int.Parse(userRecentMessageCounter[messageSender.Name]) - 1;
+            userRecentMessageCounter[messageSender.Name] = messageCount.ToString();
+            await e.Channel.SendMessage(string.Format("{0} recent message count decreased to {1}", messageSender.Name, messageCount));*/
+
         }
 
         private void Log(object sender, LogMessageEventArgs e)
