@@ -389,17 +389,20 @@ namespace CoOpBot
                 // Check to make sure that the bot is not the author
                 if (!e.Message.IsAuthor)
                 {
-                    messageTextLowercase = e.Message.RawText.ToLower();
-
-                    if (messageTextLowercase.Substring(0, 1) != prefixCharacter.ToString())
+                    if (e.Message.RawText != "")
                     {
-                        if (messageTextLowercase == "ayyy")
+                        messageTextLowercase = e.Message.RawText.ToLower();
+
+                        if (messageTextLowercase.Substring(0, 1) != prefixCharacter.ToString())
                         {
-                            await e.Channel.SendMessage("Ayyy, lmao");
-                        }
-                        if (messageTextLowercase == "winner winner")
-                        {
-                            await e.Channel.SendMessage("Chicken dinner");
+                            if (messageTextLowercase == "ayyy")
+                            {
+                                await e.Channel.SendMessage("Ayyy, lmao");
+                            }
+                            if (messageTextLowercase == "winner winner")
+                            {
+                                await e.Channel.SendMessage("Chicken dinner");
+                            }
                         }
                     }
                 }
