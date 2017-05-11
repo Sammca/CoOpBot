@@ -458,32 +458,41 @@ namespace CoOpBot
         {
             // Define variables
             string messageTextLowercase;
+            string responseText = "";
 
             bot.MessageReceived += async (s, e) =>
             {
-                // Check to make sure that the bot is not the author
-                if (!e.Message.IsAuthor)
+                // Check to make sure that the author is not a bot
+                if (!e.Message.User.IsBot)
                 {
+                    // Prevent the bot crashing on image only messages
+                    // TODO - do we want to include images in the anti spam message counter?
                     if (e.Message.RawText != "")
                     {
                         messageTextLowercase = e.Message.RawText.ToLower();
 
                         if (messageTextLowercase.Substring(0, 1) != prefixCharacter.ToString())
                         {
-                            if (messageTextLowercase == "ayyy")
+                            switch (messageTextLowercase)
                             {
-                                await e.Channel.SendMessage("Ayyy, lmao");
+                                case "ayyy":
+                                    responseText = "Ayyy, lmao";
+                                    break;
+                                case "winner winner":
+                                    responseText = "Chicken dinner";
+                                    break;
+                                default:
+                                    break;
                             }
-                            if (messageTextLowercase == "winner winner")
+                            if (responseText != "")
                             {
-                                await e.Channel.SendMessage("Chicken dinner");
+                                await e.Channel.SendMessage(responseText);
                             }
                         }
                     }
                 }
             };
         }
-
 
         /************************************************
          * 
