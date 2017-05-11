@@ -40,15 +40,14 @@ namespace CoOpBot
             
             commands = bot.GetService<CommandService>();
             
-            RegisterRollDiceCommand();
-            //RegisterHelloCommand();
-            RegisterAddMeCommand();
-            RegisterRoleListCommand();
+            RegisterAddRoleCommand();
+            RegisterAntiSpamFunctionality();
+            RegisterCountdownCommand();
             RegisterMakeTeamsCommand();
             RegisterNoveltyResponseCommands();
-            RegisterCountdownCommand();
             RegisterRemoveTeamChannelsCommand();
-            RegisterAntiSpamFunctionality();
+            RegisterRoleListCommand();
+            RegisterRollDiceCommand();
 
             //commands.CreateCommand("SteamMe") // Command name
             //        .Parameter("SteamProfile", ParameterType.Required) // Steam name
@@ -59,6 +58,11 @@ namespace CoOpBot
             });
         }
 
+        /************************************************
+         * 
+         * Command template
+         * 
+        ************************************************/
         // Good command template, but basically useless.
         /*private void RegisterHelloCommand() 
         {
@@ -69,30 +73,173 @@ namespace CoOpBot
                 });
         }*/
 
-        private void RegisterCountdownCommand()
+
+
+        /************************************************
+         * 
+         * Bot admin functions
+         * 
+        ************************************************/
+
+        private void RegisterAntiSpamFunctionality()
         {
-            commands.CreateCommand("Countdown") // Command name
-                .Parameter("time", ParameterType.Required)
-                .Description("Sends a message counting down every second, maximum of 5 Seconds.")
+            bot.MessageReceived += async (s, e) =>
+            {
+                User messageSender;
+                int messageCount;
+                ChannelPermissionOverrides channelPermissionOverrides;
+
+                messageSender = e.Message.User;
+
+                // Check to make sure that a bot is not the author
+                // Also check if admin, since admins ignore the channel permission override
+                if (!messageSender.ServerPermissions.Administrator && !messageSender.IsBot)
+                {
+                    channelPermissionOverrides = new ChannelPermissionOverrides(sendMessages: PermValue.Deny);
+
+                    if (userRecentMessageCounter[messageSender.Name] == null)
+                    {
+                        userRecentMessageCounter[messageSender.Name] = 0.ToString();
+                    }
+
+                    messageCount = CountMessage(messageSender, 1);
+
+                    if (messageCount > 2)
+                    {
+                        await e.Channel.SendMessage("#StopCamSpam");
+                        await e.Channel.AddPermissionsRule(messageSender, channelPermissionOverrides);
+
+                        //await Task.Delay(5000).ContinueWith(t => e.Channel.SendMessage("5 seconds passed"));
+                        await Task.Delay(8000).ContinueWith(t => e.Channel.RemovePermissionsRule(messageSender));
+                    }
+
+                    await Task.Delay(8000).ContinueWith(t => CountMessage(messageSender, -1));
+                }
+            };
+        }
+
+        /************************************************
+         * 
+         * Roles & permissions
+         * 
+        ************************************************/
+
+        private void RegisterAddRoleCommand()
+        {
+            commands.CreateCommand("AddRole") // Command name
+                .Alias("AddMe", "ar") // Alternate command names
+                .Parameter("RoleName", ParameterType.Required)
+                .Parameter("users", ParameterType.Multiple)
+                .Description("Adds the user to the requested Role.")
                 .Do(async (e) =>
                 {
-                    int maxAllowed = 5;
-                    int counter;
-
-                    counter = int.Parse(e.GetArg("time"));
-
-                    if (counter > maxAllowed)
+                    try
                     {
-                        await e.Channel.SendMessage(string.Format("Maximum count of {0} allowed", maxAllowed));
+                        var RoleName = e.GetArg("RoleName");
+                        var mentionedUsers = e.Args.Length > 1 ? true : false;
+
+                        Role roleObj;
+                        int addedUsers = 0;
+
+                        ChannelPermissions userPermissions;
+                        userPermissions = e.Message.User.GetPermissions(e.Message.Channel);
+                        if (userPermissions.ManagePermissions)
+                        {
+
+                            if (e.Server.FindRoles(RoleName).Count() < 1)
+                            {
+                                await e.Channel.SendMessage("New role " + RoleName + " created.");
+                                roleObj = await e.Server.CreateRole(RoleName, null, null, false, true);
+                            }
+                            else
+                            {
+                                roleObj = e.Server.FindRoles(RoleName).First();
+                            }
+
+                            if (mentionedUsers)
+                            {
+                                foreach (User userToAdd in e.Message.MentionedUsers)
+                                {
+                                    if (!userToAdd.HasRole(roleObj))
+                                    {
+                                        await userToAdd.AddRoles(roleObj);
+                                        addedUsers++;
+                                    } /*else
+                                    { // removed, to be replaced with one message at the end of function
+                                        await e.Channel.SendMessage(userToAdd.Nickname + " is already in role " + RoleName);
+                                    }*/
+                                }
+                            }
+                            else
+                            {
+                                if (!e.User.HasRole(roleObj))
+                                {
+                                    await e.User.AddRoles(roleObj);
+                                    addedUsers++;
+                                }
+                                else
+                                {
+                                    await e.Channel.SendMessage("You are already in " + RoleName);
+                                }
+                            }
+                            await e.Channel.SendMessage(string.Format("Added {0} users to role {1}", addedUsers, RoleName));
+                        }
+                        else
+                        {
+                            await e.Channel.SendMessage("You are not authorised to do that");
+                        }
                     }
-                    while (counter >= 0)
+                    catch (Exception ex)
                     {
-                        await e.Channel.SendMessage(string.Format("{0}", counter));
-                        Thread.Sleep(1000);
-                        counter--;
+                        Console.WriteLine(ex.Message);
                     }
                 });
         }
+
+        private void RegisterRoleListCommand()
+        {
+            commands.CreateCommand("Whois") // Command name
+                .Alias("RoleList","ListRole")
+                .Description("Returns a list of users with requested Roles. Roleplay is not permitted.")
+                .Parameter("RoleName", ParameterType.Required)
+                .Do(async (e) =>
+                {
+                    string roleName;
+                    Role role;
+                    string output = "";
+
+                    roleName = e.GetArg("RoleName");
+
+                    if (e.Server.FindRoles(roleName).Count() < 1)
+                    {
+                        await e.Channel.SendMessage(string.Format("Role {0} not found", roleName));
+                    }
+                    else
+                    {
+                        role = e.Server.FindRoles(roleName).First();
+                        foreach (User user in role.Members)
+                        {
+                            if (user.Nickname != null)
+                            {
+                                output += user.Nickname + "\r\n";
+                            }
+                            else
+                            {
+                                output += user.Name + "\r\n";
+                            }
+                        }
+
+                        await e.Channel.SendMessage(output);
+                    }
+                });
+        }
+
+
+        /************************************************
+         * 
+         * Voice & text channels
+         * 
+        ************************************************/
 
         private void RegisterRemoveTeamChannelsCommand()
         {
@@ -105,7 +252,7 @@ namespace CoOpBot
                     serverChannelList = e.Server.VoiceChannels.ToArray();
                     foreach (Channel voiceChannel in serverChannelList)
                     {
-                        if (voiceChannel.Name.Substring(0,4) == "Team")
+                        if (voiceChannel.Name.Substring(0, 4) == "Team")
                         {
                             await voiceChannel.Delete();
                         }
@@ -113,10 +260,16 @@ namespace CoOpBot
                 });
         }
 
+        /************************************************
+         * 
+         * Co-op gaming
+         * 
+        ************************************************/
+
         private void RegisterMakeTeamsCommand()
         {
             commands.CreateCommand("MakeTeams") // Command name
-                .Parameter("NumberOfTeams",ParameterType.Required)
+                .Parameter("NumberOfTeams", ParameterType.Required)
                 .Description("Split the current channel into number of teams specified, and moves them into their own channel.")
                 .Do(async (e) =>
                 {
@@ -245,78 +398,37 @@ namespace CoOpBot
                 });
         }
 
-        private void RegisterAddMeCommand()
+        /************************************************
+         * 
+         * Miscellaneous
+         * 
+        ************************************************/
+
+        private void RegisterCountdownCommand()
         {
-            commands.CreateCommand("Addme") // Command name
-                .Alias("AddRole", "ar") // Alternate command names
-                .Parameter("RoleName", ParameterType.Required)
-                .Parameter("users",ParameterType.Multiple)
-                .Description("Adds the user to the requested Role.")
+            commands.CreateCommand("Countdown") // Command name
+                .Parameter("time", ParameterType.Required)
+                .Description("Sends a message counting down every second, maximum of 5 Seconds.")
                 .Do(async (e) =>
                 {
-                    try
+                    int maxAllowed = 5;
+                    int counter;
+
+                    counter = int.Parse(e.GetArg("time"));
+
+                    if (counter > maxAllowed)
                     {
-                        var RoleName = e.GetArg("RoleName");
-                        var mentionedUsers = e.Args.Length > 1 ? true : false;
-                        
-                        Role roleObj;
-                        int addedUsers = 0;
-
-                        ChannelPermissions userPermissions;
-                        userPermissions = e.Message.User.GetPermissions(e.Message.Channel);
-                        if (userPermissions.ManagePermissions)
-                        {
-
-                            if (e.Server.FindRoles(RoleName).Count() < 1)
-                            {
-                                await e.Channel.SendMessage("New role " + RoleName + " created.");
-                                roleObj = await e.Server.CreateRole(RoleName, null, null, false, true);
-                            }
-                            else
-                            {
-                                roleObj = e.Server.FindRoles(RoleName).First();
-                            }
-
-                            if (mentionedUsers)
-                            {
-                                foreach (User userToAdd in e.Message.MentionedUsers)
-                                {
-                                    if (!userToAdd.HasRole(roleObj))
-                                    {
-                                        await userToAdd.AddRoles(roleObj);
-                                        addedUsers++;
-                                    } /*else
-                                    { // removed, to be replaced with one message at the end of function
-                                        await e.Channel.SendMessage(userToAdd.Nickname + " is already in role " + RoleName);
-                                    }*/
-                                }
-                            }
-                            else
-                            {
-                                if (!e.User.HasRole(roleObj))
-                                {
-                                    await e.User.AddRoles(roleObj);
-                                    addedUsers++;
-                                } 
-                                else
-                                {
-                                    await e.Channel.SendMessage("You are already in " + RoleName);
-                                }
-                            }
-                            await e.Channel.SendMessage(string.Format("Added {0} users to role {1}", addedUsers, RoleName));
-                        }
-                        else
-                        {
-                            await e.Channel.SendMessage("You are not authorised to do that");
-                        }
+                        await e.Channel.SendMessage(string.Format("Maximum count of {0} allowed", maxAllowed));
                     }
-                    catch (Exception ex)
+                    while (counter >= 0)
                     {
-                        Console.WriteLine(ex.Message);
+                        await e.Channel.SendMessage(string.Format("{0}", counter));
+                        Thread.Sleep(1000);
+                        counter--;
                     }
                 });
         }
-
+        
         private void RegisterRollDiceCommand()
         {
             commands.CreateCommand("roll") // Command name
@@ -341,44 +453,7 @@ namespace CoOpBot
                     }
                 });
         }
-
-        private void RegisterRoleListCommand()
-        {
-            commands.CreateCommand("Whois") // Command name
-                .Description("Returns a list of users with requested Roles. Roleplay is not permitted.")
-                .Parameter("RoleName", ParameterType.Required)
-                .Do(async (e) =>
-                {
-                    string roleName;
-                    Role role;
-                    string output = "";
-
-                    roleName = e.GetArg("RoleName");
-
-                    if (e.Server.FindRoles(roleName).Count() < 1)
-                    {
-                        await e.Channel.SendMessage(string.Format("Role {0} not found", roleName));
-                    }
-                    else
-                    {
-                        role = e.Server.FindRoles(roleName).First();
-                        foreach (User user in role.Members)
-                        {
-                            if (user.Nickname != null)
-                            {
-                                output += user.Nickname + "\r\n";
-                            }
-                            else
-                            {
-                                output += user.Name + "\r\n";
-                            }
-                        }
-
-                        await e.Channel.SendMessage(output);
-                    }
-                });
-        }
-
+        
         private void RegisterNoveltyResponseCommands()
         {
             // Define variables
@@ -409,43 +484,13 @@ namespace CoOpBot
             };
         }
 
-        private void RegisterAntiSpamFunctionality()
-        {
-            bot.MessageReceived += async (s, e) =>
-            {
-                User messageSender;
-                int messageCount;
-                ChannelPermissionOverrides channelPermissionOverrides;
 
-                messageSender = e.Message.User;
-                
-                // Check to make sure that a bot is not the author
-                // Also check if admin, since admins ignore the channel permission override
-                if (!messageSender.ServerPermissions.Administrator && !messageSender.IsBot)
-                {
-                    channelPermissionOverrides = new ChannelPermissionOverrides(sendMessages: PermValue.Deny);
-                    
-                    if (userRecentMessageCounter[messageSender.Name] == null)
-                    {
-                        userRecentMessageCounter[messageSender.Name] = 0.ToString();
-                    }
-
-                    messageCount = countMessage(e, messageSender, 1);
-
-                    if (messageCount > 2)
-                    {
-                        await e.Channel.SendMessage("#StopCamSpam");
-                        await e.Channel.AddPermissionsRule(messageSender, channelPermissionOverrides);
-
-                        //await Task.Delay(5000).ContinueWith(t => e.Channel.SendMessage("5 seconds passed"));
-                        await Task.Delay(5000).ContinueWith(t => e.Channel.RemovePermissionsRule(messageSender));
-                    }
-
-                    await Task.Delay(5000).ContinueWith(t => countMessage(e, messageSender, -1));
-                }
-            };
-        }
-
+        /************************************************
+         * 
+         * Separated functions
+         * (Functions not directly usable in discord)
+         * 
+        ************************************************/
         private string RollDice(string inputMessage)
         {
             string output;
@@ -494,8 +539,8 @@ namespace CoOpBot
             
             return output;
         }
-
-        private int countMessage(MessageEventArgs e, User messageSender, int changeAmount)
+        
+        private int CountMessage(User messageSender, int changeAmount)
         {
             int messageCount;
             string changeDirection;
@@ -511,28 +556,13 @@ namespace CoOpBot
 
             changeDirection = changeAmount > 0 ? "increased" : "decreased";
 
-            //output = string.Format("{0} recent message count {1} to {2}", messageSender.Name, changeDirection, messageCount);
-
             return messageCount;
 
-            /*Thread.Sleep(5000);
-            messageCount = int.Parse(userRecentMessageCounter[messageSender.Name]) - 1;
-            userRecentMessageCounter[messageSender.Name] = messageCount.ToString();
-            await e.Channel.SendMessage(string.Format("{0} recent message count decreased to {1}", messageSender.Name, messageCount));*/
-
         }
-
+        
         private void Log(object sender, LogMessageEventArgs e)
         {
             Console.WriteLine(e.Message);
         }
-    }
-
-
-    // Define array holding [user, teamNumber]
-    public class TeamAssignment
-    {
-        public User user { get; set; }
-        public int teamNumber { get; set; }
     }
 }
