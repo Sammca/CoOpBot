@@ -552,8 +552,6 @@ namespace CoOpBot
         private int CountMessage(User messageSender, int changeAmount)
         {
             int messageCount;
-            string changeDirection;
-            //string output
 
             if (userRecentMessageCounter[messageSender.Name] == null)
             {
@@ -563,7 +561,7 @@ namespace CoOpBot
             messageCount = int.Parse(userRecentMessageCounter[messageSender.Name]) + changeAmount;
             userRecentMessageCounter[messageSender.Name] = messageCount.ToString();
 
-            changeDirection = changeAmount > 0 ? "increased" : "decreased";
+            Console.WriteLine(string.Format("{0}: {1}", messageSender.Name, messageCount));
 
             return messageCount;
 
