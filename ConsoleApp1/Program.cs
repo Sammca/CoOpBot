@@ -458,10 +458,11 @@ namespace CoOpBot
         {
             // Define variables
             string messageTextLowercase;
-            string responseText = "";
+            string responseText;
 
             bot.MessageReceived += async (s, e) =>
             {
+                responseText = "";
                 // Check to make sure that the author is not a bot
                 if (!e.Message.User.IsBot)
                 {
