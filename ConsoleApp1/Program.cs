@@ -43,8 +43,11 @@ namespace CoOpBot
             RegisterAddRoleCommand();
             RegisterAntiSpamFunctionality();
             RegisterCountdownCommand();
+            RegisterDeleteRoleCommand();
             RegisterMakeTeamsCommand();
+            RegisterNewRoleCommand();
             RegisterNoveltyResponseCommands();
+            RegisterRemoveRoleCommand();
             RegisterRemoveTeamChannelsCommand();
             RegisterRoleListCommand();
             RegisterRollDiceCommand();
@@ -130,15 +133,16 @@ namespace CoOpBot
                 .Alias("AddMe", "ar") // Alternate command names
                 .Parameter("RoleName", ParameterType.Required)
                 .Parameter("users", ParameterType.Multiple)
-                .Description("Adds the user to the requested Role.")
+                .Description("Adds the user(s) to the requested Role.")
                 .Do(async (e) =>
                 {
                     try
                     {
-                        var RoleName = e.GetArg("RoleName");
-                        var mentionedUsers = e.Args.Length > 1 ? true : false;
-
-                        Role roleObj;
+                        string RoleName = e.GetArg("RoleName");
+                        //var mentionedUsers = e.Args.Length > 1 ? true : false;
+                        
+                        await this.RoleAddUsers(e.Message.User, e.Server, e.Message.MentionedUsers.ToList(), RoleName.Split(' ').ToList(), e.Channel, true);
+                        /*Role roleObj;
                         int addedUsers = 0;
 
                         ChannelPermissions userPermissions;
@@ -167,7 +171,7 @@ namespace CoOpBot
                                     } /*else
                                     { // removed, to be replaced with one message at the end of function
                                         await e.Channel.SendMessage(userToAdd.Nickname + " is already in role " + RoleName);
-                                    }*/
+                                    }*//*
                                 }
                             }
                             else
@@ -187,7 +191,71 @@ namespace CoOpBot
                         else
                         {
                             await e.Channel.SendMessage("You are not authorised to do that");
-                        }
+                        }*/
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                });
+        }
+        
+        private void RegisterRemoveRoleCommand()
+        {
+            commands.CreateCommand("RemoveRole") // Command name
+                .Alias("rr") // Alternate command names
+                .Parameter("RoleName", ParameterType.Required)
+                .Parameter("users", ParameterType.Multiple)
+                .Description("Removes the user(s) to the requested Role.")
+                .Do(async (e) =>
+                {
+                    try
+                    {
+                        string RoleName = e.GetArg("RoleName");
+
+                        await this.RoleRemoveUsers(e.Message.User, e.Server, e.Message.MentionedUsers.ToList(), RoleName.Split(' ').ToList(), e.Channel, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                });
+        }
+
+        private void RegisterNewRoleCommand()
+        {
+            commands.CreateCommand("NewRole") // Command name
+                .Alias("nr") // Alternate command names
+                .Parameter("roleName", ParameterType.Required)
+                .Description("Creates a new Role containing no users.")
+                .Do(async (e) =>
+                {
+                    try
+                    {
+                        string roleName = e.GetArg("roleName");
+
+                        await this.RoleCreate(e.Message.User, e.Server, roleName, e.Channel, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                });
+        }
+
+        private void RegisterDeleteRoleCommand()
+        {
+            commands.CreateCommand("DeleteRole") // Command name
+                .Alias("dr") // Alternate command names
+                .Parameter("roleName", ParameterType.Required)
+                .Description("Deletes a Role.")
+                .Do(async (e) =>
+                {
+                    try
+                    {
+                        string roleName = e.GetArg("roleName");
+
+                        await this.RoleDelete(e.Message.User, e.Server, roleName, e.Channel, true);
                     }
                     catch (Exception ex)
                     {
@@ -459,35 +527,84 @@ namespace CoOpBot
             // Define variables
             string messageTextLowercase;
             string responseText;
+            User userSentBy;
+            Dictionary<ulong, int> openKnockKnockThreadState;
+
+            // Initialise variables
+            responseText = "";
+            //openKnockKnockThreadState = new int[] { };
+            openKnockKnockThreadState = new Dictionary<ulong, int>();
 
             bot.MessageReceived += async (s, e) =>
             {
-                responseText = "";
+                userSentBy = e.Message.User;
                 // Check to make sure that the author is not a bot
-                if (!e.Message.User.IsBot)
+                if (!userSentBy.IsBot)
                 {
                     // Prevent the bot crashing on image only messages
-                    // TODO - do we want to include images in the anti spam message counter?
                     if (e.Message.RawText != "")
                     {
                         messageTextLowercase = e.Message.RawText.ToLower();
 
                         if (messageTextLowercase.Substring(0, 1) != prefixCharacter.ToString())
                         {
-                            switch (messageTextLowercase)
+                            if (openKnockKnockThreadState.ContainsKey(userSentBy.Id) && openKnockKnockThreadState[userSentBy.Id] > 0)
                             {
-                                case "ayyy":
-                                    responseText = "Ayyy, lmao";
-                                    break;
-                                case "winner winner":
-                                    responseText = "Chicken dinner";
-                                    break;
-                                default:
-                                    break;
+                                switch (openKnockKnockThreadState[userSentBy.Id])
+                                {
+                                    case 1:
+                                        responseText = string.Format("{0} who?", e.Message.RawText);
+                                        break;
+                                    case 2:
+                                        responseText = "Ayyy, lmao";
+                                        break;
+                                    default:
+                                        break;
+                                }
+
+                                openKnockKnockThreadState[userSentBy.Id]++;
+                                if (openKnockKnockThreadState[userSentBy.Id] > 2)
+                                {
+                                    openKnockKnockThreadState[userSentBy.Id] = 0;
+                                }
+                            }
+                            else
+                            {
+                                switch (messageTextLowercase)
+                                {
+                                    case "ayyy":
+                                        responseText = "Ayyy, lmao";
+                                        break;
+                                    case "winner winner":
+                                        responseText = "Chicken dinner";
+                                        break;
+                                    case "new number":
+                                        responseText = "Who dis?";
+                                        break;
+                                    case "knock knock":
+                                        responseText = "Who's there?";
+                                        if (!openKnockKnockThreadState.ContainsKey(userSentBy.Id))
+                                        {
+                                            openKnockKnockThreadState.Add(userSentBy.Id, 1);
+                                        }
+                                        else
+                                        {
+                                            openKnockKnockThreadState[userSentBy.Id] = 1;
+                                        }
+                                        break;
+                                    default:
+                                        break;
+                                }
+                                if (messageTextLowercase.Length >= 5 && messageTextLowercase.Substring(0, 5) == "pixis")
+                                {
+                                    responseText = "PIXISUUUUUUUU";
+                                }
                             }
                             if (responseText != "")
                             {
                                 await e.Channel.SendMessage(responseText);
+                                // reset responseText to prevent repeated messages
+                                responseText = "";
                             }
                         }
                     }
@@ -567,7 +684,177 @@ namespace CoOpBot
             return messageCount;
 
         }
-        
+
+        private async Task RoleAddUsers(User callingUser, Server server, List<User> userList, List<string> roleNameList, Channel channel = null, bool outputMessages = false)
+        {
+            // Define variables
+            string output;
+            ServerPermissions userPermissions;
+            List<Role> roleList;
+            string roleNamesString;
+
+            // Initialise variables
+            output = "";
+            roleNamesString = "";
+            roleList = new List<Role>();
+
+            try
+            {
+                userPermissions = callingUser.ServerPermissions;
+                if (userPermissions.ManageRoles)
+                {
+                    foreach (string curRoleName in roleNameList)
+                    {
+                        if (server.FindRoles(curRoleName).Count() < 1)
+                        {
+                            await this.RoleCreate(callingUser, server, curRoleName);
+                        }
+
+                        roleList.Add(server.FindRoles(curRoleName).First());
+                        roleNamesString += string.Format("{0} ", curRoleName);
+                    }
+                    foreach (User curUser in userList)
+                    {
+                        await curUser.AddRoles(roleList.ToArray());
+                    }
+                    output += string.Format("Added {0} user(s) to {1}", userList.Count, roleNamesString);
+                    output += "\r\n";
+                }
+                else
+                {
+                    throw new Exception(string.Format("{0} does not have the permissions to call this function", callingUser));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return;
+            }
+            if (channel != null && outputMessages)
+            {
+                await channel.SendMessage(output);
+            }
+        }
+
+        private async Task RoleRemoveUsers(User callingUser, Server server, List<User> userList, List<string> roleNameList, Channel channel = null, bool outputMessages = false)
+        {
+            // Define variables
+            string output;
+            ServerPermissions userPermissions;
+            List<Role> roleList;
+            string roleNamesString;
+
+            // Initialise variables
+            output = "";
+            roleNamesString = "";
+            roleList = new List<Role>();
+
+            try
+            {
+                userPermissions = callingUser.ServerPermissions;
+                if (userPermissions.ManageRoles)
+                {
+                    foreach (string curRoleName in roleNameList)
+                    {
+                        roleList.Add(server.FindRoles(curRoleName).First());
+                        roleNamesString += string.Format("{0} ", curRoleName);
+                    }
+                    foreach (User curUser in userList)
+                    {
+                        await curUser.RemoveRoles(roleList.ToArray());
+                    }
+                    output += string.Format("Removed {0} user(s) from {1}", userList.Count, roleNamesString);
+                    output += "\r\n";
+                }
+                else
+                {
+                    throw new Exception(string.Format("{0} does not have the permissions to call this function", callingUser));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return;
+            }
+            if (channel != null && outputMessages)
+            {
+                await channel.SendMessage(output);
+            }
+        }
+
+        private async Task RoleCreate(User callingUser, Server server, string roleName, Channel channel = null, bool outputMessages = false)
+        {
+            // Define variables
+            ServerPermissions userPermissions;
+            string output;
+
+            // Initialise variables
+            output = "";
+
+            try
+            {
+                userPermissions = callingUser.ServerPermissions;
+                if (userPermissions.ManageRoles)
+                {
+                    await server.CreateRole(roleName, null, null, false, true);
+                    output += string.Format("New role {0} created.", roleName);
+                    output += "\r\n";
+                }
+                else
+                {
+                    throw new Exception(string.Format("{0} does not have the permissions to call this function", callingUser));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return;
+            }
+
+            if (channel != null && outputMessages)
+            {
+                await channel.SendMessage(output);
+            }
+        }
+
+        private async Task RoleDelete(User callingUser, Server server, string roleName, Channel channel = null, bool outputMessages = false)
+        {
+            // Define variables
+            ServerPermissions userPermissions;
+            string output;
+            Role roleToDelete;
+
+            // Initialise variables
+            output = "";
+
+            try
+            {
+                userPermissions = callingUser.ServerPermissions;
+                if (userPermissions.ManageRoles)
+                {
+                    roleToDelete = server.FindRoles(roleName, true).First();
+
+                    await roleToDelete.Delete();
+                    output += string.Format("Role {0} deleted.", roleName);
+                    output += "\r\n";
+                }
+                else
+                {
+                    throw new Exception(string.Format("{0} does not have the permissions to call this function", callingUser));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return;
+            }
+
+            if (channel != null && outputMessages)
+            {
+                await channel.SendMessage(output);
+            }
+        }
+
         private void Log(object sender, LogMessageEventArgs e)
         {
             Console.WriteLine(e.Message);
