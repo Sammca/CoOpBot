@@ -139,59 +139,8 @@ namespace CoOpBot
                     try
                     {
                         string RoleName = e.GetArg("RoleName");
-                        //var mentionedUsers = e.Args.Length > 1 ? true : false;
                         
                         await this.RoleAddUsers(e.Message.User, e.Server, e.Message.MentionedUsers.ToList(), RoleName.Split(' ').ToList(), e.Channel, true);
-                        /*Role roleObj;
-                        int addedUsers = 0;
-
-                        ChannelPermissions userPermissions;
-                        userPermissions = e.Message.User.GetPermissions(e.Message.Channel);
-                        if (userPermissions.ManagePermissions)
-                        {
-
-                            if (e.Server.FindRoles(RoleName).Count() < 1)
-                            {
-                                await e.Channel.SendMessage("New role " + RoleName + " created.");
-                                roleObj = await e.Server.CreateRole(RoleName, null, null, false, true);
-                            }
-                            else
-                            {
-                                roleObj = e.Server.FindRoles(RoleName).First();
-                            }
-
-                            if (mentionedUsers)
-                            {
-                                foreach (User userToAdd in e.Message.MentionedUsers)
-                                {
-                                    if (!userToAdd.HasRole(roleObj))
-                                    {
-                                        await userToAdd.AddRoles(roleObj);
-                                        addedUsers++;
-                                    } /*else
-                                    { // removed, to be replaced with one message at the end of function
-                                        await e.Channel.SendMessage(userToAdd.Nickname + " is already in role " + RoleName);
-                                    }*//*
-                                }
-                            }
-                            else
-                            {
-                                if (!e.User.HasRole(roleObj))
-                                {
-                                    await e.User.AddRoles(roleObj);
-                                    addedUsers++;
-                                }
-                                else
-                                {
-                                    await e.Channel.SendMessage("You are already in " + RoleName);
-                                }
-                            }
-                            await e.Channel.SendMessage(string.Format("Added {0} users to role {1}", addedUsers, RoleName));
-                        }
-                        else
-                        {
-                            await e.Channel.SendMessage("You are not authorised to do that");
-                        }*/
                     }
                     catch (Exception ex)
                     {
