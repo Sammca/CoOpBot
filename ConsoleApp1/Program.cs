@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.WebSocket;
 using Discord.Commands;
 using System;
 using System.Collections.Generic;
@@ -7,39 +8,29 @@ using System.Threading;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Specialized;
+using CoOpBot.Modules.Roll;
 
 namespace CoOpBot
 {
-    class Program
+    public class Program
     {
+        public static void Main(string[] args)
+            => new Program().MainAsync().GetAwaiter().GetResult();
+
         // Define & initialise variables
-        DiscordClient bot;
-        CommandService commands;
+        private DiscordSocketClient bot;
+        private CommandService commands;
+        private DependencyMap map;
+
         char prefixCharacter = '!';
         NameValueCollection userRecentMessageCounter = new NameValueCollection();
 
-        static void Main(string[] args)
+        public async Task MainAsync()
         {
-            Program bot = new Program();
-        }
-
-        public Program()
-        {
-            bot = new DiscordClient(x =>
-            {
-                x.LogLevel = LogSeverity.Info;
-                x.LogHandler = Log;
-            });
-
-            bot.UsingCommands(x =>
-            {
-                x.PrefixChar = prefixCharacter;
-                x.AllowMentionPrefix = true;
-                x.HelpMode = HelpMode.Public;
-            });
-            
-            commands = bot.GetService<CommandService>();
-            
+            //commands = bot.GetService<CommandService>();
+            bot = new DiscordSocketClient();
+            commands = new CommandService();
+            /*
             RegisterAddRoleCommand();
             RegisterAntiSpamFunctionality();
             RegisterCountdownCommand();
@@ -49,18 +40,59 @@ namespace CoOpBot
             RegisterNoveltyResponseCommands();
             RegisterRemoveRoleCommand();
             RegisterRemoveTeamChannelsCommand();
-            RegisterRoleListCommand();
-            RegisterRollDiceCommand();
+            RegisterRoleListCommand();*/
+            //RegisterRollDiceCommand();
 
             //commands.CreateCommand("SteamMe") // Command name
             //        .Parameter("SteamProfile", ParameterType.Required) // Steam name
 
-            bot.ExecuteAndWait(async () =>
-            {
-                await bot.Connect("MzA5Nzg4NjU2MDAzMDU1NjE2.C-0k9A.7_v7ulouST3I358v2oMThI6yCPE", TokenType.Bot);
-            });
+
+            bot.Log += Log;
+            //client.MessageReceived += MessageReceived;
+
+            map = new DependencyMap();
+
+            await InstallCommands();
+
+            string token = "MzA5Nzg4NjU2MDAzMDU1NjE2.C_JsQg.OJbqgCRKN_VzA5Rxad--uzmBze8"; // Remember to keep this private!
+            await bot.LoginAsync(TokenType.Bot, token);
+            await bot.StartAsync();
+
+            var map = new DependencyMap();
+            map.Add(bot);
+
+            handler = new CommandHandler();
+            await handler.Install(map);
+
+            // Block this task until the program is closed.
+            await Task.Delay(-1);
         }
 
+
+        public async Task InstallCommands()
+        {
+            // Hook the MessageReceived Event into our Command Handler
+            bot.MessageReceived += HandleCommand;
+            // Discover all of the commands in this assembly and load them.
+            await commands.AddModulesAsync(Assembly.GetEntryAssembly());
+        }
+        public async Task HandleCommand(SocketMessage messageParam)
+        {
+            // Don't process the command if it was a System Message
+            var message = messageParam as SocketUserMessage;
+            if (message == null) return;
+            // Create a number to track where the prefix ends and the command begins
+            int argPos = 0;
+            // Determine if the message is a command, based on if it starts with '!' or a mention prefix
+            if (!(message.HasCharPrefix('!', ref argPos) || message.HasMentionPrefix(bot.CurrentUser, ref argPos))) return;
+            // Create a Command Context
+            var context = new CommandContext(bot, message);
+            // Execute the command. (result does not indicate a return value, 
+            // rather an object stating if the command executed succesfully)
+            var result = await commands.ExecuteAsync(context, argPos, map);
+            if (!result.IsSuccess)
+                await context.Channel.SendMessageAsync(result.ErrorReason);
+        }
         /************************************************
          * 
          * Command template
@@ -83,7 +115,7 @@ namespace CoOpBot
          * Bot admin functions
          * 
         ************************************************/
-
+        /*
         private void RegisterAntiSpamFunctionality()
         {
             bot.MessageReceived += async (s, e) =>
@@ -126,9 +158,10 @@ namespace CoOpBot
          * Roles & permissions
          * 
         ************************************************/
-
+        /*
         private void RegisterAddRoleCommand()
-        {
+        {*/
+        /*
             commands.CreateCommand("AddRole") // Command name
                 .Alias("AddMe", "ar") // Alternate command names
                 .Parameter("RoleName", ParameterType.Required)
@@ -148,7 +181,7 @@ namespace CoOpBot
                     }
                 });
         }
-        
+        /*
         private void RegisterRemoveRoleCommand()
         {
             commands.CreateCommand("RemoveRole") // Command name
@@ -250,14 +283,14 @@ namespace CoOpBot
                     }
                 });
         }
-
+        
 
         /************************************************
          * 
          * Voice & text channels
          * 
         ************************************************/
-
+        /*
         private void RegisterRemoveTeamChannelsCommand()
         {
             commands.CreateCommand("removeTeams") // Command name
@@ -282,7 +315,7 @@ namespace CoOpBot
          * Co-op gaming
          * 
         ************************************************/
-
+        /*
         private void RegisterMakeTeamsCommand()
         {
             commands.CreateCommand("MakeTeams") // Command name
@@ -420,7 +453,7 @@ namespace CoOpBot
          * Miscellaneous
          * 
         ************************************************/
-
+        /*
         private void RegisterCountdownCommand()
         {
             commands.CreateCommand("Countdown") // Command name
@@ -470,7 +503,7 @@ namespace CoOpBot
                     }
                 });
         }
-        
+        /*
         private void RegisterNoveltyResponseCommands()
         {
             // Define variables
@@ -567,6 +600,7 @@ namespace CoOpBot
          * (Functions not directly usable in discord)
          * 
         ************************************************/
+        /*
         private string RollDice(string inputMessage)
         {
             string output;
@@ -615,7 +649,7 @@ namespace CoOpBot
             
             return output;
         }
-        
+        /*
         private int CountMessage(User messageSender, int changeAmount)
         {
             int messageCount;
@@ -802,11 +836,12 @@ namespace CoOpBot
             {
                 await channel.SendMessage(output);
             }
-        }
+        }*/
 
-        private void Log(object sender, LogMessageEventArgs e)
+        private Task Log(LogMessage msg)
         {
-            Console.WriteLine(e.Message);
+            Console.WriteLine(msg.ToString());
+            return Task.CompletedTask;
         }
     }
 }
