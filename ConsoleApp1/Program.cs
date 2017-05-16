@@ -2,34 +2,32 @@
 using Discord.WebSocket;
 using Discord.Commands;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Specialized;
+using System.Reflection;
 using CoOpBot.Modules.Roll;
+using CoOpBot.Modules.Admin;
 
 namespace CoOpBot
 {
     public class Program
     {
+        // Define & initialise variables
+        private DiscordSocketClient client;
+        private CommandService commands = new CommandService();
+        private DependencyMap map = new DependencyMap();
+
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
-
-        // Define & initialise variables
-        private DiscordSocketClient bot;
-        private CommandService commands;
-        private DependencyMap map;
-
+        
         char prefixCharacter = '!';
         NameValueCollection userRecentMessageCounter = new NameValueCollection();
 
         public async Task MainAsync()
         {
             //commands = bot.GetService<CommandService>();
-            bot = new DiscordSocketClient();
-            commands = new CommandService();
+            //map = new DependencyMap();
+            client = new DiscordSocketClient();
             /*
             RegisterAddRoleCommand();
             RegisterAntiSpamFunctionality();
@@ -47,22 +45,20 @@ namespace CoOpBot
             //        .Parameter("SteamProfile", ParameterType.Required) // Steam name
 
 
-            bot.Log += Log;
+            client.Log += Log;
             //client.MessageReceived += MessageReceived;
-
-            map = new DependencyMap();
+            
 
             await InstallCommands();
 
             string token = "MzA5Nzg4NjU2MDAzMDU1NjE2.C_JsQg.OJbqgCRKN_VzA5Rxad--uzmBze8"; // Remember to keep this private!
-            await bot.LoginAsync(TokenType.Bot, token);
-            await bot.StartAsync();
+            await client.LoginAsync(TokenType.Bot, token);
+            await client.StartAsync();
+            
+            //map.Add(bot);
 
-            var map = new DependencyMap();
-            map.Add(bot);
-
-            handler = new CommandHandler();
-            await handler.Install(map);
+            //handler = new CommandHandler();
+            //await handler.Install(map);
 
             // Block this task until the program is closed.
             await Task.Delay(-1);
@@ -71,26 +67,73 @@ namespace CoOpBot
 
         public async Task InstallCommands()
         {
-            // Hook the MessageReceived Event into our Command Handler
-            bot.MessageReceived += HandleCommand;
             // Discover all of the commands in this assembly and load them.
+            //await commands.AddModulesAsync(Assembly.GetEntryAssembly());
+
+            map.Add(client);
+            //map.Add(commands);
+            map.Add(new RollModule());
+            map.Add(new RolesModule());
             await commands.AddModulesAsync(Assembly.GetEntryAssembly());
+
+            // Hook the MessageReceived Event into our Command Handler
+            client.MessageReceived += HandleCommand;
         }
         public async Task HandleCommand(SocketMessage messageParam)
         {
             // Don't process the command if it was a System Message
-            var message = messageParam as SocketUserMessage;
+            SocketUserMessage message = messageParam as SocketUserMessage;
             if (message == null) return;
+
+            /*SocketGuildUser messageAuthor;
+            int messageCount;
+            GuildPermissions channelPermissionOverrides;
+
+            messageAuthor = message.Author as SocketGuildUser;
+
+            // Check to make sure that a bot is not the author
+            // Also check if admin, since admins ignore the channel permission override
+            if (!messageAuthor.GuildPermissions.Administrator && !messageAuthor.IsBot)
+            {
+                channelPermissionOverrides = new GuildPermissions(sendMessages: false);
+
+                if (userRecentMessageCounter[messageAuthor.Username] == null)
+                {
+                    userRecentMessageCounter[messageAuthor.Username] = 0.ToString();
+                }
+
+                messageCount = CountMessage(messageAuthor, 1);
+
+                if (messageCount > 2)
+                {
+                    await message.Channel.SendMessageAsync("#StopCamSpam");
+                    
+                    //await message.Channel.AddPermissionsRule(messageSender, channelPermissionOverrides);
+
+                    //await Task.Delay(5000).ContinueWith(t => message.Channel.SendMessage("5 seconds passed"));
+                    await Task.Delay(8000).ContinueWith(t => message.Channel.RemovePermissionsRule(messageAuthor));
+                }
+
+                await Task.Delay(8000).ContinueWith(t => CountMessage(messageAuthor, -1));
+            }*/
+
             // Create a number to track where the prefix ends and the command begins
             int argPos = 0;
             // Determine if the message is a command, based on if it starts with '!' or a mention prefix
-            if (!(message.HasCharPrefix('!', ref argPos) || message.HasMentionPrefix(bot.CurrentUser, ref argPos))) return;
+            //if (!(message.HasCharPrefix(prefixCharacter, ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos)))
+            if (message.Author.IsBot || (!(message.HasCharPrefix(prefixCharacter, ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))))
+            {
+                return;
+            }
             // Create a Command Context
-            var context = new CommandContext(bot, message);
+            var context = new CommandContext(message.Discord, message);
             // Execute the command. (result does not indicate a return value, 
             // rather an object stating if the command executed succesfully)
             var result = await commands.ExecuteAsync(context, argPos, map);
-            if (!result.IsSuccess)
+            
+            // Uncomment the following lines if you want the bot
+            // to send a message if it failed (not advised for most situations).
+            if (!result.IsSuccess && result.Error != CommandError.UnknownCommand)
                 await context.Channel.SendMessageAsync(result.ErrorReason);
         }
         /************************************************
@@ -648,26 +691,26 @@ namespace CoOpBot
             output = string.Format("You rolled {0}d{1} and got {2}", numberOfDice, sidesOnDice, totalRoll);
             
             return output;
-        }
-        /*
-        private int CountMessage(User messageSender, int changeAmount)
+        }*/
+        
+        private int CountMessage(SocketGuildUser messageSender, int changeAmount)
         {
             int messageCount;
 
-            if (userRecentMessageCounter[messageSender.Name] == null)
+            if (userRecentMessageCounter[messageSender.Username] == null)
             {
-                userRecentMessageCounter[messageSender.Name] = 0.ToString();
+                userRecentMessageCounter[messageSender.Username] = 0.ToString();
             }
 
-            messageCount = int.Parse(userRecentMessageCounter[messageSender.Name]) + changeAmount;
-            userRecentMessageCounter[messageSender.Name] = messageCount.ToString();
+            messageCount = int.Parse(userRecentMessageCounter[messageSender.Username]) + changeAmount;
+            userRecentMessageCounter[messageSender.Username] = messageCount.ToString();
 
-            Console.WriteLine(string.Format("{0}: {1}", messageSender.Name, messageCount));
+            Console.WriteLine(string.Format("{0}: {1}", messageSender.Username, messageCount));
 
             return messageCount;
 
         }
-
+        /*
         private async Task RoleAddUsers(User callingUser, Server server, List<User> userList, List<string> roleNameList, Channel channel = null, bool outputMessages = false)
         {
             // Define variables

@@ -12,7 +12,7 @@ namespace CoOpBot.Modules.Roll
         [Command("roll")]
         //[Alias("AddMe", "ar")]
         [Summary("Rolls a specified number of dice, with a specified number of sides.Time to Die.")]
-        public async Task roll(string modifier)
+        public async Task roll(string modifier = "")
         {
             try
             {
