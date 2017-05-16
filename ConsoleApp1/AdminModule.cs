@@ -52,15 +52,14 @@ namespace CoOpBot.Modules.Admin
     public class RolesModule : ModuleBase
     {
         [Command("AddRole")]
-        //[Alias("AddMe", "ar")]
+        [Alias("AddMe", "ar")]
         [Summary("Adds the user(s) to the requested Role.")]
-        //[RequireUserPermission(GuildPermission.ManageRoles)]
-        private async Task RegisterAddRoleCommand(string RoleName, SocketGuildUser[] users)
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        private async Task RegisterAddRoleCommand(string RoleName, params IUser[] users)
         {
             try
             {
-                await this.RoleAddUsers(this.Context.User as SocketGuildUser, this.Context.Guild as SocketGuild, this.Context.Message.MentionedUserIds.ToList(), RoleName.Split(' ').ToList(), this.Context.Channel as SocketChannel, true);
-                await ReplyAsync("test");
+                await RoleAddUsers(this.Context.User as SocketGuildUser, this.Context.Guild as SocketGuild, this.Context.Message.MentionedUserIds.ToList(), RoleName.Split(' ').ToList(), this.Context.Channel as SocketChannel, true);
             }
             catch (Exception ex)
             {
@@ -200,9 +199,9 @@ namespace CoOpBot.Modules.Admin
                         }
                     }
 
-                    if (roleExists)
+                    if (!roleExists)
                     {
-                        await this.RoleCreate(callingUser, server, curRoleName);
+                        await RoleCreate(callingUser, server, curRoleName);
                     }
 
                     foreach (SocketRole curRole in server.Roles)
