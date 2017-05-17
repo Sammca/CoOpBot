@@ -51,128 +51,125 @@ namespace CoOpBot.Modules.Admin
     
     public class RolesModule : ModuleBase
     {
+
+        #region Commands
+
         [Command("AddRole")]
         [Alias("AddMe", "ar")]
         [Summary("Adds the user(s) to the requested Role.")]
         [RequireUserPermission(GuildPermission.ManageRoles)]
-        private async Task RegisterAddRoleCommand(string RoleName, params IUser[] users)
+        private async Task AddRoleCommand(string RoleName, params IUser[] users)
         {
             try
             {
-                await RoleAddUsers(this.Context.User as SocketGuildUser, this.Context.Guild as SocketGuild, this.Context.Message.MentionedUserIds.ToList(), RoleName.Split(' ').ToList(), this.Context.Channel as SocketChannel, true);
+                await RoleAddUsers(this.Context.Guild as SocketGuild, this.Context.Message.MentionedUserIds.ToList(), RoleName.Split(' ').ToList(), this.Context.Channel as SocketChannel, true);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
         }
-        /*
-        private void RegisterRemoveRoleCommand()
-        {
-            commands.CreateCommand("RemoveRole") // Command name
-                .Alias("rr") // Alternate command names
-                .Parameter("RoleName", ParameterType.Required)
-                .Parameter("users", ParameterType.Multiple)
-                .Description("Removes the user(s) to the requested Role.")
-                .Do(async (e) =>
-                {
-                    try
-                    {
-                        string RoleName = e.GetArg("RoleName");
 
-                        await this.RoleRemoveUsers(e.Message.User, e.Server, e.Message.MentionedUsers.ToList(), RoleName.Split(' ').ToList(), e.Channel, true);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-                });
+        [Command("RemoveRole")]
+        [Alias("RemoveMe", "rr")]
+        [Summary("Removes the user(s) to the requested Role.")]
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        private async Task RemoveRoleCommand(string RoleName, params IUser[] users)
+        {
+            try
+            {
+                await RoleRemoveUsers(this.Context.Guild as SocketGuild, this.Context.Message.MentionedUserIds.ToList(), RoleName.Split(' ').ToList(), this.Context.Channel as SocketChannel, true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
-        */
-        /*
-        private void RegisterNewRoleCommand()
-        {
-            commands.CreateCommand("NewRole") // Command name
-                .Alias("nr") // Alternate command names
-                .Parameter("roleName", ParameterType.Required)
-                .Description("Creates a new Role containing no users.")
-                .Do(async (e) =>
-                {
-                    try
-                    {
-                        string roleName = e.GetArg("roleName");
 
-                        await this.RoleCreate(e.Message.User, e.Server, roleName, e.Channel, true);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-                });
+        [Command("DeleteRole")]
+        [Alias("dr")]
+        [Summary("Deletes a Role.")]
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        private async Task DeleteRoleCommand(string RoleName)
+        {
+            try
+            {
+                await RoleDelete(this.Context.Guild as SocketGuild, RoleName, this.Context.Channel as SocketChannel, true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
-        */
-        /*
-        private void RegisterDeleteRoleCommand()
-        {
-            commands.CreateCommand("DeleteRole") // Command name
-                .Alias("dr") // Alternate command names
-                .Parameter("roleName", ParameterType.Required)
-                .Description("Deletes a Role.")
-                .Do(async (e) =>
-                {
-                    try
-                    {
-                        string roleName = e.GetArg("roleName");
 
-                        await this.RoleDelete(e.Message.User, e.Server, roleName, e.Channel, true);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-                });
+        [Command("NewRole")]
+        [Alias("nr", "CreateRole")]
+        [Summary("Creates a new Role containing no users.")]
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        private async Task NewRoleCommand(string RoleName)
+        {
+            try
+            {
+                await RoleCreate(this.Context.Guild as SocketGuild, RoleName, this.Context.Channel as SocketChannel, true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
-        *//*
-        private void RegisterRoleListCommand()
+        
+        [Command("RoleMembers")]
+        [Alias("rm", "listRole", "WhoIs")]
+        [Summary("Returns a list of users with requested Roles. Roleplay is not permitted.")]
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        private async Task RoleListCommand(string roleName)
         {
-            commands.CreateCommand("Whois") // Command name
-                .Alias("RoleList","ListRole")
-                .Description("Returns a list of users with requested Roles. Roleplay is not permitted.")
-                .Parameter("RoleName", ParameterType.Required)
-                .Do(async (e) =>
+            IRole role;
+            string output = "";
+            SocketGuild server;
+            IEnumerable<IGuildUser> users;
+            IGuildUser curUser;
+            int userCount;
+
+            server = this.Context.Guild as SocketGuild;
+            userCount = 0;
+
+
+            role = FindRoleFromName(roleName, server);
+            if (role != null)
+            {
+                users = await this.Context.Guild.GetUsersAsync();
+
+                for (int i = 0; i < users.Count(); i++)
                 {
-                    string roleName;
-                    Role role;
-                    string output = "";
+                    curUser = users.ElementAt(i);
 
-                    roleName = e.GetArg("RoleName");
-
-                    if (e.Server.FindRoles(roleName).Count() < 1)
+                    if (curUser.RoleIds.Contains(role.Id))
                     {
-                        await e.Channel.SendMessage(string.Format("Role {0} not found", roleName));
-                    }
-                    else
-                    {
-                        role = e.Server.FindRoles(roleName).First();
-                        foreach (User user in role.Members)
+                        output += "\r\n";
+                        userCount++;
+                        if (curUser.Nickname != null)
                         {
-                            if (user.Nickname != null)
-                            {
-                                output += user.Nickname + "\r\n";
-                            }
-                            else
-                            {
-                                output += user.Name + "\r\n";
-                            }
+                            output += curUser.Nickname;
                         }
-
-                        await e.Channel.SendMessage(output);
+                        else
+                        {
+                            output += curUser.Username;
+                        }
                     }
-                });
-        }
-        */
+                }
 
-        private async Task RoleAddUsers(SocketGuildUser callingUser, SocketGuild server, List<ulong> userList, List<string> roleNameList, SocketChannel channel = null, bool outputMessages = false)
+                output = string.Format("{0} members in {1}: {2}", userCount, roleName, output);
+                await ReplyAsync(output);
+            }
+
+        }
+
+        #endregion
+
+
+        #region Functions
+        private async Task RoleAddUsers(SocketGuild server, List<ulong> userList, List<string> roleNameList, SocketChannel channel = null, bool outputMessages = false)
         {
             // Define variables
             string output;
@@ -201,7 +198,7 @@ namespace CoOpBot.Modules.Admin
 
                     if (!roleExists)
                     {
-                        await RoleCreate(callingUser, server, curRoleName);
+                        await RoleCreate(server, curRoleName, channel, true);
                     }
 
                     foreach (SocketRole curRole in server.Roles)
@@ -233,7 +230,62 @@ namespace CoOpBot.Modules.Admin
             }
         }
         
-        private async Task RoleCreate(SocketGuildUser callingUser, SocketGuild server, string roleName, SocketChannel channel = null, bool outputMessages = false)
+        private async Task RoleRemoveUsers(SocketGuild server, List<ulong> userList, List<string> roleNameList, SocketChannel channel = null, bool outputMessages = false)
+        {
+            // Define variables
+            string output;
+            List<IRole> roleList;
+            string roleNamesString;
+            SocketGuildUser user;
+
+            // Initialise variables
+            output = "";
+            roleNamesString = "";
+            roleList = new List<IRole>();
+
+            try
+            {
+                foreach (string curRoleName in roleNameList)
+                {
+
+                    foreach (SocketRole curRole in server.Roles)
+                    {
+                        Boolean roleExists = false;
+
+                        if (curRole.Name == curRoleName)
+                        {
+                            roleList.Add(curRole);
+                            roleNamesString += string.Format("{0} ", curRoleName);
+                            roleExists = true;
+                            break;
+                        }
+
+                        if (!roleExists)
+                        {
+                            await ReplyAsync(string.Format("Role {0} not found", curRoleName));
+                        }
+                    }
+                }
+                foreach (ulong curUserID in userList)
+                {
+                    user = server.GetUser(curUserID);
+                    await user.RemoveRolesAsync(roleList.AsEnumerable<IRole>());
+                }
+                output += string.Format("Removed {0} user(s) from {1}", userList.Count, roleNamesString);
+                output += "\r\n";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return;
+            }
+            if (channel != null && outputMessages)
+            {
+                await ReplyAsync(output);
+            }
+        }
+
+        private async Task RoleCreate(SocketGuild server, string roleName, SocketChannel channel = null, bool outputMessages = false)
         {
             // Define variables
             string output;
@@ -258,6 +310,66 @@ namespace CoOpBot.Modules.Admin
                 await ReplyAsync(output);
             }
         }
+        
+        private async Task RoleDelete(SocketGuild server, string roleName, SocketChannel channel = null, bool outputMessages = false)
+        {
+            // Define variables
+            string output;
+
+            // Initialise variables
+            output = "";
+
+            try
+            {
+                //roleToDelete = server.FindRoles(roleName, true).First();
+                Boolean roleExists = false;
+                foreach (SocketRole curRole in server.Roles)
+                {
+                    if (curRole.Name == roleName)
+                    {
+                        await curRole.DeleteAsync();
+                        output += string.Format("Role {0} deleted.", roleName);
+                        output += "\r\n";
+                        roleExists = true;
+                        break;
+                    }
+                }
+
+                if (!roleExists)
+                {
+                    output += string.Format("Role {0} not found", roleName);
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return;
+            }
+
+            if (channel != null && outputMessages)
+            {
+                await ReplyAsync(output);
+            }
+        }
+
+        private IRole FindRoleFromName(string roleName, SocketGuild server)
+        {
+            IRole role;
+
+            foreach (IRole curRole in server.Roles)
+            {
+                if (curRole.Name == roleName)
+                {
+                    role = curRole;
+                    return role;
+                }
+            }
+            
+            return null;
+        }
+
+        #endregion
     }
 }
 
