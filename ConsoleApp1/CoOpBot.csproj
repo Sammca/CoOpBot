@@ -154,8 +154,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AdminModule.cs" />
-    <Compile Include="RollModule.cs" />
+    <Compile Include="Modules\AdminModule.cs" />
+    <Compile Include="Modules\CoOpGamingModule.cs" />
+    <Compile Include="Modules\RollModule.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TeamAssignment.cs" />

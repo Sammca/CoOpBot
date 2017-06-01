@@ -7,6 +7,7 @@ using System.Collections.Specialized;
 using System.Reflection;
 using CoOpBot.Modules.Roll;
 using CoOpBot.Modules.Admin;
+using CoOpBot.Modules.CoOpGaming;
 
 namespace CoOpBot
 {
@@ -54,6 +55,7 @@ namespace CoOpBot
             // Add modules containing the commands
             map.Add(new RollModule());
             map.Add(new RolesModule());
+            map.Add(new CoOpGamingModule());
 
             await commands.AddModulesAsync(Assembly.GetEntryAssembly());
 
@@ -156,168 +158,6 @@ namespace CoOpBot
             };
         }*/
 
-        /************************************************
-         * 
-         * Voice & text channels
-         * 
-        ************************************************/
-        /*
-        private void RegisterRemoveTeamChannelsCommand()
-        {
-            commands.CreateCommand("removeTeams") // Command name
-                .Description("Removes any channels created by the MakeTeams command. Cleanup your toys when your done playing!")
-                .Do(async (e) =>
-                {
-                    Channel[] serverChannelList;
-
-                    serverChannelList = e.Server.VoiceChannels.ToArray();
-                    foreach (Channel voiceChannel in serverChannelList)
-                    {
-                        if (voiceChannel.Name.Substring(0, 4) == "Team")
-                        {
-                            await voiceChannel.Delete();
-                        }
-                    }
-                });
-        }
-
-        /************************************************
-         * 
-         * Co-op gaming
-         * 
-        ************************************************/
-        /*
-        private void RegisterMakeTeamsCommand()
-        {
-            commands.CreateCommand("MakeTeams") // Command name
-                .Parameter("NumberOfTeams", ParameterType.Required)
-                .Description("Split the current channel into number of teams specified, and moves them into their own channel.")
-                .Do(async (e) =>
-                {
-                    try
-                    {
-                        // Define variables
-                        int numberOfTeams;
-                        int teamNumber;
-                        int randomUserPosition;
-                        int userCount;
-                        List<int> usedPositions;
-                        Channel curVoiceChannel;
-                        string messageOutput;
-                        Random rng;
-                        User[] users;
-                        List<TeamAssignment> teamAssignmentList;
-                        TeamAssignment curUserTeamAssignment;
-                        List<Channel> teamChannels;
-
-                        // Initialise variables
-                        numberOfTeams = int.Parse(e.GetArg("NumberOfTeams"));
-                        rng = new Random();
-                        messageOutput = "";
-                        teamAssignmentList = new List<TeamAssignment> { };
-                        usedPositions = new List<int> { };
-                        teamChannels = new List<Channel> { };
-                        teamNumber = 1;
-                        curVoiceChannel = e.User.VoiceChannel;
-
-                        // Check that the caller is in a voice channel
-                        if (curVoiceChannel == null)
-                        {
-                            messageOutput += string.Format("{0}, you must be in a voice channel to use this command", e.User.Name);
-                        }
-                        else
-                        {
-                            // make array of users in the current voice channel
-                            users = curVoiceChannel.Users.ToArray();
-                            userCount = users.Length;
-
-                            if (numberOfTeams > userCount)
-                            {
-                                numberOfTeams = userCount;
-                            }
-
-                            // Assign team numbers to users
-                            while (userCount > usedPositions.Count)
-                            {
-                                curUserTeamAssignment = new TeamAssignment();
-                                // Choose a random user from who is left
-                                do
-                                {
-                                    randomUserPosition = rng.Next(0, userCount);
-                                }
-                                while (usedPositions.Contains(randomUserPosition));
-
-
-                                curUserTeamAssignment.user = users[randomUserPosition];
-                                curUserTeamAssignment.teamNumber = teamNumber;
-
-                                teamAssignmentList.Add(curUserTeamAssignment);
-
-                                // Mark this position as being used
-                                usedPositions.Add(randomUserPosition);
-
-                                teamNumber++;
-
-                                if (teamNumber > numberOfTeams)
-                                {
-                                    teamNumber = 1;
-                                }
-                            }
-
-                            // Make sure the team chat channels exist
-                            for (int i = 1; i <= numberOfTeams; i++)
-                            {
-                                string teamChannelName;
-                                Channel[] serverChannelList;
-                                Boolean teamChannelExists = false;
-                                Channel teamVoiceChannel = null;
-
-                                teamChannelName = string.Format("Team {0}", i);
-
-                                serverChannelList = e.Server.VoiceChannels.ToArray();
-                                foreach (Channel voiceChannel in serverChannelList)
-                                {
-                                    if (voiceChannel.Name == teamChannelName)
-                                    {
-                                        teamVoiceChannel = voiceChannel;
-                                        teamChannelExists = true;
-                                    }
-                                }
-
-                                if (teamChannelExists == false)
-                                {
-                                    teamVoiceChannel = await e.Server.CreateChannel(teamChannelName, ChannelType.Voice);
-                                }
-
-                                teamChannels.Add(teamVoiceChannel);
-                            }
-
-                            // Move teams to their voice channels
-                            foreach (TeamAssignment assignment in teamAssignmentList)
-                            {
-                                User teamUser;
-                                int team;
-                                Channel teamChannel;
-
-                                teamUser = assignment.user;
-                                team = assignment.teamNumber;
-
-                                teamChannel = teamChannels.ElementAt(team - 1);
-
-                                await teamUser.Edit(voiceChannel: teamChannel);
-                            }
-
-                            messageOutput += string.Format("Made {0} teams", numberOfTeams);
-                        }
-
-                        await e.Channel.SendMessage(messageOutput);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-                });
-        }
 
         /************************************************
          * 
