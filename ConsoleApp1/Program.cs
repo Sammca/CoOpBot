@@ -8,6 +8,8 @@ using System.Reflection;
 using CoOpBot.Modules.Roll;
 using CoOpBot.Modules.Admin;
 using CoOpBot.Modules.CoOpGaming;
+using CoOpBot.Modules.GuildWars;
+using System.Xml;
 
 namespace CoOpBot
 {
@@ -17,6 +19,7 @@ namespace CoOpBot
         private DiscordSocketClient client;
         private CommandService commands = new CommandService();
         private DependencyMap map = new DependencyMap();
+        XmlDocument xmlParameters = new XmlDocument();
 
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
@@ -31,10 +34,16 @@ namespace CoOpBot
             client.Log += Log;
             //client.MessageReceived += MessageReceived;
 
+            xmlParameters.Load("C:\\CoOpBotParameters.xml");
+            XmlNode root = xmlParameters.DocumentElement;
+            XmlNode myNode = root.SelectSingleNode("descendant::BotToken");
+            //myNode.Value = "blabla";
+            //xmlParameters.Save("D:\\build.xml");
 
             await InstallCommands();
 
-            string token = "MzA5Nzg4NjU2MDAzMDU1NjE2.C_JsQg.OJbqgCRKN_VzA5Rxad--uzmBze8"; // Remember to keep this private!
+            //string token = "MzA5Nzg4NjU2MDAzMDU1NjE2.C_JsQg.OJbqgCRKN_VzA5Rxad--uzmBze8"; // Remember to keep this private!
+            string token = myNode.InnerText; // Remember to keep this private!
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
             
@@ -56,6 +65,7 @@ namespace CoOpBot
             map.Add(new RollModule());
             map.Add(new RolesModule());
             map.Add(new CoOpGamingModule());
+            map.Add(new GuildWarsModule());
 
             await commands.AddModulesAsync(Assembly.GetEntryAssembly());
 
