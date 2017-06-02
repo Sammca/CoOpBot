@@ -20,7 +20,12 @@ namespace CoOpBot.Modules.GuildWars
         XmlDocument xmlParameters = new XmlDocument();
         XmlNode root;
         XmlNode usersNode;
+        XmlNode guildWarsNode;
         string apiPrefix;
+        XmlNode guildIDNode;
+        XmlNode guildAccessTokenNode;
+        string guildId;
+        string guildAccessToken;
 
         public GuildWarsModule()
         {
@@ -34,7 +39,30 @@ namespace CoOpBot.Modules.GuildWars
                 usersNode = xmlParameters.CreateElement("Users");
                 root.AppendChild(usersNode);
             }
+
+            guildWarsNode = root.SelectSingleNode("descendant::GuildWars");
+
+            if (guildWarsNode == null)
+            {
+                guildWarsNode = xmlParameters.CreateElement("GuildWars");
+                root.AppendChild(guildWarsNode);
+            }
+            guildIDNode = guildWarsNode.SelectSingleNode("descendant::GuildId");
+            guildAccessTokenNode = guildWarsNode.SelectSingleNode("descendant::GuildAccessToken");
+
+            if (guildIDNode != null && guildAccessTokenNode != null)
+            {
+                guildId = guildIDNode.InnerText;
+                guildAccessToken = guildAccessTokenNode.InnerText;
+            }
+            else
+            {
+                guildId = null;
+                guildAccessToken = null;
+            }
         }
+
+        #region Commands
 
         [Command("RegisterKey")]
         [Alias("rk")]
@@ -93,71 +121,40 @@ namespace CoOpBot.Modules.GuildWars
 
         [Command("GoldCount")]
         [Alias("gc")]
-        [Summary("Finds the amount of gold your character has")]
-        private async Task GoldCountCommand()
+        [Summary("Finds the amount of gold the mentioned user has. Defaults to messgae author if no user is mentioned")]
+        private async Task GoldCountCommand(params IUser[] users)
         {
-            IEnumerator usersEnumerator = usersNode.GetEnumerator();
-            Boolean userNodeExists = false;
-            XmlElement userDetails = null;
-            XmlNode apiElement;
             string apiKey;
             string url;
             int gold, silver, copper, rawAmount;
+            Hashtable walletInfo;
+            Array apiResponse;
+            IUser user;
 
             gold = 0;
             silver = 0;
             copper = 0;
             rawAmount = 0;
 
-            while (usersEnumerator.MoveNext())
+            if (users.Length == 0)
             {
-                XmlElement curNode = usersEnumerator.Current as XmlElement;
-
-                if (curNode.GetAttribute("id") == this.Context.Message.Author.Id.ToString())
-                {
-                    userDetails = curNode;
-                    userNodeExists = true;
-                }
+                user = this.Context.Message.Author;
+            }
+            else
+            {
+                user = users.GetValue(0) as IUser;
             }
 
-            if (!userNodeExists)
-            {
-                await ReplyAsync("You do not have an API key registered with the bot");
-            }
-
-
-            apiElement = userDetails.SelectSingleNode("descendant::gwAPIKey");
-
-            if (apiElement == null)
-            {
-                await ReplyAsync("You do not have an API key registered with the bot");
-            }
-
-
-            apiKey = apiElement.InnerText;
+            apiKey = getUserAPIKey(user);
 
             url = apiPrefix + "/account/wallet?access_token=" + apiKey;
 
-            using (WebClient wc = new WebClient())
-            {
-                try
-                {
-                    var jsonResponse = wc.DownloadString(url);
+            apiResponse = getAPIResponse(url);
 
-                    ArrayList decoded = JSON.JsonDecode(jsonResponse) as ArrayList;
+            walletInfo = apiResponse.GetValue(0) as Hashtable;
 
-                    Array decodedArray = decoded.ToArray();
-                    Hashtable test = decodedArray.GetValue(0) as Hashtable;
-
-                    rawAmount = int.Parse(test["value"].ToString());
-                }
-                catch (Exception ex)
-                {
-                    await ReplyAsync("Invalid API key");
-                }
-
-            }
-
+            rawAmount = int.Parse(walletInfo["value"].ToString());
+            
             copper = rawAmount % 100;
             rawAmount -= copper;
 
@@ -167,8 +164,148 @@ namespace CoOpBot.Modules.GuildWars
             gold = rawAmount/ 10000;
 
 
-            await ReplyAsync(string.Format("You have {0}g{1}s{2}c", gold, silver, copper));
+            await ReplyAsync(string.Format("{0} has {1}g{2}s{3}c", user.Username, gold, silver, copper));
 
         }
+
+        [Command("MOTD")]
+        [Summary("Gets the guilds messgae of the day")]
+        private async Task MOTDCommand()
+        {
+            string url;
+            string motd;
+            Array apiResponse;
+            Hashtable guildInfo;
+
+            motd = "";
+
+            if (guildId == null)
+            {
+                await ReplyAsync("Guild not found in config file");
+            }
+            
+
+            url = apiPrefix + "/guild/"+guildId+"?access_token=" + guildAccessToken;
+
+
+            apiResponse = getAPIResponse(url, true);
+
+            guildInfo = apiResponse.GetValue(0) as Hashtable;
+
+            motd = guildInfo["motd"].ToString();
+            
+            await ReplyAsync(string.Format("{0}", motd));
+
+        }
+
+        [Command("GuildRanks")]
+        [Alias("Ranks", "RankList")]
+        [Summary("Lists the guilds ranks")]
+        private async Task GuildRanksCommand()
+        {
+            string url;
+            Dictionary<int, string> rankArray = new Dictionary<int, string>();
+            string output;
+            Array apiResponse;
+            Hashtable curRank;
+
+            output = "";
+            
+            if (guildId == null)
+            {
+                await ReplyAsync("Guild not found in config file");
+            }
+
+            url = apiPrefix + "/guild/" + guildId + "/ranks?access_token=" + guildAccessToken;
+            
+            apiResponse = getAPIResponse(url);
+            for (int i = 0; i < apiResponse.Length; i++)
+            {
+                curRank = apiResponse.GetValue(i) as Hashtable;
+                rankArray.Add(int.Parse(curRank["order"].ToString()), curRank["id"].ToString());
+            }
+
+            for (int i = 1; i <= rankArray.Count; i++)
+            {
+                output += rankArray[i] + "\r\n";
+            }
+
+            await ReplyAsync(string.Format("{0}", output));
+
+        }
+        #endregion
+
+        #region Functions
+
+        private Array getAPIResponse(string url, Boolean addSquareBrackets = false)
+        {
+            using (WebClient wc = new WebClient())
+            {
+                try
+                {
+                    var jsonResponse = wc.DownloadString(url);
+
+                    if (addSquareBrackets)
+                    {
+                        jsonResponse = "[" + jsonResponse + "]";
+                    }
+
+                    ArrayList decoded = JSON.JsonDecode(jsonResponse) as ArrayList;
+
+                    Array decodedArray = decoded.ToArray();
+
+                    return decodedArray;
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+
+            }
+
+            return null;
+        }
+
+        private string getUserAPIKey(IUser user)
+        {
+            IEnumerator usersEnumerator = usersNode.GetEnumerator();
+            string apiKey;
+            Boolean userNodeExists = false;
+            XmlElement userDetails = null;
+            XmlNode apiElement;
+
+            while (usersEnumerator.MoveNext())
+            {
+                XmlElement curNode = usersEnumerator.Current as XmlElement;
+
+                if (curNode.GetAttribute("id") == user.Id.ToString())
+                {
+                    userDetails = curNode;
+                    userNodeExists = true;
+                }
+            }
+
+            if (!userNodeExists)
+            {
+                throw new Exception(string.Format("API key not found for {0}",user.Username));
+            }
+
+
+            apiElement = userDetails.SelectSingleNode("descendant::gwAPIKey");
+
+            if (apiElement == null)
+            {
+                throw new Exception(string.Format("API key not found for {0}", user.Username));
+            }
+
+
+            apiKey = apiElement.InnerText;
+
+            return apiKey;
+        }
+
+        #endregion
+
     }
 }
