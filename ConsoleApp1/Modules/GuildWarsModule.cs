@@ -146,7 +146,7 @@ namespace CoOpBot.Modules.GuildWars
 
         [Command("GoldCount")]
         [Alias("gc")]
-        [Summary("Finds the amount of gold the mentioned user has. Defaults to messgae author if no user is mentioned")]
+        [Summary("Finds the amount of gold the mentioned user has. Defaults to message author if no user is mentioned")]
         private async Task GoldCountCommand(params IUser[] users)
         {
             string apiKey;
@@ -230,9 +230,11 @@ namespace CoOpBot.Modules.GuildWars
         {
             string url;
             Dictionary<int, string> rankArray = new Dictionary<int, string>();
+            Dictionary<string, string> rankMembersArray = new Dictionary<string, string>();
             string output;
             Array apiResponse;
             Hashtable curRank;
+            Hashtable guildMember;
 
             output = "";
             
@@ -250,13 +252,67 @@ namespace CoOpBot.Modules.GuildWars
                 rankArray.Add(int.Parse(curRank["order"].ToString()), curRank["id"].ToString());
             }
 
+            url = apiPrefix + "/guild/" + guildId + "/members?access_token=" + guildAccessToken;
+
+            apiResponse = getAPIResponse(url);
+            for (int i = 0; i < apiResponse.Length; i++)
+            {
+                guildMember = apiResponse.GetValue(i) as Hashtable;
+                if (!rankMembersArray.ContainsKey(guildMember["rank"].ToString()))
+                {
+                    rankMembersArray.Add(guildMember["rank"].ToString(), guildMember["name"].ToString());
+                }
+                else
+                {
+                    rankMembersArray[guildMember["rank"].ToString()] += ", " + guildMember["name"].ToString();
+                }
+            }
+
             for (int i = 1; i <= rankArray.Count; i++)
             {
-                output += rankArray[i] + "\r\n";
+                if (rankMembersArray.ContainsKey(rankArray[i]))
+                {
+                    output += "**" + rankArray[i] + " (" + rankMembersArray[rankArray[i]].Split(',').Length + ")**\r\n";
+                    output += "*" + rankMembersArray[rankArray[i]] + "*\r\n";
+                }
+                else
+                {
+                    output += "**" + rankArray[i] + "**\r\n";
+                }
             }
 
             await ReplyAsync(string.Format("{0}", output));
+        }
 
+
+        [Command("Username")]
+        [Alias("un")]
+        [Summary("Finds the username of the mentioned user. Defaults to message author if no user is mentioned")]
+        private async Task UsernameCommand(params IUser[] users)
+        {
+            string apiKey;
+            string url;
+            Hashtable accountInfo;
+            Array apiResponse;
+            IUser user;
+            string gw2Username;
+
+            if (users.Length == 0)
+            {
+                user = this.Context.Message.Author;
+            }
+            else
+            {
+                user = users.GetValue(0) as IUser;
+            }
+
+            apiKey = getUserAPIKey(user);
+            url = apiPrefix + "/account?access_token=" + apiKey;
+            apiResponse = getAPIResponse(url, true);
+            accountInfo = apiResponse.GetValue(0) as Hashtable;
+            gw2Username = accountInfo["name"].ToString();
+            
+            await ReplyAsync(string.Format("{0}'s GW2 usernme is {1}", user.Username, gw2Username));
         }
         #endregion
 
@@ -276,19 +332,14 @@ namespace CoOpBot.Modules.GuildWars
                     }
 
                     ArrayList decoded = JSON.JsonDecode(jsonResponse) as ArrayList;
-
                     Array decodedArray = decoded.ToArray();
-
                     return decodedArray;
-
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
                 }
-
             }
-
             return null;
         }
 
@@ -315,18 +366,15 @@ namespace CoOpBot.Modules.GuildWars
             {
                 throw new Exception(string.Format("API key not found for {0}",user.Username));
             }
-
-
+            
             apiElement = userDetails.SelectSingleNode("descendant::gwAPIKey");
 
             if (apiElement == null)
             {
                 throw new Exception(string.Format("API key not found for {0}", user.Username));
             }
-
-
+            
             apiKey = apiElement.InnerText;
-
             return apiKey;
         }
 
