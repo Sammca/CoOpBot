@@ -276,7 +276,7 @@ namespace CoOpBot.Modules.GuildWars
                 }
                 else
                 {
-                    output += "**" + rankArray[i] + " (0)**\r\n\r\n";
+                    output += "**" + rankArray[i] + "**\r\n";
                 }
             }
 
@@ -330,6 +330,8 @@ namespace CoOpBot.Modules.GuildWars
             int rank = 1;
 
             output = "";
+
+            itemValueArray.Add(0, 1);
 
             if (guildId == null)
             {
@@ -393,11 +395,25 @@ namespace CoOpBot.Modules.GuildWars
 
                         if (!itemDictionaryElemet.ContainsKey(int.Parse(curTransaction["item_id"].ToString())))
                         {
-                            itemDictionaryElemet.Add(int.Parse(curTransaction["item_id"].ToString()), directionMultiplier * int.Parse(curTransaction["count"].ToString()));
+                            if (int.Parse(curTransaction["item_id"].ToString()) == 0)
+                            {
+                                itemDictionaryElemet.Add(int.Parse(curTransaction["item_id"].ToString()), directionMultiplier * int.Parse(curTransaction["coins"].ToString()));
+                            }
+                            else
+                            {
+                                itemDictionaryElemet.Add(int.Parse(curTransaction["item_id"].ToString()), directionMultiplier * int.Parse(curTransaction["count"].ToString()));
+                            }
                         }
                         else
                         {
-                            itemDictionaryElemet[int.Parse(curTransaction["item_id"].ToString())] += (directionMultiplier * int.Parse(curTransaction["count"].ToString()));
+                            if (int.Parse(curTransaction["item_id"].ToString()) == 0)
+                            {
+                                itemDictionaryElemet[int.Parse(curTransaction["item_id"].ToString())] += (directionMultiplier * int.Parse(curTransaction["coins"].ToString()));
+                            }
+                            else
+                            {
+                                itemDictionaryElemet[int.Parse(curTransaction["item_id"].ToString())] += (directionMultiplier * int.Parse(curTransaction["count"].ToString()));
+                            }
                         }
 
                         userDonatedItems[curTransaction["user"].ToString()] = itemDictionaryElemet;
@@ -566,5 +582,5 @@ namespace CoOpBot.Modules.GuildWars
 
         #endregion
 
-    };
-};
+    }
+}
