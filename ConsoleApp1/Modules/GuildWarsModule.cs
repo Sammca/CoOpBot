@@ -86,18 +86,18 @@ namespace CoOpBot.Modules.GuildWars
                     userNodeExists = true;
                 }
 
-                
+
             }
 
             if (!userNodeExists)
             {
                 XmlElement newUserNode;
-                    
+
                 newUserNode = xmlParameters.CreateElement("User");
                 newUserNode.SetAttribute("id", this.Context.Message.Author.Id.ToString());
 
                 userDetails = usersNode.AppendChild(newUserNode) as XmlElement;
-                    
+
             }
 
             XmlNode apiElement;
@@ -115,12 +115,34 @@ namespace CoOpBot.Modules.GuildWars
                 apiElement.InnerText = key;
             }
 
-            xmlParameters.Save("C:\\CoOpBotParameters.xml");
+            xmlParameters.Save(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml");
 
             await ReplyAsync("Your API key has been updated");
-
         }
 
+        [Command("RegisterGuild")]
+        [Summary("Registers the guild ID with the bot")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        private async Task RegisterGuildCommand(string gid, string gat)
+        {
+            IEnumerator gwEnumerator = guildWarsNode.GetEnumerator();
+
+            if (guildIDNode == null && guildAccessTokenNode == null)
+            {
+                guildIDNode = xmlParameters.CreateElement("GuildId");
+                guildAccessTokenNode = xmlParameters.CreateElement("GuildAccessToken");
+
+                guildWarsNode.AppendChild(guildIDNode);
+                guildWarsNode.AppendChild(guildAccessTokenNode);
+            }
+
+            guildIDNode.InnerText = gid;
+            guildAccessTokenNode.InnerText = gat;
+
+            xmlParameters.Save(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml");
+
+            await ReplyAsync("Guild API key has been updated");
+        }
 
         [Command("GoldCount")]
         [Alias("gc")]
