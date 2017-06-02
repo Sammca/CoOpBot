@@ -31,7 +31,6 @@ namespace CoOpBot.Modules.GuildWars
         public GuildWarsModule()
         {
             apiPrefix = "https://api.guildwars2.com/v2";
-            //xmlParameters.Load("C:\\CoOpBotParameters.xml");
 
             xmlParameters.Load(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml");
             root = xmlParameters.DocumentElement;
@@ -404,11 +403,8 @@ namespace CoOpBot.Modules.GuildWars
                         userDonatedItems[curTransaction["user"].ToString()] = itemDictionaryElemet;
                     }
                 }
-                // TODO Stash deposits and withdrals
             }
-
-
-
+            
             foreach (KeyValuePair<string, Dictionary<int, int>> entry in userDonatedItems)
             {
                 Dictionary<int, int> memberDonationArray = new Dictionary<int, int>();
