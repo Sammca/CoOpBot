@@ -82,7 +82,7 @@ namespace CoOpBot
             SocketUserMessage message = messageParam as SocketUserMessage;
             if (message == null) return;
 
-            
+
 
 
             //RegisterAntiSpamFunctionality();
@@ -106,19 +106,19 @@ namespace CoOpBot
             // Execute the command. (result does not indicate a return value, 
             // rather an object stating if the command executed succesfully)
             var result = await commands.ExecuteAsync(context, argPos, map);
-            
+
             // Uncomment the following lines if you want the bot
             // to send a message if it failed (not advised for most situations).
             if (!result.IsSuccess && result.Error != CommandError.UnknownCommand)
                 await context.Channel.SendMessageAsync(result.ErrorReason);
         }
-        
+
         /************************************************
          * 
          * Bot admin functions
          * 
         ************************************************/
-        
+
         /*private void RegisterAntiSpamFunctionality()
         {
             client.MessageReceived += async (message) =>
@@ -329,5 +329,5 @@ namespace CoOpBot
             Console.WriteLine(msg.ToString());
             return Task.CompletedTask;
         }
-    }
-}
+    };
+};

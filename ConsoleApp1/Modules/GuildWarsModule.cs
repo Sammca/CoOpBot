@@ -276,7 +276,7 @@ namespace CoOpBot.Modules.GuildWars
                 }
                 else
                 {
-                    output += "**" + rankArray[i] + "**\r\n";
+                    output += "**" + rankArray[i] + " (0)**\r\n\r\n";
                 }
             }
 
@@ -566,5 +566,5 @@ namespace CoOpBot.Modules.GuildWars
 
         #endregion
 
-    }
-}
+    };
+};

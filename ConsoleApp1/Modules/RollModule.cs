@@ -150,6 +150,6 @@ namespace CoOpBot.Modules.Roll
             
             return totalRoll;
         }
-    }
-}
+    };
+};
 

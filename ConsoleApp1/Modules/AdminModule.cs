@@ -47,7 +47,7 @@ namespace CoOpBot.Modules.Admin
                 await Task.Delay(8000).ContinueWith(t => CountMessage(messageSender, -1));
             }
         }*/
-    }
+    };
     
     public class RolesModule : ModuleBase
     {
@@ -370,6 +370,6 @@ namespace CoOpBot.Modules.Admin
         }
 
         #endregion
-    }
-}
+    };
+};
 

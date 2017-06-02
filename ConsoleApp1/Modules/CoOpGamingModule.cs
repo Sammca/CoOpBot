@@ -176,6 +176,6 @@ namespace CoOpBot.Modules.CoOpGaming
         #region Functions
         
         #endregion
-    }
-}
+    };
+};
 

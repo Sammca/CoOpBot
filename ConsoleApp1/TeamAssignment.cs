@@ -7,5 +7,5 @@ namespace CoOpBot
     {
         public IUser user { get; set; }
         public int teamNumber { get; set; }
-    }
-}
+    };
+};
