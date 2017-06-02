@@ -314,6 +314,196 @@ namespace CoOpBot.Modules.GuildWars
             
             await ReplyAsync(string.Format("{0}'s GW2 usernme is {1}", user.Username, gw2Username));
         }
+
+        [Command("Donations")]
+        [Summary("Computes the cost of guild donations per person")]
+        private async Task DonationsCommand()
+        {
+            string url;
+            Dictionary<string, int> donationValueArray = new Dictionary<string, int>();
+            Dictionary<int, int> itemValueArray = new Dictionary<int, int>();
+            string output;
+            Array apiResponse;
+            Hashtable curTransaction;
+            Hashtable itemPrices;
+            Hashtable guildMember;
+            Dictionary<string, Dictionary<int, int>> userDonatedItems = new Dictionary<string, Dictionary<int, int>>();
+            int rank = 1;
+
+            output = "";
+
+            if (guildId == null)
+            {
+                await ReplyAsync("Guild not found in config file");
+            }
+
+            url = apiPrefix + "/guild/" + guildId + "/log?access_token=" + guildAccessToken;
+
+            apiResponse = getAPIResponse(url);
+            for (int i = 0; i < apiResponse.Length; i++)
+            {
+                curTransaction = apiResponse.GetValue(i) as Hashtable;
+
+                if (curTransaction["type"].ToString() == "treasury")
+                {
+                    if (!userDonatedItems.ContainsKey(curTransaction["user"].ToString()))
+                    {
+                        Dictionary<int, int> itemDictionaryElemet = new Dictionary<int, int>();
+                        itemDictionaryElemet.Add(int.Parse(curTransaction["item_id"].ToString()), int.Parse(curTransaction["count"].ToString()));
+
+                        userDonatedItems.Add(curTransaction["user"].ToString(), itemDictionaryElemet);
+                    }
+                    else
+                    {
+                        Dictionary<int, int> itemDictionaryElemet = new Dictionary<int, int>();
+
+                        itemDictionaryElemet = userDonatedItems[curTransaction["user"].ToString()];
+
+
+                        if (!itemDictionaryElemet.ContainsKey(int.Parse(curTransaction["item_id"].ToString())))
+                        {
+                            itemDictionaryElemet.Add(int.Parse(curTransaction["item_id"].ToString()), int.Parse(curTransaction["count"].ToString()));
+                        }
+                        else
+                        {
+                            itemDictionaryElemet[int.Parse(curTransaction["item_id"].ToString())] += int.Parse(curTransaction["count"].ToString());
+                        }
+
+                        userDonatedItems[curTransaction["user"].ToString()] = itemDictionaryElemet;
+                    }
+                }
+                if (curTransaction["type"].ToString() == "stash")
+                {
+                    int directionMultiplier;
+
+                    directionMultiplier = curTransaction["operation"].ToString() == "deposit" ? 1 : -1;
+
+                    if (!userDonatedItems.ContainsKey(curTransaction["user"].ToString()))
+                    {
+                        Dictionary<int, int> itemDictionaryElemet = new Dictionary<int, int>();
+                        itemDictionaryElemet.Add(int.Parse(curTransaction["item_id"].ToString()), directionMultiplier * int.Parse(curTransaction["count"].ToString()));
+
+                        userDonatedItems.Add(curTransaction["user"].ToString(), itemDictionaryElemet);
+                    }
+                    else
+                    {
+                        Dictionary<int, int> itemDictionaryElemet = new Dictionary<int, int>();
+
+                        itemDictionaryElemet = userDonatedItems[curTransaction["user"].ToString()];
+
+
+                        if (!itemDictionaryElemet.ContainsKey(int.Parse(curTransaction["item_id"].ToString())))
+                        {
+                            itemDictionaryElemet.Add(int.Parse(curTransaction["item_id"].ToString()), directionMultiplier * int.Parse(curTransaction["count"].ToString()));
+                        }
+                        else
+                        {
+                            itemDictionaryElemet[int.Parse(curTransaction["item_id"].ToString())] += (directionMultiplier * int.Parse(curTransaction["count"].ToString()));
+                        }
+
+                        userDonatedItems[curTransaction["user"].ToString()] = itemDictionaryElemet;
+                    }
+                }
+                // TODO Stash deposits and withdrals
+            }
+
+
+
+            foreach (KeyValuePair<string, Dictionary<int, int>> entry in userDonatedItems)
+            {
+                Dictionary<int, int> memberDonationArray = new Dictionary<int, int>();
+                string curGuildMember;
+
+                curGuildMember = entry.Key;
+                memberDonationArray = entry.Value;
+
+                foreach (KeyValuePair<int, int> donationItemEntry in memberDonationArray)
+                {
+                    int curItem;
+                    int donationCount;
+                    int itemValue;
+                    Hashtable buyInfo;
+
+                    itemValue = 0;
+
+                    curItem = donationItemEntry.Key;
+                    donationCount = donationItemEntry.Value;
+
+                    if (itemValueArray.ContainsKey(curItem))
+                    {
+                        itemValue = itemValueArray[curItem];
+                    }
+                    else
+                    {
+                        url = apiPrefix + "/commerce/prices?id=" + curItem;
+
+                        try
+                        {
+                            apiResponse = getAPIResponse(url, true);
+
+                            itemPrices = apiResponse.GetValue(0) as Hashtable;
+
+                            buyInfo = itemPrices["buys"] as Hashtable;
+
+                            itemValue = int.Parse(buyInfo["unit_price"].ToString());
+                        }
+                        catch
+                        {
+                            itemValue = 0;
+                        }
+                        itemValueArray.Add(curItem, itemValue);
+                    }
+
+                    if (!donationValueArray.ContainsKey(curGuildMember))
+                    {
+                        donationValueArray.Add(curGuildMember, (itemValue * donationCount));
+                    }
+                    else
+                    {
+                        donationValueArray[curGuildMember] += (itemValue * donationCount);
+                    }
+                }
+            }
+
+            var sortedDict = from entry in donationValueArray orderby entry.Value descending select entry;
+
+            Dictionary<string, int> donationValueOrdered = sortedDict.ToDictionary(pair => pair.Key, pair => pair.Value);
+
+            foreach (KeyValuePair<string, int> entry in donationValueOrdered)
+            {
+                int gold, silver, copper, rawAmount;
+
+                rawAmount = entry.Value;
+
+                copper = rawAmount % 100;
+                rawAmount -= copper;
+
+                silver = (rawAmount % 10000) / 100;
+                rawAmount -= (silver * 100);
+
+                gold = rawAmount / 10000;
+
+                if (rank <= 3)
+                {
+                    output += string.Format("**{0}. {1}: {2}g{3}s{4}c** \r\n", rank, entry.Key, gold, silver, copper);
+                }
+                else
+                {
+                    if (rawAmount < 0)
+                    {
+                        output += string.Format("*{0}. {1}: {2}g{3}s{4}c* \r\n", rank, entry.Key, gold, silver, copper);
+                    }
+                    else
+                    {
+                        output += string.Format("{0}. {1}: {2}g{3}s{4}c \r\n", rank, entry.Key, gold, silver, copper);
+                    }
+                }
+                rank++;
+            }
+
+            await ReplyAsync(output);
+        }
+
         #endregion
 
         #region Functions
