@@ -10,6 +10,7 @@ using CoOpBot.Modules.Admin;
 using CoOpBot.Modules.CoOpGaming;
 using CoOpBot.Modules.GuildWars;
 using System.Xml;
+using System.IO;
 
 namespace CoOpBot
 {
@@ -34,7 +35,9 @@ namespace CoOpBot
             client.Log += Log;
             //client.MessageReceived += MessageReceived;
 
-            xmlParameters.Load("C:\\CoOpBotParameters.xml");
+            //xmlParameters.Load("C:\\CoOpBotParameters.xml");
+
+            xmlParameters.Load(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml");
             XmlNode root = xmlParameters.DocumentElement;
             XmlNode myNode = root.SelectSingleNode("descendant::BotToken");
             //myNode.Value = "blabla";

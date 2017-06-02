@@ -10,7 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using Procurios.Public;
-
+using System.Reflection;
+using System.IO;
 
 namespace CoOpBot.Modules.GuildWars
 {
@@ -30,7 +31,9 @@ namespace CoOpBot.Modules.GuildWars
         public GuildWarsModule()
         {
             apiPrefix = "https://api.guildwars2.com/v2";
-            xmlParameters.Load("C:\\CoOpBotParameters.xml");
+            //xmlParameters.Load("C:\\CoOpBotParameters.xml");
+
+            xmlParameters.Load(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml");
             root = xmlParameters.DocumentElement;
             usersNode = root.SelectSingleNode("descendant::Users");
 
