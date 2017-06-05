@@ -112,6 +112,7 @@ namespace CoOpBot
             if (!result.IsSuccess && result.Error != CommandError.UnknownCommand)
             {
                 await context.Channel.SendMessageAsync(result.ErrorReason);
+                return;
             }
         }
 
