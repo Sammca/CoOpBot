@@ -382,8 +382,16 @@ namespace CoOpBot.Modules.GuildWars
                     if (!userDonatedItems.ContainsKey(curTransaction["user"].ToString()))
                     {
                         Dictionary<int, int> itemDictionaryElemet = new Dictionary<int, int>();
-                        itemDictionaryElemet.Add(int.Parse(curTransaction["item_id"].ToString()), directionMultiplier * int.Parse(curTransaction["count"].ToString()));
 
+
+                        if (int.Parse(curTransaction["item_id"].ToString()) == 0)
+                        {
+                            itemDictionaryElemet.Add(int.Parse(curTransaction["item_id"].ToString()), directionMultiplier * int.Parse(curTransaction["coins"].ToString()));
+                        }
+                        else
+                        {
+                            itemDictionaryElemet.Add(int.Parse(curTransaction["item_id"].ToString()), directionMultiplier * int.Parse(curTransaction["count"].ToString()));
+                        }
                         userDonatedItems.Add(curTransaction["user"].ToString(), itemDictionaryElemet);
                     }
                     else
