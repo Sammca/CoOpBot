@@ -108,8 +108,11 @@ namespace CoOpBot
 
             // Uncomment the following lines if you want the bot
             // to send a message if it failed (not advised for most situations).
+
             if (!result.IsSuccess && result.Error != CommandError.UnknownCommand)
+            {
                 await context.Channel.SendMessageAsync(result.ErrorReason);
+            }
         }
 
         /************************************************
