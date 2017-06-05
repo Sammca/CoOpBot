@@ -81,13 +81,7 @@ namespace CoOpBot
             SocketUserMessage message = messageParam as SocketUserMessage;
             if (message == null) return;
 
-
-
-
             //RegisterAntiSpamFunctionality();
-
-
-
 
             // Create a number to track where the prefix ends and the command begins
             int argPos = 0;
@@ -112,8 +106,8 @@ namespace CoOpBot
             if (!result.IsSuccess && result.Error != CommandError.UnknownCommand)
             {
                 await context.Channel.SendMessageAsync(result.ErrorReason);
-                return;
             }
+            return;
         }
 
         /************************************************
