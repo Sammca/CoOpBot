@@ -22,8 +22,7 @@ namespace CoOpBot
         private DependencyMap map = new DependencyMap();
         XmlDocument xmlParameters = new XmlDocument();
 
-        public static void Main(string[] args)
-            => new Program().MainAsync().GetAwaiter().GetResult();
+        public static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();
         
         char prefixCharacter = '!';
         NameValueCollection userRecentMessageCounter = new NameValueCollection();
