@@ -16,6 +16,7 @@ using System.IO;
 namespace CoOpBot.Modules.GuildWars
 {
     [Group("gw")]
+    [Name("Guild Wars 2")]
     public class GuildWarsModule : ModuleBase
     {
         XmlDocument xmlParameters = new XmlDocument();
