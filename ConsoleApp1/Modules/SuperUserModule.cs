@@ -56,6 +56,24 @@ namespace CoOpBot.Modules
             }
         }
 
+        [Command("ShutDown")]
+        [Alias("TurnOff")]
+        [Summary("Turns the bot off.")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        private async Task ShutDownCommand()
+        {
+            try
+            {
+                await ReplyAsync("Shutting down");
+
+                Environment.Exit(0);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
         #endregion
     };
 };
