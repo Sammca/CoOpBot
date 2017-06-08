@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 namespace CoOpBot.Modules.CoOpGaming
 {
 
+    [Name("Co-op")]
     public class CoOpGamingModule : ModuleBase
     {
 

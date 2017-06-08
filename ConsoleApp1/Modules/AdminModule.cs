@@ -48,7 +48,8 @@ namespace CoOpBot.Modules.Admin
             }
         }*/
     };
-    
+
+    [Name("Admin")]
     public class RolesModule : ModuleBase
     {
 
@@ -72,7 +73,7 @@ namespace CoOpBot.Modules.Admin
 
         [Command("RemoveRole")]
         [Alias("RemoveMe", "rr")]
-        [Summary("Removes the user(s) to the requested Role.")]
+        [Summary("Removes the user(s) from the requested Role.")]
         [RequireUserPermission(GuildPermission.ManageRoles)]
         private async Task RemoveRoleCommand(string RoleName, params IUser[] users)
         {
@@ -86,7 +87,7 @@ namespace CoOpBot.Modules.Admin
             }
         }
 
-        [Command("DeleteRole")]
+        [Command("DeleteRoll")]
         [Alias("dr")]
         [Summary("Deletes a Role.")]
         [RequireUserPermission(GuildPermission.ManageRoles)]

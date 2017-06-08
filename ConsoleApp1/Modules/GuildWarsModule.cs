@@ -16,6 +16,7 @@ using System.IO;
 namespace CoOpBot.Modules.GuildWars
 {
     [Group("gw")]
+    [Name("Guild Wars 2")]
     public class GuildWarsModule : ModuleBase
     {
         XmlDocument xmlParameters = new XmlDocument();
@@ -27,6 +28,7 @@ namespace CoOpBot.Modules.GuildWars
         XmlNode guildAccessTokenNode;
         string guildId;
         string guildAccessToken;
+        XmlNode accountBoundItemsNode;
 
         public GuildWarsModule()
         {
@@ -34,6 +36,8 @@ namespace CoOpBot.Modules.GuildWars
 
             xmlParameters.Load(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml");
             root = xmlParameters.DocumentElement;
+
+            // Users
             usersNode = root.SelectSingleNode("descendant::Users");
 
             if (usersNode == null)
@@ -42,6 +46,7 @@ namespace CoOpBot.Modules.GuildWars
                 root.AppendChild(usersNode);
             }
 
+            // GW specific settings
             guildWarsNode = root.SelectSingleNode("descendant::GuildWars");
 
             if (guildWarsNode == null)
@@ -61,6 +66,14 @@ namespace CoOpBot.Modules.GuildWars
             {
                 guildId = null;
                 guildAccessToken = null;
+            }
+            
+            // GW non tradeable items
+            accountBoundItemsNode = guildWarsNode.SelectSingleNode("descendant::AccountBoundItems");
+            if (accountBoundItemsNode == null)
+            {
+                accountBoundItemsNode = xmlParameters.CreateElement("AccountBoundItems");
+                guildWarsNode.AppendChild(accountBoundItemsNode);
             }
         }
 
@@ -282,8 +295,7 @@ namespace CoOpBot.Modules.GuildWars
 
             await ReplyAsync(string.Format("{0}", output));
         }
-
-
+        
         [Command("Username")]
         [Alias("un")]
         [Summary("Finds the username of the mentioned user. Defaults to message author if no user is mentioned")]
@@ -325,7 +337,6 @@ namespace CoOpBot.Modules.GuildWars
             Array apiResponse;
             Hashtable curTransaction;
             Hashtable itemPrices;
-            Hashtable guildMember;
             Dictionary<string, Dictionary<int, int>> userDonatedItems = new Dictionary<string, Dictionary<int, int>>();
             int rank = 1;
 
@@ -455,21 +466,44 @@ namespace CoOpBot.Modules.GuildWars
                     }
                     else
                     {
-                        url = apiPrefix + "/commerce/prices?id=" + curItem;
-
-                        try
-                        {
-                            apiResponse = getAPIResponse(url, true);
-
-                            itemPrices = apiResponse.GetValue(0) as Hashtable;
-
-                            buyInfo = itemPrices["buys"] as Hashtable;
-
-                            itemValue = int.Parse(buyInfo["unit_price"].ToString());
-                        }
-                        catch
+                        if (isItemAccountBount(curItem))
                         {
                             itemValue = 0;
+                        }
+                        else
+                        {
+                            url = apiPrefix + "/commerce/prices?id=" + curItem;
+
+                            try
+                            {
+                                apiResponse = getAPIResponse(url, true);
+
+                                itemPrices = apiResponse.GetValue(0) as Hashtable;
+
+                                buyInfo = itemPrices["buys"] as Hashtable;
+
+                                itemValue = int.Parse(buyInfo["unit_price"].ToString());
+                            }
+                            catch
+                            {
+                                XmlElement newAccountBoundItemNode;
+                                Hashtable itemDetails;
+                                
+                                url = apiPrefix + "/items?id=" + curItem;
+                                apiResponse = getAPIResponse(url, true);
+
+                                itemDetails = apiResponse.GetValue(0) as Hashtable;
+
+                                newAccountBoundItemNode = xmlParameters.CreateElement("Item");
+                                newAccountBoundItemNode.SetAttribute("id", $"{curItem}");
+                                newAccountBoundItemNode.InnerText = itemDetails["name"].ToString();
+
+                                newAccountBoundItemNode = accountBoundItemsNode.AppendChild(newAccountBoundItemNode) as XmlElement;
+
+                                xmlParameters.Save(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml");
+
+                                itemValue = 0;
+                            }
                         }
                         itemValueArray.Add(curItem, itemValue);
                     }
@@ -574,18 +608,36 @@ namespace CoOpBot.Modules.GuildWars
 
             if (!userNodeExists)
             {
-                throw new Exception(string.Format("API key not found for {0}",user.Username));
+                throw new Exception(string.Format("API key not found for {0}", user.Username));
             }
-            
+
             apiElement = userDetails.SelectSingleNode("descendant::gwAPIKey");
 
             if (apiElement == null)
             {
                 throw new Exception(string.Format("API key not found for {0}", user.Username));
             }
-            
+
             apiKey = apiElement.InnerText;
             return apiKey;
+        }
+
+        private Boolean isItemAccountBount(int itemId)
+        {
+            IEnumerator accountBoundItemsEnumerator = accountBoundItemsNode.GetEnumerator();
+            Boolean itemNodeExists = false;
+
+            while (accountBoundItemsEnumerator.MoveNext())
+            {
+                XmlElement curNode = accountBoundItemsEnumerator.Current as XmlElement;
+
+                if (int.Parse(curNode.GetAttribute("id")) == itemId)
+                {
+                    itemNodeExists = true;
+                }
+            }
+
+            return itemNodeExists;
         }
 
         #endregion

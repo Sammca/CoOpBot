@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 namespace CoOpBot.Modules.Roll
 {
+    [Name("Dice rolls")]
     public class RollModule : ModuleBase
     {
         Random rng;
@@ -14,7 +15,7 @@ namespace CoOpBot.Modules.Roll
             rng = new Random();
         }
 
-        [Command("roll")]
+        [Command("Roll")]
         [Summary("Rolls a specified number of dice, with a specified number of sides. Time to Die.")]
         public async Task roll(string diceModifier = "", bool outputEachRoll = false)
         {
