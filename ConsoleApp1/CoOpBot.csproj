@@ -173,6 +173,7 @@
     <Compile Include="FileLocations.cs" />
     <Compile Include="JSON.cs" />
     <Compile Include="Modules\AdminModule.cs" />
+    <Compile Include="Modules\SteamModule.cs" />
     <Compile Include="Modules\CoOpGamingModule.cs" />
     <Compile Include="Modules\DevModule.cs" />
     <Compile Include="Modules\GuildWarsModule.cs" />

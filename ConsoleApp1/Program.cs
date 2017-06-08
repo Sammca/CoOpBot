@@ -9,6 +9,7 @@ using CoOpBot.Modules.Roll;
 using CoOpBot.Modules.Admin;
 using CoOpBot.Modules.CoOpGaming;
 using CoOpBot.Modules.GuildWars;
+using CoOpBot.Modules.Steam;
 using System.Xml;
 using System.IO;
 
@@ -75,6 +76,7 @@ namespace CoOpBot
             map.Add(new RolesModule());
             map.Add(new CoOpGamingModule());
             map.Add(new GuildWarsModule());
+            map.Add(new SteamModule());
 
             await commands.AddModulesAsync(Assembly.GetEntryAssembly());
 
