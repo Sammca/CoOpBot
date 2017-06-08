@@ -172,6 +172,7 @@
   <ItemGroup>
     <Compile Include="JSON.cs" />
     <Compile Include="Modules\AdminModule.cs" />
+    <Compile Include="Modules\SteamModule.cs" />
     <Compile Include="Modules\CoOpGamingModule.cs" />
     <Compile Include="Modules\GuildWarsModule.cs" />
     <Compile Include="Modules\RollModule.cs" />
