@@ -36,32 +36,21 @@ namespace CoOpBot.Modules.Steam
             steamKey = steamKeyNode.InnerText;
 
 
+            usersNode = root.SelectSingleNode("descendant::Users");
+
             if (usersNode == null)
             {
                 usersNode = xmlParameters.CreateElement("Users");
                 root.AppendChild(usersNode);
             }
 
-            /*guildWarsNode = root.SelectSingleNode("descendant::GuildWars");
-
-            if (guildWarsNode == null)
+            steamKeyNode = root.SelectSingleNode("SteamToken");
+            if (steamKeyNode == null)
             {
-                guildWarsNode = xmlParameters.CreateElement("GuildWars");
-                root.AppendChild(guildWarsNode);
+                steamKeyNode = xmlParameters.CreateElement("SteamToken");
+                root.AppendChild(steamKeyNode);
             }
-            guildIDNode = guildWarsNode.SelectSingleNode("descendant::GuildId");
-            guildAccessTokenNode = guildWarsNode.SelectSingleNode("descendant::GuildAccessToken");
-
-            if (guildIDNode != null && guildAccessTokenNode != null)
-            {
-                guildId = guildIDNode.InnerText;
-                guildAccessToken = guildAccessTokenNode.InnerText;
-            }
-            else
-            {
-                guildId = null;
-                guildAccessToken = null;
-            }*/
+            steamKey = steamKeyNode.InnerText;
         }
 
         [Command("key")]
@@ -130,7 +119,7 @@ namespace CoOpBot.Modules.Steam
         [Summary("Shows which members have a game")]
         private async Task RegisterhasgameCommand(string appid)
         {
-            string url = apiPrefix + "/IPlayerService/GetOwnedGames/v1/?key=" + steamKey + "&steamid =";
+            string url = apiPrefix + "/IPlayerService/GetOwnedGames/v1/?key=" + steamKey + "&steamid=";
             IEnumerator usersEnumerator = usersNode.GetEnumerator();
             //Boolean userNodeExists = false;
             XmlElement userDetails = null;
@@ -138,18 +127,31 @@ namespace CoOpBot.Modules.Steam
             while (usersEnumerator.MoveNext())
             {
                 XmlElement curNode = usersEnumerator.Current as XmlElement;
+                //Console.WriteLine(curNode.SelectSingleNode("descendant::steamID").InnerText.Length);
 
-                if (curNode.SelectSingleNode("descendant::steamID").InnerText.Length > 0)
+                if (curNode.SelectSingleNode("descendant::steamID") != null)
                 {
+                    Array apiResponse;
+                    Hashtable gameInfo;
+                    string game;
+                    //Console.WriteLine(curNode.SelectSingleNode("descendant::steamID").InnerText);
                     userDetails = curNode;
-                    Array result = getAPIResponse(url + userDetails.SelectSingleNode("descendant::steamID").InnerText);
-                    Console.WriteLine(result);
+                    Console.WriteLine(url + userDetails.SelectSingleNode("descendant::steamID").InnerText);
+                    apiResponse = getAPIResponse(url + userDetails.SelectSingleNode("descendant::steamID").InnerText,true);
+                    //Hashtable Data = result.GetValue(0) as Hashtable;
+                    //Hashtable newVar = result.GetValue(0) as Hashtable;
+                    gameInfo = apiResponse.GetValue(0) as Hashtable;
+
+                    game = gameInfo["response"].ToString();
+
+                    await ReplyAsync(game);
+
                 }
 
 
             }
 
-            await ReplyAsync(steamKey); return;
+            await ReplyAsync(url + userDetails.SelectSingleNode("descendant::steamID").InnerText); return;
         }
 
         private Array getAPIResponse(string url, Boolean addSquareBrackets = false)
@@ -164,8 +166,10 @@ namespace CoOpBot.Modules.Steam
                     {
                         jsonResponse = "[" + jsonResponse + "]";
                     }
+                   // Console.WriteLine(jsonResponse);
 
                     ArrayList decoded = JSON.JsonDecode(jsonResponse) as ArrayList;
+                    //Console.WriteLine(decoded);
                     Array decodedArray = decoded.ToArray();
                     return decodedArray;
                 }
