@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<CoOpBotParameters>
+  <BotToken>MzEwMTAxNTE5NTMxNzY5ODc3.DBL4tA.8DTf2HgLr-k7BE5bSBrHXGee6aU</BotToken>
+  <Users>
+    <User id="137275346377637888">
+      <gwAPIKey>1CA16569-973E-6541-984E-D5408011277C23496159-8C47-474E-9E14-E8795C7057A7</gwAPIKey>
+    </User>
+    <User id="108651458315943936">
+      <gwAPIKey>6828D2E6-5E68-ED48-8696-2983DFA3D437036FEBF3-EAAA-4B6F-A948-B00584159FFF</gwAPIKey>
+    </User>
+    <User id="159395082296885248">
+      <gwAPIKey>A0A11104-B14C-C246-9775-E2654EC6FA4F63C459F4-C327-469E-9C54-AFAAAE3D3CBD</gwAPIKey>
+    </User>
+  </Users>
+  <GuildWars>
+    <GuildId>3C7DC99D-B633-E511-A34A-E4115BDF481D</GuildId>
+    <GuildAccessToken>FC7477B4-1C47-1844-BADC-44E83C737C393F904526-3865-4301-9CA7-55D133A8EF8C</GuildAccessToken>
+    <AccountBoundItems>
+      <Item id="67826">Silverwastes Shovel</Item>
+      <Item id="69434">Bottle of Airship Oil</Item>
+      <Item id="46730">Bloodstone Brick</Item>
+    </AccountBoundItems>
+  </GuildWars>
+</CoOpBotParameters>

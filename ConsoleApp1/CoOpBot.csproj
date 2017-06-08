@@ -170,9 +170,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FileLocations.cs" />
     <Compile Include="JSON.cs" />
     <Compile Include="Modules\AdminModule.cs" />
     <Compile Include="Modules\CoOpGamingModule.cs" />
+    <Compile Include="Modules\DevModule.cs" />
     <Compile Include="Modules\GuildWarsModule.cs" />
     <Compile Include="Modules\HelpModule.cs" />
     <Compile Include="Modules\RollModule.cs" />
