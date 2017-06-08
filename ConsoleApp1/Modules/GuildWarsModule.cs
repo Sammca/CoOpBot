@@ -34,7 +34,7 @@ namespace CoOpBot.Modules.GuildWars
         {
             apiPrefix = "https://api.guildwars2.com/v2";
 
-            xmlParameters.Load(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml");
+            xmlParameters.Load(FileLocations.xmlParameters());
             root = xmlParameters.DocumentElement;
 
             // Users
@@ -127,7 +127,7 @@ namespace CoOpBot.Modules.GuildWars
                 apiElement.InnerText = key;
             }
 
-            xmlParameters.Save(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml");
+            xmlParameters.Save(FileLocations.xmlParameters());
 
             await ReplyAsync("Your API key has been updated");
         }
@@ -151,7 +151,7 @@ namespace CoOpBot.Modules.GuildWars
             guildIDNode.InnerText = gid;
             guildAccessTokenNode.InnerText = gat;
 
-            xmlParameters.Save(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml");
+            xmlParameters.Save(FileLocations.xmlParameters());
 
             await ReplyAsync("Guild API key has been updated");
         }
@@ -500,7 +500,7 @@ namespace CoOpBot.Modules.GuildWars
 
                                 newAccountBoundItemNode = accountBoundItemsNode.AppendChild(newAccountBoundItemNode) as XmlElement;
 
-                                xmlParameters.Save(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml");
+                                xmlParameters.Save(FileLocations.xmlParameters());
 
                                 itemValue = 0;
                             }

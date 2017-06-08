@@ -9,46 +9,6 @@ using System.Threading.Tasks;
 
 namespace CoOpBot.Modules.Admin
 {
-    public class AntiSpamModule : ModuleBase
-    {
-        /*[Command("roll")]
-        //[Alias("AddMe", "ar")]
-        [Summary("Rolls a specified number of dice, with a specified number of sides.Time to Die.")]
-        private void RegisterAntiSpamFunctionality()
-        {
-            SocketGuildUser messageSender;
-            int messageCount;
-            ChannelPermissionOverrides channelPermissionOverrides;
-
-            messageSender = e.Message.User;
-
-            // Check to make sure that a bot is not the author
-            // Also check if admin, since admins ignore the channel permission override
-            if (!messageSender.GuildPermissions.Administrator && !messageSender.IsBot)
-            {
-                channelPermissionOverrides = new ChannelPermissionOverrides(sendMessages: PermValue.Deny);
-
-                /*if (userRecentMessageCounter[messageSender.Name] == null)
-                {
-                    userRecentMessageCounter[messageSender.Name] = 0.ToString();
-                }
-
-                messageCount = CountMessage(messageSender, 1);*/
-
-                /*if (messageCount > 2)
-                {
-                    await e.Channel.SendMessage("#StopCamSpam");
-                    await e.Channel.AddPermissionsRule(messageSender, channelPermissionOverrides);
-
-                    //await Task.Delay(5000).ContinueWith(t => e.Channel.SendMessage("5 seconds passed"));
-                    await Task.Delay(8000).ContinueWith(t => e.Channel.RemovePermissionsRule(messageSender));
-                }
-
-                await Task.Delay(8000).ContinueWith(t => CountMessage(messageSender, -1));
-            }
-        }*/
-    };
-
     [Name("Admin")]
     public class RolesModule : ModuleBase
     {

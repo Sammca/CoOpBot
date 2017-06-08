@@ -35,26 +35,33 @@ namespace CoOpBot
             client.Log += Log;
             //client.MessageReceived += MessageReceived;
 
-            //xmlParameters.Load("C:\\CoOpBotParameters.xml");
+            if (!File.Exists(FileLocations.xmlParameters()))
+            {
+                if (!File.Exists(FileLocations.backupXML()))
+                {
+                    Console.WriteLine("XML parameters not found, no backup found");
 
-            xmlParameters.Load(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml");
+                    throw new FileNotFoundException(@"XML parameters not found, and no backup found");
+                }
+                else
+                {
+                    xmlParameters.Load(FileLocations.backupXML());
+                    xmlParameters.Save(FileLocations.xmlParameters());
+
+                    Console.WriteLine("XML parameters restored from backup");
+                }
+            }
+
+            xmlParameters.Load(FileLocations.xmlParameters());
             XmlNode root = xmlParameters.DocumentElement;
             XmlNode myNode = root.SelectSingleNode("descendant::BotToken");
-            //myNode.Value = "blabla";
-            //xmlParameters.Save("D:\\build.xml");
 
             await InstallCommands();
-
-            //string token = "MzA5Nzg4NjU2MDAzMDU1NjE2.C_JsQg.OJbqgCRKN_VzA5Rxad--uzmBze8"; // Remember to keep this private!
-            string token = myNode.InnerText; // Remember to keep this private!
+            
+            string token = myNode.InnerText;
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
             
-            //map.Add(bot);
-
-            //handler = new CommandHandler();
-            //await handler.Install(map);
-
             // Block this task until the program is closed.
             await Task.Delay(-1);
         }
