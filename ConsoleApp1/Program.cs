@@ -22,11 +22,11 @@ namespace CoOpBot
         private CommandService commands = new CommandService();
         private DependencyMap map = new DependencyMap();
         XmlDocument xmlParameters = new XmlDocument();
+        char prefixCharacter;
+        NameValueCollection userRecentMessageCounter = new NameValueCollection();
 
         public static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();
-        
-        char prefixCharacter = '!';
-        NameValueCollection userRecentMessageCounter = new NameValueCollection();
+
 
         public async Task MainAsync()
         {
@@ -55,7 +55,19 @@ namespace CoOpBot
             xmlParameters.Load(FileLocations.xmlParameters());
             XmlNode root = xmlParameters.DocumentElement;
             XmlNode myNode = root.SelectSingleNode("descendant::BotToken");
+            XmlNode prefixNode = root.SelectSingleNode("descendant::PrefixChar");
+            
+            if (prefixNode == null)
+            {
+                prefixNode = xmlParameters.CreateElement("PrefixChar");
+                prefixNode.InnerText = "!";
+                root.AppendChild(prefixNode);
 
+                xmlParameters.Save(FileLocations.xmlParameters());
+            }
+
+            prefixCharacter = Convert.ToChar(prefixNode.InnerText);
+            
             await InstallCommands();
             
             string token = myNode.InnerText;

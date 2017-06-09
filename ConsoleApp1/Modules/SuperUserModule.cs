@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -65,6 +66,25 @@ namespace CoOpBot.Modules
             try
             {
                 await ReplyAsync("Shutting down");
+
+                Environment.Exit(0);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        [Command("Restart")]
+        [Summary("Restarts the bot.")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        private async Task RestartCommand()
+        {
+            try
+            {
+                await ReplyAsync("Restarting");
+
+                System.Diagnostics.Process.Start(Assembly.GetExecutingAssembly().Location);
 
                 Environment.Exit(0);
             }
