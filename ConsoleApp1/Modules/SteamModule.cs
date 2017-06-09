@@ -12,6 +12,7 @@ using System.Xml;
 using Procurios.Public;
 using System.Reflection;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace CoOpBot.Modules.Steam
 {
@@ -164,9 +165,88 @@ namespace CoOpBot.Modules.Steam
             }
             else
             {
-                output = $"No one owms {gameName(appid)}";
+                output = $"No one owns {gameName(appid)}";
             }
             await ReplyAsync(output); return;
+        }
+
+        /* https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?appid=431240
+        [Command("latestnews")]
+        [Summary("Shows Latest news article for a game")]
+        private async Task RegisterlatestnewsCommand(string appid)
+        {
+            string url = apiPrefix + "/IPlayerService/GetOwnedGames/v1/?key=" + steamKey + "&steamid=";
+            IEnumerator usersEnumerator = usersNode.GetEnumerator();
+            //Boolean userNodeExists = false;
+            XmlElement userDetails = null;
+            string output = "";
+            string usernamesOutput = "";
+
+            while (usersEnumerator.MoveNext())
+            {
+                XmlElement curNode = usersEnumerator.Current as XmlElement;
+                //Console.WriteLine(curNode.SelectSingleNode("descendant::steamID").InnerText.Length);
+
+                if (curNode.SelectSingleNode("descendant::steamID") != null)
+                {
+                    Hashtable userGamesInfo;
+                    int numberOfGames = 0;
+                    ArrayList games;
+                    string username;
+
+                    userDetails = curNode;
+                    username = await getDiscordUsername(userDetails.GetAttribute("id"));
+                    userGamesInfo = getAPIResponse(url + userDetails.SelectSingleNode("descendant::steamID").InnerText, "response", true);
+                    games = userGamesInfo["games"] as ArrayList;
+                    numberOfGames = games.Count;
+
+                    for (int i = 0; i < numberOfGames; i++)
+                    {
+                        Hashtable curGame;
+                        curGame = games[i] as Hashtable;
+
+                        if (curGame["appid"].ToString() == appid)
+                        {
+                            usernamesOutput += $"\n{username}";
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (usernamesOutput != "")
+            {
+                output = $"Users with {gameName(appid)}:{usernamesOutput}";
+            }
+            else
+            {
+                output = $"No one owns {gameName(appid)}";
+            }
+            await ReplyAsync(output); return;
+        }
+        */
+
+        public class gameResult
+        {
+            public string Name { get; set; }
+            public string id { get; set; }
+            public int similarity { get; set; }
+        }
+
+
+        [Command("gameID")]
+        [Summary("Searches for a Steam App ID")]
+        private async Task RegistergameIDCommand(string appid)
+        {
+            string response = "Did you mean? \n";
+            List<gameResult> result;
+            result = getGameId(appid);
+            List<gameResult> resultOrdered = result.OrderBy(o => o.similarity).ToList();
+            for (var i = 0; i < 5; i++)
+            {
+                response += $"{resultOrdered[i].Name} - SteamID = {resultOrdered[i].id} \n";
+            }
+            await ReplyAsync(response); return;
         }
 
         private Hashtable getAPIResponse(string url, string responseContainerString, Boolean addSquareBrackets = false)
@@ -199,6 +279,47 @@ namespace CoOpBot.Modules.Steam
             return null;
         }
 
+        private List<gameResult> getGameId(string queryStr)
+        {
+            string url;
+            string gameName;
+            Hashtable gameList;
+
+            url = $"{apiPrefix}/ISteamApps/GetAppList/v2/?key={steamKey}";
+            gameList = getAPIResponse(url, "applist", true);
+
+            Hashtable steamGamesInfo;
+            int numberOfGames = 0;
+            int matchcount = 0;
+            ArrayList games;
+            List<gameResult> results = new List<gameResult>();
+
+            steamGamesInfo = getAPIResponse(url, "applist", true);
+            games = steamGamesInfo["apps"] as ArrayList;
+            numberOfGames = games.Count;
+
+            for (int i = 0; i < numberOfGames; i++)
+            {
+                Hashtable curGame;
+                curGame = games[i] as Hashtable;
+                gameName = Regex.Replace(curGame["name"].ToString().ToLower(), @"\s+", "");
+                if (gameName.Contains(queryStr))
+                {
+                    matchcount++;
+                    int similarity = LevenshteinDistance.Compute(gameName, queryStr);
+                    gameResult resultClass = new gameResult
+                    {
+                        Name = curGame["name"].ToString(),
+                        id = curGame["appid"].ToString(),
+                        similarity = similarity
+                    };
+                    results.Add(resultClass);
+                }
+            }
+            return results;
+
+        }
+
         private string gameName(string appId)
         {
             string url;
@@ -206,9 +327,8 @@ namespace CoOpBot.Modules.Steam
             string gameName;
 
             url = $"{apiPrefix}/ISteamUserStats/GetSchemaForGame/v2/?key={steamKey}&appid={appId}";
-
+            Console.WriteLine(url);
             gameInfo = getAPIResponse(url, "game", true);
-
             gameName = gameInfo["gameName"].ToString();
 
             return gameName;
@@ -240,6 +360,57 @@ namespace CoOpBot.Modules.Steam
             }
 
             return username;
+        }
+
+        static class LevenshteinDistance
+        {
+            /// <summary>
+            /// Compute the distance between two strings.
+            /// </summary>
+            public static int Compute(string s, string t)
+            {
+                int n = s.Length;
+                int m = t.Length;
+                int[,] d = new int[n + 1, m + 1];
+
+                // Step 1
+                if (n == 0)
+                {
+                    return m;
+                }
+
+                if (m == 0)
+                {
+                    return n;
+                }
+
+                // Step 2
+                for (int i = 0; i <= n; d[i, 0] = i++)
+                {
+                }
+
+                for (int j = 0; j <= m; d[0, j] = j++)
+                {
+                }
+
+                // Step 3
+                for (int i = 1; i <= n; i++)
+                {
+                    //Step 4
+                    for (int j = 1; j <= m; j++)
+                    {
+                        // Step 5
+                        int cost = (t[j - 1] == s[i - 1]) ? 0 : 1;
+
+                        // Step 6
+                        d[i, j] = Math.Min(
+                            Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
+                            d[i - 1, j - 1] + cost);
+                    }
+                }
+                // Step 7
+                return d[n, m];
+            }
         }
 
     }
