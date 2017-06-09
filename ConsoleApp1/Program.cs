@@ -184,32 +184,6 @@ namespace CoOpBot
          * 
         ************************************************/
         /*
-        private void RegisterCountdownCommand()
-        {
-            commands.CreateCommand("Countdown") // Command name
-                .Parameter("time", ParameterType.Required)
-                .Description("Sends a message counting down every second, maximum of 5 Seconds.")
-                .Do(async (e) =>
-                {
-                    int maxAllowed = 5;
-                    int counter;
-
-                    counter = int.Parse(e.GetArg("time"));
-
-                    if (counter > maxAllowed)
-                    {
-                        await e.Channel.SendMessage(string.Format("Maximum count of {0} allowed", maxAllowed));
-                    }
-                    while (counter >= 0)
-                    {
-                        await e.Channel.SendMessage(string.Format("{0}", counter));
-                        Thread.Sleep(1000);
-                        counter--;
-                    }
-                });
-        }
-        
-        /*
         private void RegisterNoveltyResponseCommands()
         {
             // Define variables

@@ -29,7 +29,7 @@ namespace CoOpBot.Modules.Steam
         {
             apiPrefix = "https://api.steampowered.com";
 
-            xmlParameters.Load(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml");
+            xmlParameters.Load(FileLocations.xmlParameters());
             root = xmlParameters.DocumentElement;
             usersNode = root.SelectSingleNode("descendant::Users");
             steamKeyNode = root.SelectSingleNode("SteamToken");
@@ -109,7 +109,7 @@ namespace CoOpBot.Modules.Steam
                 apiElement.InnerText = key;
             }
 
-            xmlParameters.Save(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml");
+            xmlParameters.Save(FileLocations.xmlParameters());
 
             await ReplyAsync("Your Steam profile has been updated");
         }
@@ -123,6 +123,8 @@ namespace CoOpBot.Modules.Steam
             IEnumerator usersEnumerator = usersNode.GetEnumerator();
             //Boolean userNodeExists = false;
             XmlElement userDetails = null;
+            string output = "";
+            string usernamesOutput = "";
 
             while (usersEnumerator.MoveNext())
             {
@@ -131,30 +133,43 @@ namespace CoOpBot.Modules.Steam
 
                 if (curNode.SelectSingleNode("descendant::steamID") != null)
                 {
-                    Array apiResponse;
-                    Hashtable gameInfo;
-                    string game;
-                    //Console.WriteLine(curNode.SelectSingleNode("descendant::steamID").InnerText);
+                    Hashtable userGamesInfo;
+                    int numberOfGames = 0;
+                    ArrayList games;
+                    string username;
+
                     userDetails = curNode;
-                    Console.WriteLine(url + userDetails.SelectSingleNode("descendant::steamID").InnerText);
-                    apiResponse = getAPIResponse(url + userDetails.SelectSingleNode("descendant::steamID").InnerText,true);
-                    //Hashtable Data = result.GetValue(0) as Hashtable;
-                    //Hashtable newVar = result.GetValue(0) as Hashtable;
-                    gameInfo = apiResponse.GetValue(0) as Hashtable;
+                    username = await getDiscordUsername(userDetails.GetAttribute("id"));
+                    userGamesInfo = getAPIResponse(url + userDetails.SelectSingleNode("descendant::steamID").InnerText, "response", true);
+                    games = userGamesInfo["games"] as ArrayList;
+                    numberOfGames = games.Count;
 
-                    game = gameInfo["response"].ToString();
+                    for (int i = 0; i < numberOfGames; i++)
+                    {
+                        Hashtable curGame;
+                        curGame = games[i] as Hashtable;
 
-                    await ReplyAsync(game);
-
+                        if (curGame["appid"].ToString() == appid)
+                        {
+                            usernamesOutput += $"\n{username}";
+                            break;
+                        }
+                    }
                 }
-
-
             }
 
-            await ReplyAsync(url + userDetails.SelectSingleNode("descendant::steamID").InnerText); return;
+            if (usernamesOutput != "")
+            {
+                output = $"Users with {gameName(appid)}:{usernamesOutput}";
+            }
+            else
+            {
+                output = $"No one owms {gameName(appid)}";
+            }
+            await ReplyAsync(output); return;
         }
 
-        private Array getAPIResponse(string url, Boolean addSquareBrackets = false)
+        private Hashtable getAPIResponse(string url, string responseContainerString, Boolean addSquareBrackets = false)
         {
             using (WebClient wc = new WebClient())
             {
@@ -166,12 +181,15 @@ namespace CoOpBot.Modules.Steam
                     {
                         jsonResponse = "[" + jsonResponse + "]";
                     }
-                   // Console.WriteLine(jsonResponse);
 
                     ArrayList decoded = JSON.JsonDecode(jsonResponse) as ArrayList;
-                    //Console.WriteLine(decoded);
                     Array decodedArray = decoded.ToArray();
-                    return decodedArray;
+
+                    //steam specific part - go 1 layer into the array becasue there is a single node that holds all the info we want
+                    Hashtable response = decodedArray.GetValue(0) as Hashtable;
+                    Hashtable returnArray = response[responseContainerString] as Hashtable;
+
+                    return returnArray;
                 }
                 catch (Exception ex)
                 {
@@ -179,6 +197,49 @@ namespace CoOpBot.Modules.Steam
                 }
             }
             return null;
+        }
+
+        private string gameName(string appId)
+        {
+            string url;
+            Hashtable gameInfo;
+            string gameName;
+
+            url = $"{apiPrefix}/ISteamUserStats/GetSchemaForGame/v2/?key={steamKey}&appid={appId}";
+
+            gameInfo = getAPIResponse(url, "game", true);
+
+            gameName = gameInfo["gameName"].ToString();
+
+            return gameName;
+        }
+
+        private async Task<string> getDiscordUsername(string discordId)
+        {
+            string username = "";
+            IEnumerable<IGuildUser> users;
+            IGuildUser curUser;
+
+            users = await this.Context.Guild.GetUsersAsync();
+
+            for (int i = 0; i < users.Count(); i++)
+            {
+                curUser = users.ElementAt(i);
+
+                if ($"{curUser.Id}" == discordId)
+                {
+                    if (curUser.Nickname != null)
+                    {
+                        username = curUser.Nickname;
+                    }
+                    else
+                    {
+                        username = curUser.Username;
+                    }
+                }
+            }
+
+            return username;
         }
 
     }
