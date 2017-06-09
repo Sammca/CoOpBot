@@ -299,22 +299,17 @@ namespace CoOpBot.Modules.GuildWars
         [Command("Username")]
         [Alias("un")]
         [Summary("Finds the username of the mentioned user. Defaults to message author if no user is mentioned")]
-        private async Task UsernameCommand(params IUser[] users)
+        private async Task UsernameCommand(IUser user)
         {
             string apiKey;
             string url;
             Hashtable accountInfo;
             Array apiResponse;
-            IUser user;
             string gw2Username;
 
-            if (users.Length == 0)
+            if (user == null)
             {
                 user = this.Context.Message.Author;
-            }
-            else
-            {
-                user = users.GetValue(0) as IUser;
             }
 
             apiKey = getUserAPIKey(user);
@@ -558,6 +553,74 @@ namespace CoOpBot.Modules.GuildWars
             await ReplyAsync(output);
         }
 
+        [Command("AmountStored")]
+        [Alias("as")]
+        [Summary("Finds the amount of a metrial you have in material storage")]
+        private async Task AmountStoredCommand(int itemId, IUser user = null)
+        {
+            string apiKey;
+            string url;
+            Array materialStorage;
+            int materialCount = 0;
+            int amountStored = 0;
+
+            if (user == null)
+            {
+                user = this.Context.Message.Author;
+            }
+
+            apiKey = getUserAPIKey(user);
+            url = apiPrefix + "/account/materials?access_token=" + apiKey;
+            materialStorage = getAPIResponse(url);
+
+            materialCount = materialStorage.Length;
+
+            XmlDocument gwItemsDocument = new XmlDocument();
+            gwItemsDocument.Load(FileLocations.gwItemNames());
+            XmlElement gwRoot = gwItemsDocument.DocumentElement;
+            Boolean fileIsNew = gwRoot.HasChildNodes;
+            Boolean saveFile = false;
+
+            for (int i = 0; i < materialCount; i++)
+            {
+                Hashtable curMaterial = materialStorage.GetValue(i) as Hashtable;
+                XmlElement gwItem = null;
+
+                if (fileIsNew)
+                {
+                    //gwItem = gwRoot.SelectSingleNode($"descendant::{curMaterial["id"].ToString()}") as XmlElement;
+                    IEnumerator filteredEnumerator = gwItemsDocument.SelectNodes($"//Item[@id={curMaterial["id"].ToString()}]").GetEnumerator();
+                    filteredEnumerator.MoveNext();
+                    gwItem = filteredEnumerator.Current as XmlElement;
+                }
+
+                if (gwItem == null)
+                {
+                    string itemurl = apiPrefix + "/items?id=" + curMaterial["id"].ToString();
+                    Hashtable itemDetails = getAPIResponse(itemurl, true).GetValue(0) as Hashtable;
+
+                    gwItem = gwItemsDocument.CreateElement($"Item");
+                    gwItem.SetAttribute("id", $"{curMaterial["id"].ToString()}");
+                    gwItem.InnerText = itemDetails["name"].ToString();
+                    gwRoot.AppendChild(gwItem);
+
+                    saveFile = true;
+                }
+
+                if (int.Parse(curMaterial["id"].ToString()) == itemId)
+                {
+                    amountStored = int.Parse(curMaterial["count"].ToString());
+                }
+            }
+
+            if (saveFile)
+            {
+                gwItemsDocument.Save(FileLocations.gwItemNames());
+            }
+            
+            await ReplyAsync($"{user.Username} has {amountStored} of item \"{itemNameFromId(itemId)}\" in their material storage");
+        }
+
         #endregion
 
         #region Functions
@@ -638,6 +701,28 @@ namespace CoOpBot.Modules.GuildWars
             }
 
             return itemNodeExists;
+        }
+
+        private string itemNameFromId(int itemId)
+        {
+            XmlDocument gwItemsDocument = new XmlDocument();
+            gwItemsDocument.Load(FileLocations.gwItemNames());
+            XmlElement gwRoot = gwItemsDocument.DocumentElement;
+            IEnumerator itemsEnumerator = gwRoot.GetEnumerator();
+            XmlNode itemNode = null;
+
+            while (itemsEnumerator.MoveNext())
+            {
+                XmlElement curNode = itemsEnumerator.Current as XmlElement;
+
+                if (curNode.GetAttribute("id") == itemId.ToString())
+                {
+                    itemNode = curNode;
+                    break;
+                }
+            }
+
+            return itemNode.InnerText;
         }
 
         #endregion
