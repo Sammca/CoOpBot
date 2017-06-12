@@ -121,11 +121,11 @@ namespace CoOpBot.Modules.Steam
 
             foreach (string s in appName)
             {
-                queryStr += $"{s} ";
+                queryStr += $"{s}";
             }
 
             string appid = queryStr;
-            await ReplyAsync("Searching for " + appid);
+            await ReplyAsync("Searching...");
 
             string url = apiPrefix + "/IPlayerService/GetOwnedGames/v1/?key=" + steamKey + "&steamid=";
             IEnumerator usersEnumerator = usersNode.GetEnumerator();
@@ -270,11 +270,11 @@ namespace CoOpBot.Modules.Steam
 
             foreach (string s in appName)
             {
-                queryStr += $"{s} ";
+                queryStr += $"{s}";
             }
 
             string appid = queryStr;
-            await ReplyAsync("Searching for " + appid);
+            await ReplyAsync("Searching...");
             string response = "Did you mean? \n";
             List<gameResult> result;
             result = getGameId(appid);
