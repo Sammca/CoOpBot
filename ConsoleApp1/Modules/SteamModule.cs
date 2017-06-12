@@ -152,7 +152,7 @@ namespace CoOpBot.Modules.Steam
                     {
                         response += $"{resultOrdered[i].Name} - SteamID = {resultOrdered[i].id} \n";
                     }
-                    response += "/n/nPlease try again using the AppId of the game.";
+                    response += "\n\nPlease try again using the SteamID of the game.";
                     await ReplyAsync(response); return;
                 }
 
