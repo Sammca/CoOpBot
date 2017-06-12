@@ -639,7 +639,7 @@ namespace CoOpBot.Modules.GuildWars
             itemSearchResults = itemSearch(queryStr).OrderBy(o => o.similarity).ToList();
             closestMatch = itemSearchResults[0];
 
-            await AmountStoredCommand(int.Parse(closestMatch.id));
+            await AmountStoredCommand(int.Parse(closestMatch.id), user);
         }
 
         [Command("AmountStored")]
