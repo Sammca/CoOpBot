@@ -37,6 +37,42 @@ namespace CoOpBot.Modules
             }
         }
 
+        [Command("BackupGW")]
+        [Summary("Creates a backup of the GW items file.")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        private async Task BackupGWCommand()
+        {
+            XmlDocument xmlParameters = new XmlDocument();
+            try
+            {
+                xmlParameters.Load(FileLocations.gwItemNames());
+                xmlParameters.Save(FileLocations.gwItemNamesBackup());
+
+                await ReplyAsync($"XML parameters backed up to {FileLocations.gwItemNamesBackup()}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        [Command("BackupAll")]
+        [Summary("Creates a backup of all XML files.")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        private async Task BackupAllCommand()
+        {
+            XmlDocument xmlParameters = new XmlDocument();
+            try
+            {
+                await BackupGWCommand();
+                await BackupXMLCommand();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
         [Command("RestoreXML")]
         [Alias("restore")]
         [Summary("Restores a backup of the XML parameters file.")]
