@@ -33,10 +33,7 @@ namespace CoOpBot.Modules.Steam
             xmlParameters.Load(FileLocations.xmlParameters());
             root = xmlParameters.DocumentElement;
             usersNode = root.SelectSingleNode("descendant::Users");
-            steamKeyNode = root.SelectSingleNode("SteamToken");
-            steamKey = steamKeyNode.InnerText;
-
-
+            
             usersNode = root.SelectSingleNode("descendant::Users");
 
             if (usersNode == null)

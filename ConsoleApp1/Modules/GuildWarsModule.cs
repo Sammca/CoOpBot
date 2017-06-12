@@ -183,7 +183,7 @@ namespace CoOpBot.Modules.GuildWars
                 user = users.GetValue(0) as IUser;
             }
 
-            apiKey = getUserAPIKey(user);
+            apiKey = await getUserAPIKey(user);
 
             url = apiPrefix + "/account/wallet?access_token=" + apiKey;
 
@@ -313,7 +313,7 @@ namespace CoOpBot.Modules.GuildWars
                 user = this.Context.Message.Author;
             }
 
-            apiKey = getUserAPIKey(user);
+            apiKey = await getUserAPIKey(user);
             url = apiPrefix + "/account?access_token=" + apiKey;
             apiResponse = getAPIResponse(url, true);
             accountInfo = apiResponse.GetValue(0) as Hashtable;
@@ -555,7 +555,7 @@ namespace CoOpBot.Modules.GuildWars
         }
 
         [Command("AmountStored")]
-        [Alias("as")]
+        [Alias("as", "stored")]
         [Summary("Finds the amount of a metrial you have in material storage")]
         private async Task AmountStoredCommand(int itemId, IUser user = null)
         {
@@ -570,7 +570,7 @@ namespace CoOpBot.Modules.GuildWars
                 user = this.Context.Message.Author;
             }
 
-            apiKey = getUserAPIKey(user);
+            apiKey = await getUserAPIKey(user);
             url = apiPrefix + "/account/materials?access_token=" + apiKey;
             materialStorage = getAPIResponse(url);
 
@@ -623,7 +623,7 @@ namespace CoOpBot.Modules.GuildWars
         }
 
         [Command("AmountStored")]
-        [Alias("as")]
+        [Alias("as", "stored")]
         [Summary("Finds the amount of a metrial the specified user has in material storage")]
         private async Task AmountStoredStringCommand(IUser user = null, params string[] itemNameQuery)
         {
@@ -643,7 +643,7 @@ namespace CoOpBot.Modules.GuildWars
         }
 
         [Command("AmountStored")]
-        [Alias("as")]
+        [Alias("as", "stored")]
         [Summary("Finds the amount of a metrial you have in material storage")]
         private async Task AmountStoredStringCommand(params string[] itemNameQuery)
         {
@@ -710,7 +710,7 @@ namespace CoOpBot.Modules.GuildWars
             return null;
         }
 
-        private string getUserAPIKey(IUser user)
+        private async Task<string> getUserAPIKey(IUser user)
         {
             IEnumerator usersEnumerator = usersNode.GetEnumerator();
             string apiKey;
@@ -731,14 +731,14 @@ namespace CoOpBot.Modules.GuildWars
 
             if (!userNodeExists)
             {
-                throw new Exception(string.Format("API key not found for {0}", user.Username));
+                await ReplyAsync($"API key not found for {user.Username}. \n Go to https://account.arena.net/applications to get a key, then use the command gw registerkey [KEY] to register it with the bot");
             }
 
             apiElement = userDetails.SelectSingleNode("descendant::gwAPIKey");
 
             if (apiElement == null)
             {
-                throw new Exception(string.Format("API key not found for {0}", user.Username));
+                await ReplyAsync($"API key not found for {user.Username}. \n Go to https://account.arena.net/applications to get a key, then use the command gw registerkey [KEY] to register it with the bot");
             }
 
             apiKey = apiElement.InnerText;
@@ -811,7 +811,7 @@ namespace CoOpBot.Modules.GuildWars
                 itemList.Add(curNode.GetAttribute("id"), curNode.InnerText);
             }
 
-            
+
             foreach (DictionaryEntry curItem in itemList)
             {
                 //curGame = games[i] as Hashtable;
@@ -827,6 +827,27 @@ namespace CoOpBot.Modules.GuildWars
                         similarity = similarity
                     };
                     results.Add(resultClass);
+                }
+            }
+
+            if (results.Count == 0)
+            {
+                foreach (DictionaryEntry curItem in itemList)
+                {
+                    //curGame = games[i] as Hashtable;
+                    itemName = Regex.Replace(curItem.Value.ToString().ToLower(), @"\s+", "");
+                    matchcount++;
+                    int similarity = LevenshteinDistance.Compute(itemName, queryStr);
+                    if (similarity < 15)
+                    {
+                        itemResult resultClass = new itemResult
+                        {
+                            Name = curItem.Value.ToString(),
+                            id = curItem.Key.ToString(),
+                            similarity = similarity
+                        };
+                        results.Add(resultClass);
+                    }
                 }
             }
             return results;
