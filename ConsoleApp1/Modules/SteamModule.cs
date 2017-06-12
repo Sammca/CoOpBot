@@ -118,14 +118,45 @@ namespace CoOpBot.Modules.Steam
 
         [Command("hasgame")]
         [Summary("Shows which members have a game")]
-        private async Task RegisterhasgameCommand(string appid)
+        private async Task RegisterhasgameCommand(params string[] appName)
         {
+            string queryStr = "";
+
+            foreach (string s in appName)
+            {
+                queryStr += $"{s} ";
+            }
+
+            string appid = queryStr;
+            await ReplyAsync("Searching for " + appid);
+
             string url = apiPrefix + "/IPlayerService/GetOwnedGames/v1/?key=" + steamKey + "&steamid=";
             IEnumerator usersEnumerator = usersNode.GetEnumerator();
             //Boolean userNodeExists = false;
             XmlElement userDetails = null;
             string output = "";
             string usernamesOutput = "";
+
+            if (!Regex.IsMatch(appid, @"^\d+$"))
+            {
+                List<gameResult> result;
+                result = getGameId(appid);
+                List<gameResult> resultOrdered = result.OrderBy(o => o.similarity).ToList();
+                if (resultOrdered[0].similarity == 0) // if top result is an exact match
+                {
+                    appid = resultOrdered[0].id;
+                } else
+                {
+                    string response ="Multiple games found \n";
+                    for (var i = 0; i < 5; i++)
+                    {
+                        response += $"{resultOrdered[i].Name} - SteamID = {resultOrdered[i].id} \n";
+                    }
+                    response += "/n/nPlease try again using the AppId of the game.";
+                    await ReplyAsync(response); return;
+                }
+
+            }
 
             while (usersEnumerator.MoveNext())
             {
@@ -236,8 +267,17 @@ namespace CoOpBot.Modules.Steam
 
         [Command("gameID")]
         [Summary("Searches for a Steam App ID")]
-        private async Task RegistergameIDCommand(string appid)
+        private async Task RegistergameIDCommand(params string[] appName)
         {
+            string queryStr = "";
+
+            foreach (string s in appName)
+            {
+                queryStr += $"{s} ";
+            }
+
+            string appid = queryStr;
+            await ReplyAsync("Searching for " + appid);
             string response = "Did you mean? \n";
             List<gameResult> result;
             result = getGameId(appid);
@@ -290,7 +330,7 @@ namespace CoOpBot.Modules.Steam
 
             Hashtable steamGamesInfo;
             int numberOfGames = 0;
-            int matchcount = 0;
+            //int matchcount = 0;
             ArrayList games;
             List<gameResult> results = new List<gameResult>();
 
@@ -303,18 +343,16 @@ namespace CoOpBot.Modules.Steam
                 Hashtable curGame;
                 curGame = games[i] as Hashtable;
                 gameName = Regex.Replace(curGame["name"].ToString().ToLower(), @"\s+", "");
-                if (gameName.Contains(queryStr))
+                int similarity = LevenshteinDistance.Compute(gameName, queryStr);
+                if (similarity > 15) continue;
+                gameResult resultClass = new gameResult
                 {
-                    matchcount++;
-                    int similarity = LevenshteinDistance.Compute(gameName, queryStr);
-                    gameResult resultClass = new gameResult
-                    {
-                        Name = curGame["name"].ToString(),
-                        id = curGame["appid"].ToString(),
-                        similarity = similarity
-                    };
-                    results.Add(resultClass);
-                }
+                    Name = curGame["name"].ToString(),
+                    id = curGame["appid"].ToString(),
+                    similarity = similarity
+                };
+                results.Add(resultClass);
+                if (similarity == 0) return results;
             }
             return results;
 
@@ -327,7 +365,7 @@ namespace CoOpBot.Modules.Steam
             string gameName;
 
             url = $"{apiPrefix}/ISteamUserStats/GetSchemaForGame/v2/?key={steamKey}&appid={appId}";
-            Console.WriteLine(url);
+            //Console.WriteLine(url);
             gameInfo = getAPIResponse(url, "game", true);
             gameName = gameInfo["gameName"].ToString();
 
