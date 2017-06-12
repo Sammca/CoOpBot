@@ -12,6 +12,7 @@ using System.Xml;
 using Procurios.Public;
 using System.Reflection;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace CoOpBot.Modules.GuildWars
 {
@@ -621,6 +622,65 @@ namespace CoOpBot.Modules.GuildWars
             await ReplyAsync($"{user.Username} has {amountStored} of item \"{itemNameFromId(itemId)}\" in their material storage");
         }
 
+        [Command("AmountStored")]
+        [Alias("as")]
+        [Summary("Finds the amount of a metrial the specified user has in material storage")]
+        private async Task AmountStoredStringCommand(IUser user = null, params string[] itemNameQuery)
+        {
+            List<itemResult> itemSearchResults = new List<itemResult>();
+            string queryStr = "";
+            itemResult closestMatch;
+
+            foreach (string s in itemNameQuery)
+            {
+                queryStr += $"{s}";
+            }
+
+            itemSearchResults = itemSearch(queryStr).OrderBy(o => o.similarity).ToList();
+            closestMatch = itemSearchResults[0];
+
+            await AmountStoredCommand(int.Parse(closestMatch.id));
+        }
+
+        [Command("AmountStored")]
+        [Alias("as")]
+        [Summary("Finds the amount of a metrial you have in material storage")]
+        private async Task AmountStoredStringCommand(params string[] itemNameQuery)
+        {
+            List<itemResult> itemSearchResults = new List<itemResult>();
+            string queryStr = "";
+            itemResult closestMatch;
+
+            foreach (string s in itemNameQuery)
+            {
+                queryStr += $"{s}";
+            }
+
+            itemSearchResults = itemSearch(queryStr).OrderBy(o => o.similarity).ToList();
+            closestMatch = itemSearchResults[0];
+
+            await AmountStoredCommand(int.Parse(closestMatch.id));
+        }
+
+        [Command("ItemSearch")]
+        [Alias("is")]
+        [Summary("Finds the items close to the query string entered")]
+        private async Task ItemSearchCommand(params string[] query)
+        {
+            List<itemResult> itemSearchResults = new List<itemResult>();
+            string queryStr = "";
+
+            foreach (string s in query)
+            {
+                queryStr += $"{s}";
+            }
+
+            itemSearchResults = itemSearch(queryStr).OrderBy(o => o.similarity).ToList();
+
+            await ReplyAsync($"Closest match - {itemSearchResults[0].Name}");
+        }
+
+
         #endregion
 
         #region Functions
@@ -723,6 +783,54 @@ namespace CoOpBot.Modules.GuildWars
             }
 
             return itemNode.InnerText;
+        }
+
+        public class itemResult
+        {
+            public string Name { get; set; }
+            public string id { get; set; }
+            public int similarity { get; set; }
+        }
+
+        private List<itemResult> itemSearch(string queryStr)
+        {
+            string itemName;
+            Hashtable itemList = new Hashtable();
+            int matchcount = 0;
+            List<itemResult> results = new List<itemResult>();
+
+            XmlDocument gwItemsDocument = new XmlDocument();
+            gwItemsDocument.Load(FileLocations.gwItemNames());
+            XmlElement gwRoot = gwItemsDocument.DocumentElement;
+            IEnumerator itemsEnumerator = gwRoot.GetEnumerator();
+
+            while (itemsEnumerator.MoveNext())
+            {
+                XmlElement curNode = itemsEnumerator.Current as XmlElement;
+
+                itemList.Add(curNode.GetAttribute("id"), curNode.InnerText);
+            }
+
+            
+            foreach (DictionaryEntry curItem in itemList)
+            {
+                //curGame = games[i] as Hashtable;
+                itemName = Regex.Replace(curItem.Value.ToString().ToLower(), @"\s+", "");
+                if (itemName.Contains(queryStr))
+                {
+                    matchcount++;
+                    int similarity = LevenshteinDistance.Compute(itemName, queryStr);
+                    itemResult resultClass = new itemResult
+                    {
+                        Name = curItem.Value.ToString(),
+                        id = curItem.Key.ToString(),
+                        similarity = similarity
+                    };
+                    results.Add(resultClass);
+                }
+            }
+            return results;
+
         }
 
         #endregion
