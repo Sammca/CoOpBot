@@ -93,6 +93,28 @@ namespace CoOpBot.Modules
             }
         }
 
+        [Command("RestoreAll")]
+        [Summary("Restores all files from their backups.")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        private async Task RestoreAllCommand()
+        {
+            XmlDocument xmlParameters = new XmlDocument();
+            XmlDocument gwItems = new XmlDocument();
+            try
+            {
+                xmlParameters.Load(FileLocations.backupXML());
+                xmlParameters.Save(FileLocations.xmlParameters());
+                gwItems.Load(FileLocations.gwItemNamesBackup());
+                gwItems.Save(FileLocations.gwItemNames());
+
+                await ReplyAsync("XML parameters restored");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
         [Command("ShutDown")]
         [Alias("TurnOff")]
         [Summary("Turns the bot off.")]
