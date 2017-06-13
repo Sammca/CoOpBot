@@ -198,61 +198,55 @@ namespace CoOpBot.Modules.Steam
             await ReplyAsync(output); return;
         }
 
-        /* https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?appid=431240
         [Command("latestnews")]
         [Summary("Shows Latest news article for a game")]
-        private async Task RegisterlatestnewsCommand(string appid)
+        private async Task RegisterlatestnewsCommand(params string[] appName)
         {
-            string url = apiPrefix + "/IPlayerService/GetOwnedGames/v1/?key=" + steamKey + "&steamid=";
-            IEnumerator usersEnumerator = usersNode.GetEnumerator();
-            //Boolean userNodeExists = false;
-            XmlElement userDetails = null;
-            string output = "";
-            string usernamesOutput = "";
-
-            while (usersEnumerator.MoveNext())
+            string queryStr = "";
+            foreach (string s in appName)
             {
-                XmlElement curNode = usersEnumerator.Current as XmlElement;
-                //Console.WriteLine(curNode.SelectSingleNode("descendant::steamID").InnerText.Length);
-
-                if (curNode.SelectSingleNode("descendant::steamID") != null)
+                queryStr += $"{s}";
+            }
+            string appid = queryStr;
+            string url = apiPrefix + "/ISteamNews/GetNewsForApp/v2/?count=1&appid=";
+            if (!Regex.IsMatch(appid, @"^\d+$"))
+            {
+                List<gameResult> result;
+                result = getGameId(appid);
+                List<gameResult> resultOrdered = result.OrderBy(o => o.similarity).ToList();
+                if (resultOrdered[0].similarity == 0) // if top result is an exact match
                 {
-                    Hashtable userGamesInfo;
-                    int numberOfGames = 0;
-                    ArrayList games;
-                    string username;
-
-                    userDetails = curNode;
-                    username = await getDiscordUsername(userDetails.GetAttribute("id"));
-                    userGamesInfo = getAPIResponse(url + userDetails.SelectSingleNode("descendant::steamID").InnerText, "response", true);
-                    games = userGamesInfo["games"] as ArrayList;
-                    numberOfGames = games.Count;
-
-                    for (int i = 0; i < numberOfGames; i++)
-                    {
-                        Hashtable curGame;
-                        curGame = games[i] as Hashtable;
-
-                        if (curGame["appid"].ToString() == appid)
-                        {
-                            usernamesOutput += $"\n{username}";
-                            break;
-                        }
-                    }
+                    appid = resultOrdered[0].id;
                 }
-            }
+                else
+                {
+                    string response = "Multiple games found \n";
+                    for (var i = 0; i < 5; i++)
+                    {
+                        response += $"{resultOrdered[i].Name} - SteamID = {resultOrdered[i].id} \n";
+                    }
+                    response += "\n\nPlease try again using the SteamID of the game.";
+                    await ReplyAsync(response); return;
+                }
 
-            if (usernamesOutput != "")
-            {
-                output = $"Users with {gameName(appid)}:{usernamesOutput}";
             }
-            else
+            Hashtable gameNews = getAPIResponse(url + appid, "appnews", true);
+            ArrayList newsItems = gameNews["newsitems"] as ArrayList;
+            Hashtable news = newsItems[0] as Hashtable;
+            var builder = new EmbedBuilder()
             {
-                output = $"No one owns {gameName(appid)}";
-            }
-            await ReplyAsync(output); return;
+                Color = new Color(114, 137, 218),
+                Description = queryStr
+            };
+            
+            builder.AddField(x =>
+            {
+                x.Name = news["title"].ToString();
+                x.Value = news["contents"].ToString();
+                x.IsInline = false;
+            });
+            await Context.Channel.SendMessageAsync("\n\n", false, builder);
         }
-        */
 
         public class gameResult
         {
