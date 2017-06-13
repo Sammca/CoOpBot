@@ -236,13 +236,13 @@ namespace CoOpBot.Modules.Steam
             var builder = new EmbedBuilder()
             {
                 Color = new Color(114, 137, 218),
-                Description = queryStr
+                Description = gameName(appid)
             };
             
             builder.AddField(x =>
             {
                 x.Name = news["title"].ToString();
-                x.Value = news["contents"].ToString();
+                x.Value = CleanNewsString(news["contents"].ToString());
                 x.IsInline = false;
             });
             await Context.Channel.SendMessageAsync("\n\n", false, builder);
@@ -390,5 +390,21 @@ namespace CoOpBot.Modules.Steam
 
             return username;
         }
+
+        private string CleanNewsString(string rawNewsString)
+        {
+            string returnString = rawNewsString;
+
+            returnString = returnString.Replace("[b]", "**");
+            returnString = returnString.Replace("[/b]", "**");
+            returnString = returnString.Replace("[img]", "\n");
+            returnString = returnString.Replace("[/img]", "");
+            returnString = returnString.Replace("[url=", "");
+            returnString = returnString.Replace("[/url]", "");
+            returnString = returnString.Replace("]", " ");
+
+            return returnString;
+        }
+
     }
 }
