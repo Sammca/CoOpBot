@@ -177,10 +177,10 @@ namespace CoOpBot.Modules.Steam
                     {
                         Hashtable curGame;
                         curGame = games[i] as Hashtable;
-
+                        int playtime = Int32.Parse(curGame["playtime_forever"].ToString()) / 60;
                         if (curGame["appid"].ToString() == appid)
                         {
-                            usernamesOutput += $"\n{username}";
+                            usernamesOutput += $"\n{username} - {playtime.ToString()} Hours on record ";
                             break;
                         }
                     }
