@@ -209,8 +209,10 @@ namespace CoOpBot.Modules.Steam
             }
             string appid = queryStr;
             string url = apiPrefix + "/ISteamNews/GetNewsForApp/v2/?count=1&appid=";
+            string img = "";
             if (!Regex.IsMatch(appid, @"^\d+$"))
             {
+                await ReplyAsync("Searching");
                 List<gameResult> result;
                 result = getGameId(appid);
                 List<gameResult> resultOrdered = result.OrderBy(o => o.similarity).ToList();
@@ -225,27 +227,49 @@ namespace CoOpBot.Modules.Steam
                     {
                         response += $"{resultOrdered[i].Name} - SteamID = {resultOrdered[i].id} \n";
                     }
-                    response += "\n\nPlease try again using the SteamID of the game.";
+                    response += "\nPlease try again using the SteamID of the game.";
                     await ReplyAsync(response); return;
                 }
-
             }
             Hashtable gameNews = getAPIResponse(url + appid, "appnews", true);
             ArrayList newsItems = gameNews["newsitems"] as ArrayList;
             Hashtable news = newsItems[0] as Hashtable;
+            string content = news["contents"].ToString();
+            Match imgurl = Regex.Match(content, @"(\[img\](.*)\[/img\]|<img(.*)/>)");
+
+            if (imgurl.Success)
+            {
+                if (imgurl.Value.Contains("<img"))
+                {
+                    Match imgMatch = Regex.Match(imgurl.Value, "src=\"([^ \"]+)");
+                    img = imgMatch.Value.Replace("src=\"", "");
+                }
+                else
+                {
+                    img = imgurl.Value.Replace("[img]", "");
+                    img = img.Replace("[/img]", "");
+                }
+                content = content.Replace(imgurl.Value, "");
+            }
+
+            content = CleanNewsString(content);
+            if (content.Length > 500) content = content.Substring(0, 500) + "...";
+            content += "\n\n Click here to see the full post: \n" + news["url"].ToString();
+
             var builder = new EmbedBuilder()
             {
-                Color = new Color(114, 137, 218),
-                Description = gameName(appid)
+                Color = new Color(198, 212, 223),
+                ImageUrl = img,
+                Url = news["url"].ToString(),
+                Title = gameName(appid)
             };
-            
             builder.AddField(x =>
             {
                 x.Name = news["title"].ToString();
-                x.Value = CleanNewsString(news["contents"].ToString());
+                x.Value = content;
                 x.IsInline = false;
             });
-            await Context.Channel.SendMessageAsync("\n\n", false, builder);
+            await Context.Channel.SendMessageAsync("\n", false, builder);
         }
 
         public class gameResult
@@ -356,8 +380,8 @@ namespace CoOpBot.Modules.Steam
             string gameName;
 
             url = $"{apiPrefix}/ISteamUserStats/GetSchemaForGame/v2/?key={steamKey}&appid={appId}";
-            //Console.WriteLine(url);
             gameInfo = getAPIResponse(url, "game", true);
+            if (gameInfo["gameName"] == null) return "";
             gameName = gameInfo["gameName"].ToString();
 
             return gameName;
@@ -395,14 +419,16 @@ namespace CoOpBot.Modules.Steam
         {
             string returnString = rawNewsString;
 
+            returnString = returnString.Replace("[h1]", "__**");
+            returnString = returnString.Replace("[/h1]", "**__");
             returnString = returnString.Replace("[b]", "**");
             returnString = returnString.Replace("[/b]", "**");
             returnString = returnString.Replace("[img]", "\n");
             returnString = returnString.Replace("[/img]", "");
-            returnString = returnString.Replace("[url=", "");
+            returnString = Regex.Replace(returnString, @"\[url=(.*)\]", "");
             returnString = returnString.Replace("[/url]", "");
-            returnString = returnString.Replace("]", " ");
-
+            returnString = returnString.Replace("<p>", "");
+            returnString = returnString.Replace("</p>", "\n");
             return returnString;
         }
 
