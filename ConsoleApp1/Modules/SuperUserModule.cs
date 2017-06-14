@@ -152,6 +152,36 @@ namespace CoOpBot.Modules
             }
         }
 
+        [Command("sendXML")]
+        [Summary("Makes the bot send a copy of the XML parameters file to the chat.")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        private async Task sendXMLCommand()
+        {
+            try
+            {
+                await this.Context.Message.Channel.SendFileAsync(FileLocations.xmlParameters());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        [Command("sendGWItemsXML")]
+        [Summary("Makes the bot send a copy of the GW items file to the chat.")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        private async Task sendGWItemsXMLCommand()
+        {
+            try
+            {
+                await this.Context.Message.Channel.SendFileAsync(FileLocations.gwItemNames());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
         #endregion
     };
 };
