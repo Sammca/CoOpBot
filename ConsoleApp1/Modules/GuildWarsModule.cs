@@ -556,100 +556,57 @@ namespace CoOpBot.Modules.GuildWars
 
         [Command("AmountStored")]
         [Alias("as", "stored")]
-        [Summary("Finds the amount of a metrial you have in material storage")]
-        private async Task AmountStoredCommand(int itemId, IUser user = null)
+        [Summary("Finds the amount of a material the specified user has in their material storage")]
+        private async Task AmountStoredStringCommand(IUser user, params string[] itemNameQuery)
         {
-            string apiKey;
-            string url;
-            Array materialStorage;
-            int materialCount = 0;
+            List<itemResult> itemSearchResults = new List<itemResult>();
+            string queryStr = "";
+            itemResult closestMatch;
             int amountStored = 0;
+            int itemId;
 
-            if (user == null)
+            foreach (string s in itemNameQuery)
             {
-                user = this.Context.Message.Author;
+                queryStr += $"{s}";
             }
 
-            apiKey = await getUserAPIKey(user);
-            url = apiPrefix + "/account/materials?access_token=" + apiKey;
-            materialStorage = getAPIResponse(url);
+            itemSearchResults = itemSearch(queryStr).OrderBy(o => o.similarity).ToList();
+            closestMatch = itemSearchResults[0];
+            itemId = int.Parse(closestMatch.id);
 
-            materialCount = materialStorage.Length;
+            amountStored = await getAmountStored(itemId, user);
 
-            XmlDocument gwItemsDocument = new XmlDocument();
-            gwItemsDocument.Load(FileLocations.gwItemNames());
-            XmlElement gwRoot = gwItemsDocument.DocumentElement;
-            Boolean fileIsNew = gwRoot.HasChildNodes;
-            Boolean saveFile = false;
-
-            for (int i = 0; i < materialCount; i++)
-            {
-                Hashtable curMaterial = materialStorage.GetValue(i) as Hashtable;
-                XmlElement gwItem = null;
-
-                if (fileIsNew)
-                {
-                    //gwItem = gwRoot.SelectSingleNode($"descendant::{curMaterial["id"].ToString()}") as XmlElement;
-                    IEnumerator filteredEnumerator = gwItemsDocument.SelectNodes($"//Item[@id={curMaterial["id"].ToString()}]").GetEnumerator();
-                    filteredEnumerator.MoveNext();
-                    gwItem = filteredEnumerator.Current as XmlElement;
-                }
-
-                if (gwItem == null)
-                {
-                    string itemurl = apiPrefix + "/items?id=" + curMaterial["id"].ToString();
-                    Hashtable itemDetails = getAPIResponse(itemurl, true).GetValue(0) as Hashtable;
-
-                    gwItem = gwItemsDocument.CreateElement($"Item");
-                    gwItem.SetAttribute("id", $"{curMaterial["id"].ToString()}");
-                    gwItem.InnerText = itemDetails["name"].ToString();
-                    gwRoot.AppendChild(gwItem);
-
-                    saveFile = true;
-                }
-
-                if (int.Parse(curMaterial["id"].ToString()) == itemId)
-                {
-                    amountStored = int.Parse(curMaterial["count"].ToString());
-                }
-            }
-
-            if (saveFile)
-            {
-                gwItemsDocument.Save(FileLocations.gwItemNames());
-            }
-            
             await ReplyAsync($"{user.Username} has {amountStored} of item \"{itemNameFromId(itemId)}\" in their material storage");
         }
 
         [Command("AmountStored")]
         [Alias("as", "stored")]
-        [Summary("Finds the amount of a metrial the specified user has in material storage")]
-        private async Task AmountStoredStringCommand(IUser user = null, params string[] itemNameQuery)
-        {
-            List<itemResult> itemSearchResults = new List<itemResult>();
-            string queryStr = "";
-            itemResult closestMatch;
-
-            foreach (string s in itemNameQuery)
-            {
-                queryStr += $"{s}";
-            }
-
-            itemSearchResults = itemSearch(queryStr).OrderBy(o => o.similarity).ToList();
-            closestMatch = itemSearchResults[0];
-
-            await AmountStoredCommand(int.Parse(closestMatch.id), user);
-        }
-
-        [Command("AmountStored")]
-        [Alias("as", "stored")]
-        [Summary("Finds the amount of a metrial you have in material storage")]
+        [Summary("Finds the amount of a material you have in your material storage")]
         private async Task AmountStoredStringCommand(params string[] itemNameQuery)
         {
             List<itemResult> itemSearchResults = new List<itemResult>();
+            IUser user;
+
+            user = this.Context.Message.Author;
+
+            await AmountStoredStringCommand(user, itemNameQuery);
+        }
+
+        [Command("StoredAll")]
+        [Alias("sa", "totalstored")]
+        [Summary("Finds the amount of a material every user has in their material storage")]
+        private async Task StoredAllCommand(params string[] itemNameQuery)
+        {
+            List<itemResult> itemSearchResults = new List<itemResult>();
             string queryStr = "";
             itemResult closestMatch;
+            int userStored = 0;
+            int totalStored = 0;
+            int itemId;
+            string output = "";
+            string itemName = "";
+            IUser curUser;
+            IEnumerator usersEnumerator = usersNode.GetEnumerator();
 
             foreach (string s in itemNameQuery)
             {
@@ -658,8 +615,35 @@ namespace CoOpBot.Modules.GuildWars
 
             itemSearchResults = itemSearch(queryStr).OrderBy(o => o.similarity).ToList();
             closestMatch = itemSearchResults[0];
+            itemId = int.Parse(closestMatch.id);
+            itemName = itemNameFromId(itemId);
 
-            await AmountStoredCommand(int.Parse(closestMatch.id));
+            while (usersEnumerator.MoveNext())
+            {
+                XmlElement curUserNode = usersEnumerator.Current as XmlElement;
+                XmlNode userAPIKeyNode = curUserNode.SelectSingleNode("descendant::gwAPIKey");
+
+                if (userAPIKeyNode == null)
+                {
+                    continue;
+                }
+
+                curUser = this.Context.Guild.GetUserAsync(ulong.Parse(curUserNode.GetAttribute("id"))).Result as IUser;
+
+                if (curUser == null)
+                {
+                    continue;
+                }
+
+                userStored = await getAmountStored(itemId, curUser);
+                totalStored += userStored;
+
+                output += $"\n{curUser.Username} - {userStored}";
+            }
+
+            output = $"Total {itemName} stored = {totalStored}:{output}";
+
+            await ReplyAsync(output);
         }
 
         [Command("ItemSearch")]
@@ -852,6 +836,71 @@ namespace CoOpBot.Modules.GuildWars
             }
             return results;
 
+        }
+
+        private async Task<int> getAmountStored(int itemId, IUser user)
+        {
+            string apiKey;
+            string url;
+            Array materialStorage;
+            int materialCount = 0;
+            int amountStored = 0;
+
+            if (user == null)
+            {
+                user = this.Context.Message.Author;
+            }
+
+            apiKey = await getUserAPIKey(user);
+            url = apiPrefix + "/account/materials?access_token=" + apiKey;
+            materialStorage = getAPIResponse(url);
+
+            materialCount = materialStorage.Length;
+
+            XmlDocument gwItemsDocument = new XmlDocument();
+            gwItemsDocument.Load(FileLocations.gwItemNames());
+            XmlElement gwRoot = gwItemsDocument.DocumentElement;
+            Boolean fileIsNew = gwRoot.HasChildNodes;
+            Boolean saveFile = false;
+
+            for (int i = 0; i < materialCount; i++)
+            {
+                Hashtable curMaterial = materialStorage.GetValue(i) as Hashtable;
+                XmlElement gwItem = null;
+
+                if (fileIsNew)
+                {
+                    //gwItem = gwRoot.SelectSingleNode($"descendant::{curMaterial["id"].ToString()}") as XmlElement;
+                    IEnumerator filteredEnumerator = gwItemsDocument.SelectNodes($"//Item[@id={curMaterial["id"].ToString()}]").GetEnumerator();
+                    filteredEnumerator.MoveNext();
+                    gwItem = filteredEnumerator.Current as XmlElement;
+                }
+
+                if (gwItem == null)
+                {
+                    string itemurl = apiPrefix + "/items?id=" + curMaterial["id"].ToString();
+                    Hashtable itemDetails = getAPIResponse(itemurl, true).GetValue(0) as Hashtable;
+
+                    gwItem = gwItemsDocument.CreateElement($"Item");
+                    gwItem.SetAttribute("id", $"{curMaterial["id"].ToString()}");
+                    gwItem.InnerText = itemDetails["name"].ToString();
+                    gwRoot.AppendChild(gwItem);
+
+                    saveFile = true;
+                }
+
+                if (int.Parse(curMaterial["id"].ToString()) == itemId)
+                {
+                    amountStored = int.Parse(curMaterial["count"].ToString());
+                }
+            }
+
+            if (saveFile)
+            {
+                gwItemsDocument.Save(FileLocations.gwItemNames());
+            }
+
+            return amountStored;
         }
 
         #endregion
