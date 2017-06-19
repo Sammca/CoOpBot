@@ -12,6 +12,7 @@ using CoOpBot.Modules.GuildWars;
 using CoOpBot.Modules.Steam;
 using System.Xml;
 using System.IO;
+using System.Collections.Generic;
 
 namespace CoOpBot
 {
@@ -33,7 +34,6 @@ namespace CoOpBot
             client = new DiscordSocketClient();
             
             client.Log += Log;
-            //client.MessageReceived += MessageReceived;
 
             if (!File.Exists(FileLocations.xmlParameters()))
             {
@@ -95,7 +95,6 @@ namespace CoOpBot
             // Hook the MessageReceived Event into our Command Handler
             client.MessageReceived += HandleCommand;
             client.MessageReceived += RegisterNoveltyResponseCommands;
-            //RegisterAntiSpamFunctionality();
         }
 
         public async Task HandleCommand(SocketMessage messageParam)
@@ -109,7 +108,6 @@ namespace CoOpBot
             int argPos = 0;
 
             // Determine if the message is a command, based on if it starts with '!' or a mention prefix
-            //if (!(message.HasCharPrefix(prefixCharacter, ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos)))
             if (message.Author.IsBot || (!(message.HasCharPrefix(prefixCharacter, ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))))
             {
                 return;
@@ -141,67 +139,6 @@ namespace CoOpBot
             }
             return;
         }
-
-        /************************************************
-         * 
-         * Bot admin functions
-         * 
-        ************************************************/
-
-        //private void RegisterAntiSpamFunctionality()
-        //{
-        //    client.MessageReceived += async (message) =>
-        //    {
-        //        SocketGuildUser messageSender;
-        //        ISocketMessageChannel channel;
-        //        IGuildChannel guildChannel;
-        //        IUser iuser;
-        //        int messageCount;
-        //        //ChannelPermissionOverrides channelPermissionOverrides;
-
-        //        messageSender = message.Author as SocketGuildUser;
-        //        channel = message.Channel;
-        //        guildChannel = message.Channel as IGuildChannel;
-
-        //        // Check to make sure that a bot is not the author
-        //        // Also check if admin, since admins ignore the channel permission override
-        //        if (/*!messageSender.GuildPermissions.Administrator &&*/ !messageSender.IsBot)
-        //        {
-        //            //channelPermissionOverrides = new ChannelPermissionOverrides(sendMessages: PermValue.Deny);
-
-        //            /*if (userRecentMessageCounter[messageSender.Username] == null)
-        //            {
-        //                userRecentMessageCounter[messageSender.Username] = 0.ToString();
-        //            }*/
-
-        //            //messageCount = await CountMessage(messageSender, 1);
-        //            await Task.Factory.StartNew(async () => { await CountMessage(messageSender, channel, 1); });
-        //            await Task.Factory.StartNew(async () => { await CountMessage(messageSender, channel, -1, 8); });
-
-        //            /*if (messageCount > 2)
-        //            {
-        //                await channel.SendMessageAsync("#StopCamSpam");
-
-        //                iuser = await channel.GetUserAsync(messageSender.Id);
-
-        //                messageSender.GetPermissions(guildChannel).Modify(sendMessages: false);
-
-        //                //await channel.AddPermissionsRule(messageSender, channelPermissionOverrides);
-
-        //                //await Task.Delay(5000).ContinueWith(t => e.Channel.SendMessage("5 seconds passed"));
-        //                await Task.Factory.StartNew(() => { messageSender.GetPermissions(guildChannel).Modify(sendMessages: null); });
-        //            }
-
-        //            await Task.Factory.StartNew(async () => { await CountMessage(messageSender, -1, 8); });*/
-        //        }
-        //        /*else
-        //        {
-        //            messageCount = await CountMessage(messageSender, 1);
-        //            await Task.Factory.StartNew(async () => { await CountMessage(messageSender, -1, 8); });
-        //        }*/
-        //    };
-        //}
-
 
         /************************************************
          * 
@@ -263,73 +200,7 @@ namespace CoOpBot
          * (Functions not directly usable in discord)
          * 
         ************************************************/
-
-        /*private async Task<int> CountMessage(SocketGuildUser messageSender, int changeAmount, int delaySeconds = 0)
-        {
-            int messageCount;
-
-            await Task.Delay(delaySeconds * 1000);
-
-            if (userRecentMessageCounter[messageSender.Username] == null)
-            {
-                userRecentMessageCounter[messageSender.Username] = 0.ToString();
-            }
-
-            messageCount = int.Parse(userRecentMessageCounter[messageSender.Username]) + changeAmount;
-            userRecentMessageCounter[messageSender.Username] = messageCount.ToString();
-
-            Console.WriteLine(string.Format("{0}: {1}", messageSender.Username, messageCount));
-
-            // TODO move banning to here
-            // Only if messageCount = 3 and changeamount = +1
-
-            return messageCount;
-
-        }*/
-
-        //private async Task CountMessage(SocketGuildUser messageSender, ISocketMessageChannel channel, int changeAmount, int delaySeconds = 0)
-        //{
-        //    int messageCount;
-        //    IUser user;
-
-        //    await Task.Delay(delaySeconds * 1000);
-
-        //    if (userRecentMessageCounter[messageSender.Username] == null)
-        //    {
-        //        userRecentMessageCounter[messageSender.Username] = 0.ToString();
-        //    }
-
-        //    messageCount = int.Parse(userRecentMessageCounter[messageSender.Username]) + changeAmount;
-        //    userRecentMessageCounter[messageSender.Username] = messageCount.ToString();
-
-        //    Console.WriteLine(string.Format("{0}: {1}", messageSender.Username, messageCount));
-
-        //    // TODO move banning to here
-        //    // Only if messageCount = 3 and changeamount = +1
-
-        //    if (messageCount == 3 && changeAmount == 1)
-        //    {
-        //        await channel.SendMessageAsync("#StopCamSpam");
-
-        //        user = await channel.GetUserAsync(messageSender.Id);
-                
-
-        //        //messageSender.GetPermissions(messageSender.Guild as IGuildChannel).Modify(sendMessages: false);
-        //        messageSender.GuildPermissions.Modify(sendMessages: false);
-
-                
-
-        //        //await channel.AddPermissionsRule(messageSender, channelPermissionOverrides);
-
-        //        //await Task.Delay(5000).ContinueWith(t => e.Channel.SendMessage("5 seconds passed"));
-        //        await Task.Delay(delaySeconds * 5000);
-        //        //await Task.Factory.StartNew(() => { messageSender.GetPermissions(messageSender.Guild as IGuildChannel).Modify(sendMessages: null); });
-        //        await Task.Factory.StartNew(() => { messageSender.GuildPermissions.Modify(sendMessages: true); });
-        //    }
-
-
-        //}
-
+        
         private Task Log(LogMessage msg)
         {
             Console.WriteLine(msg.ToString());
