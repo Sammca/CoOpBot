@@ -991,7 +991,7 @@ namespace CoOpBot.Modules.GuildWars
             {
                 currencyOutput = $"{gold}g{silver}s{copper}c";
             }
-            else if (gold != 0)
+            else if (silver != 0)
             {
                 currencyOutput = $"{silver}s{copper}c";
             }
