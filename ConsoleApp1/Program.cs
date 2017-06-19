@@ -94,6 +94,7 @@ namespace CoOpBot
 
             // Hook the MessageReceived Event into our Command Handler
             client.MessageReceived += HandleCommand;
+            client.MessageReceived += RegisterNoveltyResponseCommands;
             //RegisterAntiSpamFunctionality();
         }
 
@@ -146,7 +147,7 @@ namespace CoOpBot
          * Bot admin functions
          * 
         ************************************************/
-        
+
         //private void RegisterAntiSpamFunctionality()
         //{
         //    client.MessageReceived += async (message) =>
@@ -207,95 +208,53 @@ namespace CoOpBot
          * Miscellaneous
          * 
         ************************************************/
-        /*
-        private void RegisterNoveltyResponseCommands()
+
+        private async Task RegisterNoveltyResponseCommands(SocketMessage messageParam)
         {
             // Define variables
             string messageTextLowercase;
             string responseText;
-            User userSentBy;
-            Dictionary<ulong, int> openKnockKnockThreadState;
+            IUser userSentBy;
+            SocketUserMessage message = messageParam as SocketUserMessage;
+            if (message == null) return;
 
             // Initialise variables
             responseText = "";
-            //openKnockKnockThreadState = new int[] { };
-            openKnockKnockThreadState = new Dictionary<ulong, int>();
-
-            bot.MessageReceived += async (s, e) =>
+            userSentBy = message.Author;
+            // Check to make sure that the author is not a bot
+            if (!userSentBy.IsBot)
             {
-                userSentBy = e.Message.User;
-                // Check to make sure that the author is not a bot
-                if (!userSentBy.IsBot)
+                messageTextLowercase = message.Content.ToLower();
+
+                if (messageTextLowercase.Substring(0, 1) != prefixCharacter.ToString())
                 {
-                    // Prevent the bot crashing on image only messages
-                    if (e.Message.RawText != "")
+                    switch (messageTextLowercase)
                     {
-                        messageTextLowercase = e.Message.RawText.ToLower();
-
-                        if (messageTextLowercase.Substring(0, 1) != prefixCharacter.ToString())
-                        {
-                            if (openKnockKnockThreadState.ContainsKey(userSentBy.Id) && openKnockKnockThreadState[userSentBy.Id] > 0)
-                            {
-                                switch (openKnockKnockThreadState[userSentBy.Id])
-                                {
-                                    case 1:
-                                        responseText = string.Format("{0} who?", e.Message.RawText);
-                                        break;
-                                    case 2:
-                                        responseText = "Ayyy, lmao";
-                                        break;
-                                    default:
-                                        break;
-                                }
-
-                                openKnockKnockThreadState[userSentBy.Id]++;
-                                if (openKnockKnockThreadState[userSentBy.Id] > 2)
-                                {
-                                    openKnockKnockThreadState[userSentBy.Id] = 0;
-                                }
-                            }
-                            else
-                            {
-                                switch (messageTextLowercase)
-                                {
-                                    case "ayyy":
-                                        responseText = "Ayyy, lmao";
-                                        break;
-                                    case "winner winner":
-                                        responseText = "Chicken dinner";
-                                        break;
-                                    case "new number":
-                                        responseText = "Who dis?";
-                                        break;
-                                    case "knock knock":
-                                        responseText = "Who's there?";
-                                        if (!openKnockKnockThreadState.ContainsKey(userSentBy.Id))
-                                        {
-                                            openKnockKnockThreadState.Add(userSentBy.Id, 1);
-                                        }
-                                        else
-                                        {
-                                            openKnockKnockThreadState[userSentBy.Id] = 1;
-                                        }
-                                        break;
-                                    default:
-                                        break;
-                                }
-                                if (messageTextLowercase.Length >= 5 && messageTextLowercase.Substring(0, 5) == "pixis")
-                                {
-                                    responseText = "PIXISUUUUUUUU";
-                                }
-                            }
-                            if (responseText != "")
-                            {
-                                await e.Channel.SendMessage(responseText);
-                                // reset responseText to prevent repeated messages
-                                responseText = "";
-                            }
-                        }
+                        case "ayyy":
+                            responseText = "Ayyy, lmao";
+                            break;
+                        case "winner winner":
+                            responseText = "Chicken dinner";
+                            break;
+                        case "new number":
+                            responseText = "Who dis?";
+                            break;
+                        default:
+                            break;
+                    }
+                    if (messageTextLowercase.Length >= 5 && messageTextLowercase.Contains("pixis"))
+                    {
+                        responseText = "PIXISUUUUUUUU";
+                    }
+                    if (responseText != "")
+                    {
+                        await message.Channel.SendMessageAsync(responseText);
+                        // reset responseText to prevent repeated messages
+                        responseText = "";
                     }
                 }
-            };
+            }
+            return;
         }
 
         /************************************************
