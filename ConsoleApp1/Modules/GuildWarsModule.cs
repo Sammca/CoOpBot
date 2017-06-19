@@ -664,6 +664,75 @@ namespace CoOpBot.Modules.GuildWars
             await ReplyAsync($"Closest match - {itemSearchResults[0].Name}");
         }
 
+        [Command("price")]
+        [Summary("Finds the sell price for the given item")]
+        private async Task PriceCommand(params string[] query)
+        {
+            List<itemResult> itemSearchResults = new List<itemResult>();
+            string queryStr = "";
+            itemResult item;
+            int itemValue;
+            Hashtable buyInfo;
+            string url;
+            Dictionary<string, int> donationValueArray = new Dictionary<string, int>();
+            Dictionary<int, int> itemValueArray = new Dictionary<int, int>();
+            Array apiResponse;
+            Hashtable itemPrices;
+
+            foreach (string s in query)
+            {
+                queryStr += $"{s}";
+            }
+
+            itemSearchResults = itemSearch(queryStr).OrderBy(o => o.similarity).ToList();
+
+            item = itemSearchResults[0];
+
+            itemValue = 0;
+
+            if (isItemAccountBount(int.Parse(item.id)))
+            {
+                itemValue = 0;
+            }
+            else
+            {
+                url = $"{apiPrefix}/commerce/prices?id={item.id}";
+
+                try
+                {
+                    apiResponse = getAPIResponse(url, true);
+
+                    itemPrices = apiResponse.GetValue(0) as Hashtable;
+
+                    buyInfo = itemPrices["buys"] as Hashtable;
+
+                    itemValue = int.Parse(buyInfo["unit_price"].ToString());
+                }
+                catch
+                {
+                    XmlElement newAccountBoundItemNode;
+                    Hashtable itemDetails;
+
+                    url = $"{apiPrefix}/items?id={item.id}";
+                    apiResponse = getAPIResponse(url, true);
+
+                    itemDetails = apiResponse.GetValue(0) as Hashtable;
+
+                    newAccountBoundItemNode = xmlParameters.CreateElement("Item");
+                    newAccountBoundItemNode.SetAttribute("id", $"{item.id}");
+                    newAccountBoundItemNode.InnerText = itemDetails["name"].ToString();
+
+                    newAccountBoundItemNode = accountBoundItemsNode.AppendChild(newAccountBoundItemNode) as XmlElement;
+
+                    xmlParameters.Save(FileLocations.xmlParameters());
+
+                    itemValue = 0;
+                }
+            }
+            
+            await ReplyAsync($"1 x {itemSearchResults[0].Name} = {num2currency(itemValue)}");
+        }
+
 
         #endregion
 
@@ -903,6 +972,36 @@ namespace CoOpBot.Modules.GuildWars
             return amountStored;
         }
 
+        private string num2currency(int rawAmount)
+        {
+            string currencyOutput = "0c";
+            int gold = 0;
+            int silver = 0;
+            int copper = 0;
+            
+            copper = rawAmount % 100;
+            rawAmount -= copper;
+
+            silver = (rawAmount % 10000) / 100;
+            rawAmount -= (silver * 100);
+
+            gold = rawAmount / 10000;
+
+            if (gold != 0)
+            {
+                currencyOutput = $"{gold}g{silver}s{copper}c";
+            }
+            else if (gold != 0)
+            {
+                currencyOutput = $"{silver}s{copper}c";
+            }
+            else
+            {
+                currencyOutput = $"{copper}c";
+            }
+
+            return currencyOutput;
+        }
         #endregion
 
     }
