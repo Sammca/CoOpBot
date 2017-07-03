@@ -335,6 +335,8 @@ namespace CoOpBot.Modules.GuildWars
             Hashtable itemPrices;
             Dictionary<string, Dictionary<int, int>> userDonatedItems = new Dictionary<string, Dictionary<int, int>>();
             int rank = 1;
+            string upgradeListUrl = apiPrefix + "/guild/upgrades/";
+            ArrayList upgradeList = getAPIResponse(upgradeListUrl, true).GetValue(0) as ArrayList;
 
             output = "";
 
@@ -380,7 +382,7 @@ namespace CoOpBot.Modules.GuildWars
                         userDonatedItems[curTransaction["user"].ToString()] = itemDictionaryElemet;
                     }
                 }
-                if (curTransaction["type"].ToString() == "stash")
+                else if (curTransaction["type"].ToString() == "stash")
                 {
                     int directionMultiplier;
 
@@ -434,8 +436,106 @@ namespace CoOpBot.Modules.GuildWars
                         userDonatedItems[curTransaction["user"].ToString()] = itemDictionaryElemet;
                     }
                 }
+                else if (curTransaction["type"].ToString() == "upgrade" && curTransaction["action"].ToString() == "queued" && curTransaction.ContainsKey("user") && upgradeList.Contains(curTransaction["upgrade_id"]))
+                {
+                    string upgradeId = curTransaction["upgrade_id"].ToString();
+                    string upgradeUrl = apiPrefix + "/guild/upgrades/" + upgradeId;
+                    Array upgradeAPIResponse;
+
+                    upgradeAPIResponse = getAPIResponse(upgradeUrl, true);
+
+                    if (upgradeAPIResponse != null)
+                    {
+
+                        Hashtable upgradeInfo = upgradeAPIResponse.GetValue(0) as Hashtable;
+                        ArrayList upgradeCosts = upgradeInfo["costs"] as ArrayList;
+
+                        foreach (Hashtable costItem in upgradeCosts)
+                        {
+                            if (costItem["type"].ToString().ToLower() == "coins")
+                            {
+                                if (!userDonatedItems.ContainsKey(curTransaction["user"].ToString()))
+                                {
+                                    Dictionary<int, int> itemDictionaryElemet = new Dictionary<int, int>();
+                                    itemDictionaryElemet.Add(0, int.Parse(costItem["count"].ToString()));
+
+                                    userDonatedItems.Add(curTransaction["user"].ToString(), itemDictionaryElemet);
+                                }
+                                else
+                                {
+                                    Dictionary<int, int> itemDictionaryElemet = new Dictionary<int, int>();
+
+                                    itemDictionaryElemet = userDonatedItems[curTransaction["user"].ToString()];
+
+
+                                    if (!itemDictionaryElemet.ContainsKey(0))
+                                    {
+                                        itemDictionaryElemet.Add(0, int.Parse(costItem["count"].ToString()));
+                                    }
+                                    else
+                                    {
+                                        itemDictionaryElemet[0] += int.Parse(costItem["count"].ToString());
+                                    }
+
+                                    userDonatedItems[curTransaction["user"].ToString()] = itemDictionaryElemet;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
             }
-            
+
+            /**********************************************************
+             * 
+             * Add on gold cost for upgrades which aren't showing a user
+             * 
+            **********************************************************/
+
+            Dictionary<int, int> additionItemDictionaryElemet = new Dictionary<int, int>();
+            int coinAmountToAdd;
+
+            additionItemDictionaryElemet = userDonatedItems["CoOpRich.4216"];
+
+            coinAmountToAdd = 0;
+            // 20 gold for Repair Anvil
+            coinAmountToAdd += 200000;
+
+            if (!additionItemDictionaryElemet.ContainsKey(0))
+            {
+                additionItemDictionaryElemet.Add(0, coinAmountToAdd);
+            }
+            else
+            {
+                // 20 gold for Repair Anvil
+                additionItemDictionaryElemet[0] += coinAmountToAdd;
+            }
+
+            userDonatedItems["CoOpRich.4216"] = additionItemDictionaryElemet;
+
+            additionItemDictionaryElemet = userDonatedItems["Poppins.2053"];
+
+            coinAmountToAdd = 0;
+            // 100 gold for Guild Hall access
+            coinAmountToAdd += 1000000;
+
+            if (!additionItemDictionaryElemet.ContainsKey(0))
+            {
+                additionItemDictionaryElemet.Add(0, coinAmountToAdd);
+            }
+            else
+            {
+                // 20 gold for Repair Anvil
+                additionItemDictionaryElemet[0] += coinAmountToAdd;
+            }
+
+            userDonatedItems["Poppins.2053"] = additionItemDictionaryElemet;
+            /**********************************************************
+             * 
+             * End
+             * 
+            **********************************************************/
+
             foreach (KeyValuePair<string, Dictionary<int, int>> entry in userDonatedItems)
             {
                 Dictionary<int, int> memberDonationArray = new Dictionary<int, int>();
