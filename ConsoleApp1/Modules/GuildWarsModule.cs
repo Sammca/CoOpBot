@@ -495,7 +495,7 @@ namespace CoOpBot.Modules.GuildWars
             Dictionary<int, int> additionItemDictionaryElemet = new Dictionary<int, int>();
             int coinAmountToAdd;
 
-            additionItemDictionaryElemet = userDonatedItems["CoOpRich.4216"];
+            additionItemDictionaryElemet = userDonatedItems["Poppins.2053"];
 
             coinAmountToAdd = 0;
             // 20 gold for Repair Anvil
@@ -511,9 +511,9 @@ namespace CoOpBot.Modules.GuildWars
                 additionItemDictionaryElemet[0] += coinAmountToAdd;
             }
 
-            userDonatedItems["CoOpRich.4216"] = additionItemDictionaryElemet;
+            userDonatedItems["Poppins.2053"] = additionItemDictionaryElemet;
 
-            additionItemDictionaryElemet = userDonatedItems["Poppins.2053"];
+            additionItemDictionaryElemet = userDonatedItems["Xutos.4632"];
 
             coinAmountToAdd = 0;
             // 100 gold for Guild Hall access
@@ -529,7 +529,7 @@ namespace CoOpBot.Modules.GuildWars
                 additionItemDictionaryElemet[0] += coinAmountToAdd;
             }
 
-            userDonatedItems["Poppins.2053"] = additionItemDictionaryElemet;
+            userDonatedItems["Xutos.4632"] = additionItemDictionaryElemet;
             /**********************************************************
              * 
              * End
@@ -639,7 +639,7 @@ namespace CoOpBot.Modules.GuildWars
                 }
                 else
                 {
-                    if (rawAmount < 0)
+                    if (gold + silver + copper < 0)
                     {
                         output += string.Format("*{0}. {1}: {2}g{3}s{4}c* \r\n", rank, entry.Key, gold, silver, copper);
                     }
