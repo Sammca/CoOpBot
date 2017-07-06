@@ -832,7 +832,75 @@ namespace CoOpBot.Modules.GuildWars
             
             await ReplyAsync($"1 x {itemSearchResults[0].Name} = {num2currency(itemValue)}");
         }
+        
+        [Command("daily")]
+        [Alias("dailies")]
+        [Summary("Gets information about the daily achievements. Options are pve, pvp, wvw or fractals")]
+        private async Task DailyCommand(string type = "pve")
+        {
+            string url;
+            Array apiResponse;
+            Hashtable dailiesInfo;
+            ArrayList pveDailies;
+            string dailyIds = "";
+            Boolean firstId = true;
+            
+            // Find the IDs of the 4 daily achievements for level 80 characters with HoT
+            url = apiPrefix + "/achievements/daily";
+            
+            apiResponse = getAPIResponse(url, true);
 
+            dailiesInfo = apiResponse.GetValue(0) as Hashtable;
+
+            pveDailies = dailiesInfo[type] as ArrayList;
+
+            foreach (Hashtable daily in pveDailies)
+            {
+                Hashtable levelInfo;
+                ArrayList accessInfo;
+
+                levelInfo = daily["level"] as Hashtable;
+                accessInfo = daily["required_access"] as ArrayList;
+
+                if (levelInfo["max"].ToString() == "80" && accessInfo.Contains("HeartOfThorns"))
+                {
+                    // Don't add a comma before the first item in the list
+                    if (!firstId)
+                    {
+                        dailyIds += ",";
+                    }
+                    else
+                    {
+                        firstId = false;
+                    }
+
+                    dailyIds += daily["id"].ToString();
+                }
+            }
+
+            url = apiPrefix + "/achievements?ids=" + dailyIds;
+
+            apiResponse = getAPIResponse(url);
+            
+            // Build the response
+            var builder = new EmbedBuilder()
+            {
+                Color = new Color(114, 137, 218),
+            };
+
+            foreach (Hashtable daily in apiResponse)
+            {
+
+                builder.AddField(x =>
+                {
+                    x.Name = daily["name"].ToString();
+                    x.Value = daily["requirement"].ToString();
+                    x.IsInline = false;
+                });
+            }
+
+            await ReplyAsync("", false, builder.Build());
+        }
 
         #endregion
 
