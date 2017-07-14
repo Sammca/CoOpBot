@@ -132,6 +132,50 @@ namespace CoOpBot.Modules.Roll
             }
         }
 
+        [Command("Rolls")]
+        [Summary("Shows a summary of rolls from a specified number of dice, with a specified number of sides.")]
+        public async Task rolls(int numberOfDice = 1, int sidesOnDice = 6)
+        {
+            int[] rollCount = new int[(sidesOnDice + 1)];
+            int curRollResult;
+            string output;
+
+            try
+            {
+                curRollResult = 0;
+                output = "[Roll] - [Count] \n";
+                // Initialise array values
+                rollCount[0] = 0;
+                for (int i = 1; i <= sidesOnDice; i++)
+                {
+                    rollCount[i] = 0;
+                }
+
+                // do the rolls
+                for (int attemptNumber = 1; attemptNumber <= numberOfDice; attemptNumber++)
+                {
+                    curRollResult = RollDice(1, sidesOnDice);
+
+                    rollCount[curRollResult] += 1;
+                }
+
+
+                for (int j = 1; j <= sidesOnDice; j++)
+                {
+                    if (rollCount[j] > 0)
+                    {
+                        output += string.Format("{0} - {1} \n", j, rollCount[j]);
+                    }
+                }
+
+                await ReplyAsync(output);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
         private int RollDice(int numberOfDice = 1, int sidesOnDice = 6)
         {
             int totalRoll;
@@ -146,7 +190,8 @@ namespace CoOpBot.Modules.Roll
             // do the roll
             for (int rollNumber = 1; rollNumber <= numberOfDice; rollNumber++)
             {
-                totalRoll += rng.Next(1, sidesOnDice);
+                // Add 1 to the sides on dice because upper bound is EXCLUSIVE
+                totalRoll += rng.Next(1, (sidesOnDice+1));
             }
             
             return totalRoll;
