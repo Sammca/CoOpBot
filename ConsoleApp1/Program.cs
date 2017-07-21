@@ -21,7 +21,6 @@ namespace CoOpBot
         // Define & initialise variables
         private DiscordSocketClient client;
         private CommandService commands = new CommandService();
-        private DependencyMap map = new DependencyMap();
         XmlDocument xmlParameters = new XmlDocument();
         char prefixCharacter;
         NameValueCollection userRecentMessageCounter = new NameValueCollection();
@@ -81,15 +80,6 @@ namespace CoOpBot
 
         public async Task InstallCommands()
         {
-            map.Add(client);
-
-            // Add modules containing the commands
-            map.Add(new RollModule());
-            map.Add(new RolesModule());
-            map.Add(new CoOpGamingModule());
-            map.Add(new GuildWarsModule());
-            map.Add(new SteamModule());
-
             await commands.AddModulesAsync(Assembly.GetEntryAssembly());
 
             // Hook the MessageReceived Event into our Command Handler
@@ -101,29 +91,33 @@ namespace CoOpBot
         {
             // Don't process the command if it was a System Message
             SocketUserMessage message = messageParam as SocketUserMessage;
-            if (message == null) return;
-
+            if (message == null)
+            {
+                return;
+            }
 
             // Create a number to track where the prefix ends and the command begins
             int argPos = 0;
 
-            // Determine if the message is a command, based on if it starts with '!' or a mention prefix
+            // Determine if the message is a command, based on if it starts with the prefix from the parameters file (default '!') or a mention prefix
             if (message.Author.IsBot || (!(message.HasCharPrefix(prefixCharacter, ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))))
             {
                 return;
             }
 
             // Create a Command Context
-            var context = new CommandContext(message.Discord, message);
+            var context = new CommandContext(client, message);
 
             // Execute the command. (result does not indicate a return value, 
             // rather an object stating if the command executed succesfully)
             if(commands.Search(context, argPos).IsSuccess)
             {
-                await context.Message.AddReactionAsync("👍");
+                Emoji emoji = new Emoji("👍");
+                
+                await context.Message.AddReactionAsync(emoji);
             }
 
-            var result = await commands.ExecuteAsync(context, argPos, map);
+            var result = await commands.ExecuteAsync(context, argPos);
 
             if (commands.Search(context, argPos).IsSuccess)
             {
@@ -136,6 +130,10 @@ namespace CoOpBot
             if (!result.IsSuccess && result.Error != CommandError.UnknownCommand)
             {
                 await context.Channel.SendMessageAsync(result.ErrorReason);
+            }
+            else if (!result.IsSuccess && result.Error == CommandError.UnknownCommand)
+            {
+                await context.Channel.SendMessageAsync($"Command not recognised, try {prefixCharacter}help to see the available commands");
             }
             return;
         }
