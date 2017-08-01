@@ -173,6 +173,7 @@
     <Compile Include="CoOpGlobals.cs" />
     <Compile Include="JSON.cs" />
     <Compile Include="Modules\AdminModule.cs" />
+    <Compile Include="Modules\BloodbowlModule.cs" />
     <Compile Include="Modules\SteamModule.cs" />
     <Compile Include="Modules\CoOpGamingModule.cs" />
     <Compile Include="Modules\SuperUserModule.cs" />
