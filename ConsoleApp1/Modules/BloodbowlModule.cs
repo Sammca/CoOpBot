@@ -339,6 +339,52 @@ namespace CoOpBot.Modules.Bloodbowl
             }
         }
 
+
+        [Command("Register")]
+        [Summary("Register other users for the bloodbowl tournament")]
+        private async Task RegisterCommand(params IUser[] users)
+        {
+            try
+            {
+                string output = "";
+
+                foreach (IUser curUser in users)
+                {
+                    IEnumerator playersEnumerator = playersNode.GetEnumerator();
+                    Boolean alreadyRegistered = false;
+
+                    while (playersEnumerator.MoveNext())
+                    {
+                        XmlElement playerNode = playersEnumerator.Current as XmlElement;
+
+                        if (ulong.Parse(playerNode.GetAttribute("id")) == curUser.Id)
+                        {
+                            alreadyRegistered = true;
+                        }
+                    }
+
+                    if (!alreadyRegistered)
+                    {
+                        XmlElement newPlayerNode;
+
+                        newPlayerNode = xmlParameters.CreateElement("Player");
+                        newPlayerNode.SetAttribute("id", curUser.Id.ToString());
+                        playersNode.AppendChild(newPlayerNode);
+
+                        xmlParameters.Save(FileLocations.xmlParameters());
+                    }
+                }
+
+                output += "Users successfully added to the tournament";
+
+                await ReplyAsync(output);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
         [Command("AssignTeams")]
         [Alias("CreateLeague")]
         [Summary("Assigns teams to the registered players. Parameter sets how many teams can be of the same race")]
