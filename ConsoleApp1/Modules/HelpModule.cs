@@ -3,6 +3,7 @@ using Discord.Commands;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace CoOpBot.Modules.HelpModule
 {
@@ -14,8 +15,13 @@ namespace CoOpBot.Modules.HelpModule
 
         public HelpModule(CommandService service)           // Create a constructor for the commandservice dependency
         {
+            XmlDocument xmlParameters = new XmlDocument();
+            xmlParameters.Load(FileLocations.xmlParameters());
+            XmlNode root = xmlParameters.DocumentElement;
+            XmlNode prefixNode = root.SelectSingleNode("descendant::PrefixChar");
+            
             _service = service;
-            prefix = "!";
+            prefix = prefixNode.InnerText;
         }
 
         [Command("help")]
