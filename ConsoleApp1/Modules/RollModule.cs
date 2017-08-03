@@ -108,17 +108,6 @@ namespace CoOpBot.Modules.Roll
                     if (curRollResult >= targetRoll)
                     {
                         passCounter++;
-
-                        if (outputEachRoll)
-                        {
-                            output += string.Format("Roll {0} result: {1} ", attemptNumber, curRollResult);
-                            output += "- PASS \r\n";
-                        }
-                    }
-                    else if(outputEachRoll)
-                    {
-                        output += string.Format("Roll {0} result: {1} ", attemptNumber, curRollResult);
-                        output += "- FAIL \r\n";
                     }
                 }
 

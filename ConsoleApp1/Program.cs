@@ -3,16 +3,9 @@ using Discord.WebSocket;
 using Discord.Commands;
 using System;
 using System.Threading.Tasks;
-using System.Collections.Specialized;
 using System.Reflection;
-using CoOpBot.Modules.Roll;
-using CoOpBot.Modules.Admin;
-using CoOpBot.Modules.CoOpGaming;
-using CoOpBot.Modules.GuildWars;
-using CoOpBot.Modules.Steam;
 using System.Xml;
 using System.IO;
-using System.Collections.Generic;
 
 namespace CoOpBot
 {
@@ -23,7 +16,6 @@ namespace CoOpBot
         private CommandService commands = new CommandService();
         XmlDocument xmlParameters = new XmlDocument();
         char prefixCharacter;
-        NameValueCollection userRecentMessageCounter = new NameValueCollection();
 
         public static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();
 
