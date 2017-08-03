@@ -17,7 +17,7 @@ namespace CoOpBot.Modules.Roll
 
         [Command("Roll")]
         [Summary("Rolls a specified number of dice, with a specified number of sides. Time to Die.")]
-        public async Task roll(string diceModifier = "", bool outputEachRoll = false)
+        public async Task roll(string diceModifier = "")
         {
             int numberOfDice;
             int sidesOnDice;
@@ -73,7 +73,7 @@ namespace CoOpBot.Modules.Roll
         
         [Command("RollToBeat")]
         [Summary("Rolls to match or beat a specified result using a specified number of dice, with a specified number of sides. Time to Die Hard with a Vengence.")]
-        public async Task rollToBeat(int targetRoll, int numberOfTries, string diceModifier = "", bool outputEachRoll = false)
+        public async Task rollToBeat(int targetRoll, int numberOfTries, string diceModifier = "")
         {
             int numberOfDice;
             int sidesOnDice;
