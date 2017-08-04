@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -86,6 +87,89 @@ namespace CoOpBot
             backupPath += @"\gwItemNamesBAK.xml";
 
             return backupPath;
+        }
+    }
+
+    public static class CoOpGlobal
+    {
+        public static XmlNode xmlFindOrCreateChild(XmlDocument file, XmlNode parent, string childName, string defaultValue = "")
+        {
+            XmlNode childNode;
+            string filePath = new Uri(file.BaseURI).LocalPath;
+
+            childNode = parent.SelectSingleNode($"descendant::{childName}");
+
+            if (childNode == null)
+            {
+                childNode = file.CreateElement(childName);
+
+                if (defaultValue != "")
+                {
+                    childNode.InnerText = defaultValue;
+                }
+
+                parent.AppendChild(childNode);
+                file.Save(filePath);
+            }
+
+            return childNode;
+        }
+
+        public static XmlNode xmlUpdateOrCreateChildNode(XmlDocument file, XmlNode parent, string childName, string newValue)
+        {
+            XmlNode childNode;
+            string filePath = new Uri(file.BaseURI).LocalPath;
+
+            childNode = parent.SelectSingleNode($"descendant::{childName}");
+
+            if (childNode == null)
+            {
+                childNode = file.CreateElement(childName);
+                childNode.InnerText = newValue;
+                parent.AppendChild(childNode);
+            }
+            else
+            {
+                childNode.InnerText = newValue;
+            }
+
+            file.Save(filePath);
+
+            return childNode;
+        }
+
+
+        public static XmlElement xmlFindOrCreateNodeFromAttribute(XmlDocument file, XmlNode parentNode, string attributeName, string attributeValue, string childNodeName)
+        {
+            IEnumerator nodeEnumerator = parentNode.GetEnumerator();
+            Boolean nodeExists = false;
+            XmlElement foundNode = null;
+
+            while (nodeEnumerator.MoveNext() && !nodeExists)
+            {
+                XmlElement curNode = nodeEnumerator.Current as XmlElement;
+
+                if (curNode.GetAttribute(attributeName) == attributeValue)
+                {
+                    foundNode = curNode;
+                    nodeExists = true;
+                }
+            }
+
+            if (!nodeExists)
+            {
+                XmlElement newNode;
+                string filePath = new Uri(file.BaseURI).LocalPath;
+
+                newNode = file.CreateElement(childNodeName);
+                newNode.SetAttribute(attributeName, attributeValue);
+
+                foundNode = parentNode.AppendChild(newNode) as XmlElement;
+
+                file.Save(filePath);
+            }
+
+            return foundNode;
         }
     }
 

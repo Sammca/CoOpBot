@@ -28,22 +28,10 @@ namespace CoOpBot.Modules.Steam
 
             xmlParameters.Load(FileLocations.xmlParameters());
             root = xmlParameters.DocumentElement;
-            usersNode = root.SelectSingleNode("descendant::Users");
-            
-            usersNode = root.SelectSingleNode("descendant::Users");
 
-            if (usersNode == null)
-            {
-                usersNode = xmlParameters.CreateElement("Users");
-                root.AppendChild(usersNode);
-            }
+            usersNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "Users");
 
-            steamKeyNode = root.SelectSingleNode("SteamToken");
-            if (steamKeyNode == null)
-            {
-                steamKeyNode = xmlParameters.CreateElement("SteamToken");
-                root.AppendChild(steamKeyNode);
-            }
+            steamKeyNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "SteamToken");
             steamKey = steamKeyNode.InnerText;
         }
 
@@ -60,50 +48,10 @@ namespace CoOpBot.Modules.Steam
         [Summary("Registers your steam ID with the bot")]
         private async Task RegisterTokenCommand(string key)
         {
-            IEnumerator usersEnumerator = usersNode.GetEnumerator();
-            Boolean userNodeExists = false;
-            XmlElement userDetails = null;
+            XmlElement userDetails;
+            userDetails = CoOpGlobal.xmlFindOrCreateNodeFromAttribute(xmlParameters, usersNode, "id", this.Context.Message.Author.Id.ToString(), "User");
 
-            while (usersEnumerator.MoveNext())
-            {
-                XmlElement curNode = usersEnumerator.Current as XmlElement;
-
-                if (curNode.GetAttribute("id") == this.Context.Message.Author.Id.ToString())
-                {
-                    userDetails = curNode;
-                    userNodeExists = true;
-                }
-
-
-            }
-
-            if (!userNodeExists)
-            {
-                XmlElement newUserNode;
-
-                newUserNode = xmlParameters.CreateElement("User");
-                newUserNode.SetAttribute("id", this.Context.Message.Author.Id.ToString());
-
-                userDetails = usersNode.AppendChild(newUserNode) as XmlElement;
-
-            }
-
-            XmlNode apiElement;
-
-            apiElement = userDetails.SelectSingleNode("descendant::steamID");
-
-            if (apiElement == null)
-            {
-                apiElement = xmlParameters.CreateElement("steamID");
-                apiElement.InnerText = key;
-                userDetails.AppendChild(apiElement);
-            }
-            else
-            {
-                apiElement.InnerText = key;
-            }
-
-            xmlParameters.Save(FileLocations.xmlParameters());
+            CoOpGlobal.xmlUpdateOrCreateChildNode(xmlParameters, userDetails, "steamID", key);
 
             await ReplyAsync("Your Steam profile has been updated");
         }

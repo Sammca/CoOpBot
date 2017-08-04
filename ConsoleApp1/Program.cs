@@ -22,6 +22,8 @@ namespace CoOpBot
 
         public async Task MainAsync()
         {
+            XmlNode prefixNode;
+
             client = new DiscordSocketClient();
             
             client.Log += Log;
@@ -45,23 +47,15 @@ namespace CoOpBot
 
             xmlParameters.Load(FileLocations.xmlParameters());
             XmlNode root = xmlParameters.DocumentElement;
-            XmlNode myNode = root.SelectSingleNode("descendant::BotToken");
-            XmlNode prefixNode = root.SelectSingleNode("descendant::PrefixChar");
-            
-            if (prefixNode == null)
-            {
-                prefixNode = xmlParameters.CreateElement("PrefixChar");
-                prefixNode.InnerText = "!";
-                root.AppendChild(prefixNode);
+            XmlNode botTokenNode = root.SelectSingleNode("descendant::BotToken");
 
-                xmlParameters.Save(FileLocations.xmlParameters());
-            }
+            prefixNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "PrefixChar", "!");
 
             prefixCharacter = Convert.ToChar(prefixNode.InnerText);
             
             await InstallCommands();
             
-            string token = myNode.InnerText;
+            string token = botTokenNode.InnerText;
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
             

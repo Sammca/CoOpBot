@@ -35,22 +35,11 @@ namespace CoOpBot.Modules.GuildWars
             root = xmlParameters.DocumentElement;
 
             // Users
-            usersNode = root.SelectSingleNode("descendant::Users");
-
-            if (usersNode == null)
-            {
-                usersNode = xmlParameters.CreateElement("Users");
-                root.AppendChild(usersNode);
-            }
+            usersNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "Users");
 
             // GW specific settings
-            guildWarsNode = root.SelectSingleNode("descendant::GuildWars");
+            guildWarsNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "GuildWars");
 
-            if (guildWarsNode == null)
-            {
-                guildWarsNode = xmlParameters.CreateElement("GuildWars");
-                root.AppendChild(guildWarsNode);
-            }
             guildIDNode = guildWarsNode.SelectSingleNode("descendant::GuildId");
             guildAccessTokenNode = guildWarsNode.SelectSingleNode("descendant::GuildAccessToken");
 
@@ -64,14 +53,9 @@ namespace CoOpBot.Modules.GuildWars
                 guildId = null;
                 guildAccessToken = null;
             }
-            
+
             // GW non tradeable items
-            accountBoundItemsNode = guildWarsNode.SelectSingleNode("descendant::AccountBoundItems");
-            if (accountBoundItemsNode == null)
-            {
-                accountBoundItemsNode = xmlParameters.CreateElement("AccountBoundItems");
-                guildWarsNode.AppendChild(accountBoundItemsNode);
-            }
+            accountBoundItemsNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, guildWarsNode, "AccountBoundItems");
         }
 
         #region Commands
@@ -81,50 +65,10 @@ namespace CoOpBot.Modules.GuildWars
         [Summary("Registers your guild wars API access token with the bot")]
         private async Task RegisterTokenCommand(string key)
         {
-            IEnumerator usersEnumerator = usersNode.GetEnumerator();
-            Boolean userNodeExists = false;
-            XmlElement userDetails = null;
+            XmlElement userDetails;
+            userDetails = CoOpGlobal.xmlFindOrCreateNodeFromAttribute(xmlParameters, usersNode, "id", this.Context.Message.Author.Id.ToString(), "User");
 
-            while (usersEnumerator.MoveNext())
-            {
-                XmlElement curNode = usersEnumerator.Current as XmlElement;
-
-                if (curNode.GetAttribute("id") == this.Context.Message.Author.Id.ToString())
-                {
-                    userDetails = curNode;
-                    userNodeExists = true;
-                }
-
-
-            }
-
-            if (!userNodeExists)
-            {
-                XmlElement newUserNode;
-
-                newUserNode = xmlParameters.CreateElement("User");
-                newUserNode.SetAttribute("id", this.Context.Message.Author.Id.ToString());
-
-                userDetails = usersNode.AppendChild(newUserNode) as XmlElement;
-
-            }
-
-            XmlNode apiElement;
-
-            apiElement = userDetails.SelectSingleNode("descendant::gwAPIKey");
-
-            if (apiElement == null)
-            {
-                apiElement = xmlParameters.CreateElement("gwAPIKey");
-                apiElement.InnerText = key;
-                userDetails.AppendChild(apiElement);
-            }
-            else
-            {
-                apiElement.InnerText = key;
-            }
-
-            xmlParameters.Save(FileLocations.xmlParameters());
+            CoOpGlobal.xmlUpdateOrCreateChildNode(xmlParameters, userDetails, "gwAPIKey", key);
 
             await ReplyAsync("Your API key has been updated");
         }
@@ -203,7 +147,7 @@ namespace CoOpBot.Modules.GuildWars
         }
 
         [Command("MOTD")]
-        [Summary("Gets the guilds messgae of the day")]
+        [Summary("Gets the guilds message of the day")]
         private async Task MOTDCommand()
         {
             string url;
@@ -1103,7 +1047,6 @@ namespace CoOpBot.Modules.GuildWars
 
                 if (fileIsNew)
                 {
-                    //gwItem = gwRoot.SelectSingleNode($"descendant::{curMaterial["id"].ToString()}") as XmlElement;
                     IEnumerator filteredEnumerator = gwItemsDocument.SelectNodes($"//Item[@id={curMaterial["id"].ToString()}]").GetEnumerator();
                     filteredEnumerator.MoveNext();
                     gwItem = filteredEnumerator.Current as XmlElement;

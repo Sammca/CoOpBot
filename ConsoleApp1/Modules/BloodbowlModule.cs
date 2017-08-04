@@ -31,13 +31,7 @@ namespace CoOpBot.Modules.Bloodbowl
             rng = new Random();
 
             // Bloodbowl section of XML
-            bloodbowlNode = root.SelectSingleNode("descendant::Bloodbowl");
-
-            if (bloodbowlNode == null)
-            {
-                bloodbowlNode = xmlParameters.CreateElement("Bloodbowl");
-                root.AppendChild(bloodbowlNode);
-            }
+            bloodbowlNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "Bloodbowl");
 
             // List of all available races
             racesNode = bloodbowlNode.SelectSingleNode("descendant::Races");
@@ -123,27 +117,16 @@ namespace CoOpBot.Modules.Bloodbowl
                 racesNode.AppendChild(raceNode);
                 #endregion
 
+                xmlParameters.Save(FileLocations.xmlParameters());
             }
 
             // Node that stores the total number of players in tournament
-            tournamentSizeNode = bloodbowlNode.SelectSingleNode("descendant::TournamentSize");
+            tournamentSizeNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, bloodbowlNode, "TournamentSize", "16");
 
-            if (tournamentSizeNode == null)
-            {
-                tournamentSizeNode = xmlParameters.CreateElement("TournamentSize");
-                tournamentSizeNode.InnerText = "16";
-                bloodbowlNode.AppendChild(tournamentSizeNode);
-            }
             tournamentSize = int.Parse(tournamentSizeNode.InnerText);
 
             // Players registered for the tournament
-            playersNode = bloodbowlNode.SelectSingleNode("descendant::Players");
-
-            if (playersNode == null)
-            {
-                playersNode = xmlParameters.CreateElement("Players");
-                bloodbowlNode.AppendChild(playersNode);
-            }
+            playersNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, bloodbowlNode, "Players");
 
             // List of races being available for random distribution in the current tournament
             tournamentRacesNode = bloodbowlNode.SelectSingleNode("descendant::TournamentRacesNode");
@@ -228,9 +211,11 @@ namespace CoOpBot.Modules.Bloodbowl
                 raceNode.InnerText = "Goblins";
                 tournamentRacesNode.AppendChild(raceNode);
                 #endregion
+
+                xmlParameters.Save(FileLocations.xmlParameters());
             }
 
-            xmlParameters.Save(FileLocations.xmlParameters());
+            //xmlParameters.Save(FileLocations.xmlParameters());
         }
 
         #region Commands
