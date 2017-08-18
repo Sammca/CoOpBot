@@ -111,6 +111,10 @@ namespace CoOpBot.Modules.HelpModule
             string output = "";
             bool inputIsModule = false;
             bool breakStatemenet = false;
+            var builder = new EmbedBuilder()
+            {
+                Color = new Color(114, 137, 218)
+            };
 
             commandString = command.Length > 1 ? command[0] + " " + command[1] : command[0];
 
@@ -127,6 +131,7 @@ namespace CoOpBot.Modules.HelpModule
                         var result = await cmd.CheckPreconditionsAsync(Context);
                         int parameterCount = 0;
                         int parameterNumber = 1;
+
                         if (result.IsSuccess)
                         {
                             description += $"{prefix}{cmd.Aliases.First()} ";
@@ -171,7 +176,14 @@ namespace CoOpBot.Modules.HelpModule
                             description += "\n";
                         }
                         output += description;
+
                     }
+                    builder.AddField(x =>
+                    {
+                        x.Name = module.Name;
+                        x.Value = output;
+                        x.IsInline = false;
+                    });
                 }
                 if (breakStatemenet)
                 {
@@ -197,10 +209,12 @@ namespace CoOpBot.Modules.HelpModule
                             int aliasCount = 0;
                             int aliasNumber = 1;
                             breakStatemenet = true;
+                            string commandStr = "";
 
                             if (result.IsSuccess)
                             {
                                 description += $"{prefix}{cmd.Aliases.First()} ";
+                                commandStr = $"{cmd.Aliases.First()}";
 
                                 parameterCount = cmd.Parameters.Count;
                                 aliasCount = cmd.Aliases.Count;
@@ -240,17 +254,20 @@ namespace CoOpBot.Modules.HelpModule
                                     description += ")";
                                 }
 
-                                if (aliasCount > 0)
+                                if (aliasCount > 1)
                                 {
                                     description += "\n";
                                     description += "Other names: ";
                                 }
                                 foreach (string alias in cmd.Aliases)
                                 {
-                                    description += alias;
-                                    if (aliasCount > aliasNumber)
+                                    if (alias != cmd.Aliases.First())
                                     {
-                                        description += ", ";
+                                        description += alias;
+                                        if (aliasCount > aliasNumber)
+                                        {
+                                            description += ", ";
+                                        }
                                     }
                                     aliasNumber++;
                                 }
@@ -261,6 +278,13 @@ namespace CoOpBot.Modules.HelpModule
                             }
 
                             output = description;
+
+                            builder.AddField(x =>
+                            {
+                                x.Name = commandStr;
+                                x.Value = description;
+                                x.IsInline = false;
+                            });
                         }
                         if (breakStatemenet)
                         {
@@ -273,8 +297,8 @@ namespace CoOpBot.Modules.HelpModule
                     }
                 }
             }
-
-            await ReplyAsync(output);
+            
+            await ReplyAsync("", false, builder.Build());
         }
     }
 }
