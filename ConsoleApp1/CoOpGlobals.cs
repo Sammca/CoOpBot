@@ -14,7 +14,7 @@ namespace CoOpBot
             return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml";
         }
 
-        public static string backupXML()
+        public static string backupXMLParameters()
         {
             string fullPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotParameters.xml";
             string backupPath = "";
@@ -34,6 +34,35 @@ namespace CoOpBot
             }
 
             backupPath += @"\CoOpBotParametersBAK.xml";
+
+            return backupPath;
+        }
+
+        public static string xmlDatabase()
+        {
+            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotDB.xml";
+        }
+
+        public static string backupXMLDatabase()
+        {
+            string fullPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\CoOpBotDB.xml";
+            string backupPath = "";
+            string[] pathArray;
+
+            pathArray = fullPath.Split('\\');
+            pathArray = pathArray.Take(pathArray.Length - 6).ToArray();
+
+            for (int i = 0; i < pathArray.Length; i++)
+            {
+                if (i > 0)
+                {
+                    backupPath += '\\';
+                }
+                backupPath += pathArray[i];
+
+            }
+
+            backupPath += @"\CoOpBotDBBAK.xml";
 
             return backupPath;
         }

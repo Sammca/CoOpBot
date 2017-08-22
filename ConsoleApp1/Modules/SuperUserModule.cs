@@ -23,9 +23,9 @@ namespace CoOpBot.Modules
             try
             {
                 xmlParameters.Load(FileLocations.xmlParameters());
-                xmlParameters.Save(FileLocations.backupXML());
+                xmlParameters.Save(FileLocations.backupXMLParameters());
 
-                await ReplyAsync($"XML parameters backed up to {FileLocations.backupXML()}");
+                await ReplyAsync($"XML parameters backed up to {FileLocations.backupXMLParameters()}");
             }
             catch (Exception ex)
             {
@@ -36,7 +36,8 @@ namespace CoOpBot.Modules
         [Command("BackupGW")]
         [Summary("Creates a backup of the GW items file.")]
         [RequireUserPermission(GuildPermission.Administrator)]
-        private async Task BackupGWCommand()
+
+        private async Task BackupDBCommand()
         {
             XmlDocument xmlParameters = new XmlDocument();
             try
@@ -45,6 +46,25 @@ namespace CoOpBot.Modules
                 xmlParameters.Save(FileLocations.gwItemNamesBackup());
 
                 await ReplyAsync($"GW item names file backed up to {FileLocations.gwItemNamesBackup()}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        [Command("BackupDB")]
+        [Summary("Creates a backup of the XML database file.")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+
+        private async Task BackupGWCommand()
+        {
+            XmlDocument xmlParameters = new XmlDocument();
+            try
+            {
+                xmlParameters.Load(FileLocations.xmlDatabase());
+                xmlParameters.Save(FileLocations.backupXMLDatabase());
+
+                await ReplyAsync($"GW item names file backed up to {FileLocations.backupXMLDatabase()}");
             }
             catch (Exception ex)
             {
@@ -62,6 +82,7 @@ namespace CoOpBot.Modules
             {
                 await BackupGWCommand();
                 await BackupXMLCommand();
+                await BackupDBCommand();
             }
             catch (Exception ex)
             {
@@ -70,7 +91,6 @@ namespace CoOpBot.Modules
         }
 
         [Command("RestoreXML")]
-        [Alias("restore")]
         [Summary("Restores a backup of the XML parameters file.")]
         [RequireUserPermission(GuildPermission.Administrator)]
         private async Task RestoreXMLCommand()
@@ -78,10 +98,29 @@ namespace CoOpBot.Modules
             XmlDocument xmlParameters = new XmlDocument();
             try
             {
-                xmlParameters.Load(FileLocations.backupXML());
+                xmlParameters.Load(FileLocations.backupXMLParameters());
                 xmlParameters.Save(FileLocations.xmlParameters());
 
                 await ReplyAsync("XML parameters restored");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        [Command("RestoreDB")]
+        [Summary("Restores a backup of the XML parameters file.")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        private async Task RestoreDBCommand()
+        {
+            XmlDocument xmlParameters = new XmlDocument();
+            try
+            {
+                xmlParameters.Load(FileLocations.backupXMLDatabase());
+                xmlParameters.Save(FileLocations.xmlDatabase());
+
+                await ReplyAsync("XML database restored");
             }
             catch (Exception ex)
             {
@@ -96,12 +135,15 @@ namespace CoOpBot.Modules
         {
             XmlDocument xmlParameters = new XmlDocument();
             XmlDocument gwItems = new XmlDocument();
+            XmlDocument xmlDB = new XmlDocument();
             try
             {
-                xmlParameters.Load(FileLocations.backupXML());
+                xmlParameters.Load(FileLocations.backupXMLParameters());
                 xmlParameters.Save(FileLocations.xmlParameters());
                 gwItems.Load(FileLocations.gwItemNamesBackup());
                 gwItems.Save(FileLocations.gwItemNames());
+                xmlDB.Load(FileLocations.backupXMLDatabase());
+                xmlDB.Save(FileLocations.xmlDatabase());
 
                 await ReplyAsync("XML parameters restored");
             }
@@ -156,6 +198,21 @@ namespace CoOpBot.Modules
             try
             {
                 await this.Context.Message.Channel.SendFileAsync(FileLocations.xmlParameters());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        [Command("sendDB")]
+        [Summary("Makes the bot send a copy of the XML database file to the chat.")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        private async Task sendDBCommand()
+        {
+            try
+            {
+                await this.Context.Message.Channel.SendFileAsync(FileLocations.xmlDatabase());
             }
             catch (Exception ex)
             {

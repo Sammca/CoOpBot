@@ -14,7 +14,7 @@ namespace CoOpBot.Modules.Bloodbowl
     public class BloodbowlModule : ModuleBase
     {
 
-        XmlDocument xmlParameters = new XmlDocument();
+        XmlDocument xmlDatabase = new XmlDocument();
         XmlNode root;
         XmlNode bloodbowlNode;
         XmlNode playersNode;
@@ -26,12 +26,12 @@ namespace CoOpBot.Modules.Bloodbowl
 
         public BloodbowlModule()
         {
-            xmlParameters.Load(FileLocations.xmlParameters());
-            root = xmlParameters.DocumentElement;
+            xmlDatabase.Load(FileLocations.xmlDatabase());
+            root = xmlDatabase.DocumentElement;
             rng = new Random();
 
             // Bloodbowl section of XML
-            bloodbowlNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "Bloodbowl");
+            bloodbowlNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, root, "Bloodbowl");
 
             // List of all available races
             racesNode = bloodbowlNode.SelectSingleNode("descendant::Races");
@@ -39,94 +39,94 @@ namespace CoOpBot.Modules.Bloodbowl
             if (racesNode == null)
             {
                 XmlNode raceNode;
-                racesNode = xmlParameters.CreateElement("Races");
+                racesNode = xmlDatabase.CreateElement("Races");
                 bloodbowlNode.AppendChild(racesNode);
 
                 #region add all races
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Humans";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Orcs";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Dwarves";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Skaven";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "High Elves";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Dark Elves";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Brettonians";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Chaos";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Wood Elves";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Lizardmen";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Norse";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Undead";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Necromantic";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Nurgle";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Khemri";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Chaos Dwarves";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Ogres";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Halflings";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Vampires";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Amazons";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Kislev";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Pro Elves";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Underworld";
                 racesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Goblins";
                 racesNode.AppendChild(raceNode);
                 #endregion
 
-                xmlParameters.Save(FileLocations.xmlParameters());
+                xmlDatabase.Save(FileLocations.xmlDatabase());
             }
 
             // Node that stores the total number of players in tournament
-            tournamentSizeNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, bloodbowlNode, "TournamentSize", "16");
+            tournamentSizeNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, bloodbowlNode, "TournamentSize", "16");
 
             tournamentSize = int.Parse(tournamentSizeNode.InnerText);
 
             // Players registered for the tournament
-            playersNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, bloodbowlNode, "Players");
+            playersNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, bloodbowlNode, "Players");
 
             // List of races being available for random distribution in the current tournament
             tournamentRacesNode = bloodbowlNode.SelectSingleNode("descendant::TournamentRacesNode");
@@ -134,88 +134,86 @@ namespace CoOpBot.Modules.Bloodbowl
             if (tournamentRacesNode == null)
             {
                 XmlNode raceNode;
-                tournamentRacesNode = xmlParameters.CreateElement("TournamentRacesNode");
+                tournamentRacesNode = xmlDatabase.CreateElement("TournamentRacesNode");
                 bloodbowlNode.AppendChild(tournamentRacesNode);
 
                 #region add all races
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Humans";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Orcs";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Dwarves";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Skaven";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "High Elves";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Dark Elves";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Brettonians";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Chaos";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Wood Elves";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Lizardmen";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Norse";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Undead";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Necromantic";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Nurgle";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Khemri";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Chaos Dwarves";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Ogres";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Halflings";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Vampires";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Amazons";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Kislev";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Pro Elves";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Underworld";
                 tournamentRacesNode.AppendChild(raceNode);
-                raceNode = xmlParameters.CreateElement("Race");
+                raceNode = xmlDatabase.CreateElement("Race");
                 raceNode.InnerText = "Goblins";
                 tournamentRacesNode.AppendChild(raceNode);
                 #endregion
 
-                xmlParameters.Save(FileLocations.xmlParameters());
+                xmlDatabase.Save(FileLocations.xmlDatabase());
             }
-
-            //xmlParameters.Save(FileLocations.xmlParameters());
         }
 
         #region Commands
@@ -304,11 +302,11 @@ namespace CoOpBot.Modules.Bloodbowl
                 {
                     XmlElement newPlayerNode;
 
-                    newPlayerNode = xmlParameters.CreateElement("Player");
+                    newPlayerNode = xmlDatabase.CreateElement("Player");
                     newPlayerNode.SetAttribute("id", Context.Message.Author.Id.ToString());
                     playersNode.AppendChild(newPlayerNode);
 
-                    xmlParameters.Save(FileLocations.xmlParameters());
+                    xmlDatabase.Save(FileLocations.xmlDatabase());
 
                     output = "You have successfully registered for the tournament";
                 }
@@ -349,11 +347,11 @@ namespace CoOpBot.Modules.Bloodbowl
                     {
                         XmlElement newPlayerNode;
 
-                        newPlayerNode = xmlParameters.CreateElement("Player");
+                        newPlayerNode = xmlDatabase.CreateElement("Player");
                         newPlayerNode.SetAttribute("id", curUser.Id.ToString());
                         playersNode.AppendChild(newPlayerNode);
 
-                        xmlParameters.Save(FileLocations.xmlParameters());
+                        xmlDatabase.Save(FileLocations.xmlDatabase());
                     }
                 }
 
@@ -416,7 +414,7 @@ namespace CoOpBot.Modules.Bloodbowl
                     race = availableRaces[randomPosition];
                     availableRaces.RemoveAt(randomPosition);
 
-                    newAINode = xmlParameters.CreateElement("Player");
+                    newAINode = xmlDatabase.CreateElement("Player");
                     newAINode.SetAttribute("id", "0");
                     newAINode.SetAttribute("name", $"AI {i}");
                     newAINode.InnerText = race;
@@ -425,7 +423,7 @@ namespace CoOpBot.Modules.Bloodbowl
                     output += $"{$"AI {i}"} - {race} \r\n";
                 }
 
-                xmlParameters.Save(FileLocations.xmlParameters());
+                xmlDatabase.Save(FileLocations.xmlDatabase());
 
                 await ReplyAsync(output);
             }
@@ -444,7 +442,7 @@ namespace CoOpBot.Modules.Bloodbowl
             {
                 string output = "";
                 playersNode.RemoveAll();
-                xmlParameters.Save(FileLocations.xmlParameters());
+                xmlDatabase.Save(FileLocations.xmlDatabase());
 
                 output += "League data reset";
 
@@ -466,7 +464,7 @@ namespace CoOpBot.Modules.Bloodbowl
 
                 tournamentSize = teamCount;
                 tournamentSizeNode.InnerText = tournamentSize.ToString();
-                xmlParameters.Save(FileLocations.xmlParameters());
+                xmlDatabase.Save(FileLocations.xmlDatabase());
 
                 output += $"League size has been updated to {tournamentSize} teams";
 

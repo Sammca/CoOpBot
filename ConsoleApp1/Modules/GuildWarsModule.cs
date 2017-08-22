@@ -16,7 +16,7 @@ namespace CoOpBot.Modules.GuildWars
     [Name("Guild Wars 2")]
     public class GuildWarsModule : ModuleBase
     {
-        XmlDocument xmlParameters = new XmlDocument();
+        XmlDocument xmlDatabase = new XmlDocument();
         XmlNode root;
         XmlNode usersNode;
         XmlNode guildWarsNode;
@@ -31,14 +31,14 @@ namespace CoOpBot.Modules.GuildWars
         {
             apiPrefix = "https://api.guildwars2.com/v2";
 
-            xmlParameters.Load(FileLocations.xmlParameters());
-            root = xmlParameters.DocumentElement;
+            xmlDatabase.Load(FileLocations.xmlDatabase());
+            root = xmlDatabase.DocumentElement;
 
             // Users
-            usersNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "Users");
+            usersNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, root, "Users");
 
             // GW specific settings
-            guildWarsNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "GuildWars");
+            guildWarsNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, root, "GuildWars");
 
             guildIDNode = guildWarsNode.SelectSingleNode("descendant::GuildId");
             guildAccessTokenNode = guildWarsNode.SelectSingleNode("descendant::GuildAccessToken");
@@ -55,7 +55,7 @@ namespace CoOpBot.Modules.GuildWars
             }
 
             // GW non tradeable items
-            accountBoundItemsNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, guildWarsNode, "AccountBoundItems");
+            accountBoundItemsNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, guildWarsNode, "AccountBoundItems");
         }
 
         #region Commands
@@ -66,9 +66,9 @@ namespace CoOpBot.Modules.GuildWars
         private async Task RegisterTokenCommand(string key)
         {
             XmlElement userDetails;
-            userDetails = CoOpGlobal.xmlFindOrCreateNodeFromAttribute(xmlParameters, usersNode, "id", this.Context.Message.Author.Id.ToString(), "User");
+            userDetails = CoOpGlobal.xmlFindOrCreateNodeFromAttribute(xmlDatabase, usersNode, "id", this.Context.Message.Author.Id.ToString(), "User");
 
-            CoOpGlobal.xmlUpdateOrCreateChildNode(xmlParameters, userDetails, "gwAPIKey", key);
+            CoOpGlobal.xmlUpdateOrCreateChildNode(xmlDatabase, userDetails, "gwAPIKey", key);
 
             await ReplyAsync("Your API key has been updated");
         }
@@ -82,8 +82,8 @@ namespace CoOpBot.Modules.GuildWars
 
             if (guildIDNode == null && guildAccessTokenNode == null)
             {
-                guildIDNode = xmlParameters.CreateElement("GuildId");
-                guildAccessTokenNode = xmlParameters.CreateElement("GuildAccessToken");
+                guildIDNode = xmlDatabase.CreateElement("GuildId");
+                guildAccessTokenNode = xmlDatabase.CreateElement("GuildAccessToken");
 
                 guildWarsNode.AppendChild(guildIDNode);
                 guildWarsNode.AppendChild(guildAccessTokenNode);
@@ -92,7 +92,7 @@ namespace CoOpBot.Modules.GuildWars
             guildIDNode.InnerText = gid;
             guildAccessTokenNode.InnerText = gat;
 
-            xmlParameters.Save(FileLocations.xmlParameters());
+            xmlDatabase.Save(FileLocations.xmlDatabase());
 
             await ReplyAsync("Guild API key has been updated");
         }
@@ -530,13 +530,13 @@ namespace CoOpBot.Modules.GuildWars
 
                                 itemDetails = apiResponse.GetValue(0) as Hashtable;
 
-                                newAccountBoundItemNode = xmlParameters.CreateElement("Item");
+                                newAccountBoundItemNode = xmlDatabase.CreateElement("Item");
                                 newAccountBoundItemNode.SetAttribute("id", $"{curItem}");
                                 newAccountBoundItemNode.InnerText = itemDetails["name"].ToString();
 
                                 newAccountBoundItemNode = accountBoundItemsNode.AppendChild(newAccountBoundItemNode) as XmlElement;
 
-                                xmlParameters.Save(FileLocations.xmlParameters());
+                                xmlDatabase.Save(FileLocations.xmlDatabase());
 
                                 itemValue = 0;
                             }
@@ -758,13 +758,13 @@ namespace CoOpBot.Modules.GuildWars
 
                     itemDetails = apiResponse.GetValue(0) as Hashtable;
 
-                    newAccountBoundItemNode = xmlParameters.CreateElement("Item");
+                    newAccountBoundItemNode = xmlDatabase.CreateElement("Item");
                     newAccountBoundItemNode.SetAttribute("id", $"{item.id}");
                     newAccountBoundItemNode.InnerText = itemDetails["name"].ToString();
 
                     newAccountBoundItemNode = accountBoundItemsNode.AppendChild(newAccountBoundItemNode) as XmlElement;
 
-                    xmlParameters.Save(FileLocations.xmlParameters());
+                    xmlDatabase.Save(FileLocations.xmlDatabase());
 
                     itemValue = 0;
                 }

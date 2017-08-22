@@ -16,48 +16,25 @@ namespace CoOpBot
         private DiscordSocketClient client;
         private CommandService commands = new CommandService();
         XmlDocument xmlParameters = new XmlDocument();
+        XmlDocument xmlDatabase = new XmlDocument();
         char prefixCharacter;
         NameValueCollection userRecentMessageCounter = new NameValueCollection();
+        string token;
 
         public static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();
 
 
         public async Task MainAsync()
         {
-            XmlNode prefixNode;
-
             client = new DiscordSocketClient();
             
             client.Log += Log;
 
-            if (!File.Exists(FileLocations.xmlParameters()))
-            {
-                if (!File.Exists(FileLocations.backupXML()))
-                {
-                    Console.WriteLine("XML parameters not found, no backup found");
-
-                    throw new FileNotFoundException(@"XML parameters not found, and no backup found");
-                }
-                else
-                {
-                    xmlParameters.Load(FileLocations.backupXML());
-                    xmlParameters.Save(FileLocations.xmlParameters());
-
-                    Console.WriteLine("XML parameters restored from backup");
-                }
-            }
-
-            xmlParameters.Load(FileLocations.xmlParameters());
-            XmlNode root = xmlParameters.DocumentElement;
-            XmlNode botTokenNode = root.SelectSingleNode("descendant::BotToken");
-
-            prefixNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "PrefixChar", "!");
-
-            prefixCharacter = Convert.ToChar(prefixNode.InnerText);
+            loadXMLParameters();
             
             await InstallCommands();
             
-            string token = botTokenNode.InnerText;
+            //string token = botTokenNode.InnerText;
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
             
@@ -235,6 +212,83 @@ namespace CoOpBot
 
             return messageCount;
 
+        }
+
+        private void loadXMLParameters()
+        {
+            XmlNode prefixNode;
+
+            if (!File.Exists(FileLocations.xmlParameters()))
+            {
+                if (!File.Exists(FileLocations.backupXMLParameters()))
+                {
+                    Console.WriteLine("XML parameters not found, no backup found");
+
+                    throw new FileNotFoundException(@"XML parameters not found, and no backup found");
+                }
+                else
+                {
+                    xmlParameters.Load(FileLocations.backupXMLParameters());
+                    xmlParameters.Save(FileLocations.xmlParameters());
+
+                    Console.WriteLine("XML parameters restored from backup");
+                }
+            }
+
+            if (!File.Exists(FileLocations.xmlDatabase()))
+            {
+                if (!File.Exists(FileLocations.backupXMLDatabase()))
+                {
+                    xmlParameters.Load(FileLocations.xmlParameters());
+                    XmlNode dbRoot = xmlDatabase.CreateElement("CoOpBotDB");
+                    XmlNode paramsRoot = xmlParameters.DocumentElement;
+                    XmlNode paramsUsersNode = paramsRoot.SelectSingleNode("descendant::Users");
+                    XmlNode paramsGuildWarsNode = paramsRoot.SelectSingleNode("descendant::GuildWars");
+
+                    if (paramsUsersNode != null && paramsGuildWarsNode != null)
+                    {
+
+                        XmlNode importUsersNode;
+                        XmlNode importGuildWarsNode;
+
+                        importUsersNode = xmlDatabase.ImportNode(paramsUsersNode, true);
+                        importGuildWarsNode = xmlDatabase.ImportNode(paramsGuildWarsNode, true);
+
+                        dbRoot.AppendChild(importUsersNode);
+                        dbRoot.AppendChild(importGuildWarsNode);
+                        xmlDatabase.AppendChild(dbRoot);
+                        xmlDatabase.Save(FileLocations.xmlDatabase());
+
+                        paramsRoot.RemoveChild(paramsUsersNode);
+                        paramsRoot.RemoveChild(paramsGuildWarsNode);
+                        xmlParameters.Save(FileLocations.xmlParameters());
+                        Console.WriteLine("XML database created from data in parameters file");
+                    }
+                    else
+                    {
+                        Console.WriteLine("XML database not found, no backup found");
+                        Console.WriteLine("File cannot be initialsed from old parameters file since required db nodes do not exist there");
+
+                        throw new FileNotFoundException(@"XML database not found, and no backup found");
+                    }
+                }
+                else
+                {
+                    xmlParameters.Load(FileLocations.backupXMLDatabase());
+                    xmlParameters.Save(FileLocations.xmlDatabase());
+
+                    Console.WriteLine("XML parameters restored from backup");
+                }
+            }
+
+            xmlParameters.Load(FileLocations.xmlParameters());
+            XmlNode root = xmlParameters.DocumentElement;
+            XmlNode botTokenNode = root.SelectSingleNode("descendant::BotToken");
+            token = botTokenNode.InnerText;
+
+            prefixNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "PrefixChar", "!");
+
+            prefixCharacter = Convert.ToChar(prefixNode.InnerText);
         }
 
         private Task Log(LogMessage msg)

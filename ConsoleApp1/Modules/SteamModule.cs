@@ -15,8 +15,10 @@ namespace CoOpBot.Modules.Steam
     [Group("steam")]
     public class SteamModule : ModuleBase
     {
+        XmlDocument xmlDatabase = new XmlDocument();
         XmlDocument xmlParameters = new XmlDocument();
-        XmlNode root;
+        XmlNode dbRoot;
+        XmlNode paramsRoot;
         XmlNode usersNode;
         string apiPrefix;
         XmlNode steamKeyNode;
@@ -26,12 +28,14 @@ namespace CoOpBot.Modules.Steam
         {
             apiPrefix = "https://api.steampowered.com";
 
+            xmlDatabase.Load(FileLocations.xmlDatabase());
+            dbRoot = xmlDatabase.DocumentElement;
             xmlParameters.Load(FileLocations.xmlParameters());
-            root = xmlParameters.DocumentElement;
+            paramsRoot = xmlParameters.DocumentElement;
 
-            usersNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "Users");
+            usersNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, dbRoot, "Users");
 
-            steamKeyNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "SteamToken");
+            steamKeyNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, paramsRoot, "SteamToken");
             steamKey = steamKeyNode.InnerText;
         }
 
@@ -49,9 +53,9 @@ namespace CoOpBot.Modules.Steam
         private async Task RegisterTokenCommand(string key)
         {
             XmlElement userDetails;
-            userDetails = CoOpGlobal.xmlFindOrCreateNodeFromAttribute(xmlParameters, usersNode, "id", this.Context.Message.Author.Id.ToString(), "User");
+            userDetails = CoOpGlobal.xmlFindOrCreateNodeFromAttribute(xmlDatabase, usersNode, "id", this.Context.Message.Author.Id.ToString(), "User");
 
-            CoOpGlobal.xmlUpdateOrCreateChildNode(xmlParameters, userDetails, "steamID", key);
+            CoOpGlobal.xmlUpdateOrCreateChildNode(xmlDatabase, userDetails, "steamID", key);
 
             await ReplyAsync("Your Steam profile has been updated");
         }
