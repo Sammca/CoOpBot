@@ -56,7 +56,6 @@ namespace CoOpBot.Modules.Steam
             await ReplyAsync("Your Steam profile has been updated");
         }
 
-
         [Command("hasgame")]
         [Summary("Shows which members have a game")]
         private async Task RegisterhasgameCommand(params string[] appName)

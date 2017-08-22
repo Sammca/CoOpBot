@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Reflection;
 using System.Xml;
 using System.IO;
+using System.Collections.Specialized;
 
 namespace CoOpBot
 {
@@ -16,6 +17,7 @@ namespace CoOpBot
         private CommandService commands = new CommandService();
         XmlDocument xmlParameters = new XmlDocument();
         char prefixCharacter;
+        NameValueCollection userRecentMessageCounter = new NameValueCollection();
 
         public static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();
 
@@ -71,6 +73,7 @@ namespace CoOpBot
             // Hook the MessageReceived Event into our Command Handler
             client.MessageReceived += HandleCommand;
             client.MessageReceived += RegisterNoveltyResponseCommands;
+            RegisterAntiSpamFunctionality();
         }
 
         public async Task HandleCommand(SocketMessage messageParam)
@@ -122,6 +125,29 @@ namespace CoOpBot
                 await context.Channel.SendMessageAsync($"Command not recognised, try {prefixCharacter}help to see the available commands");
             }
             return;
+        }
+
+        private void RegisterAntiSpamFunctionality()
+        {
+            client.MessageReceived += async (message) =>
+            {
+                SocketGuildUser messageSender;
+                ISocketMessageChannel channel;
+
+                messageSender = message.Author as SocketGuildUser;
+                channel = message.Channel;
+
+                // Check to make sure that a bot is not the author
+                // Also check if admin, since admins ignore the channel permission override
+                if (!messageSender.GuildPermissions.Administrator && !messageSender.IsBot)
+                {
+                    // Increment the counter by 1
+                    await Task.Factory.StartNew(async () => { await CountMessage(messageSender, channel, 1); });
+
+                    // Decrese the counter by 1 after 8 seconds
+                    await Task.Factory.StartNew(async () => { await CountMessage(messageSender, channel, -1, 8); });
+                }
+            };
         }
 
         /************************************************
@@ -184,7 +210,33 @@ namespace CoOpBot
          * (Functions not directly usable in discord)
          * 
         ************************************************/
-        
+
+        private async Task<int> CountMessage(SocketGuildUser messageSender, ISocketMessageChannel channel, int changeAmount, int delaySeconds = 0)
+        {
+            int messageCount;
+
+            await Task.Delay(delaySeconds * 1000);
+
+            if (userRecentMessageCounter[messageSender.Username] == null)
+            {
+                userRecentMessageCounter[messageSender.Username] = 0.ToString();
+            }
+
+            messageCount = int.Parse(userRecentMessageCounter[messageSender.Username]) + changeAmount;
+            userRecentMessageCounter[messageSender.Username] = messageCount.ToString();
+
+            Console.WriteLine(string.Format("{0}: {1}", messageSender.Username, messageCount));
+
+            // TODO try to find a way to mute people here
+            if (messageCount == 3 && changeAmount == 1)
+            {
+                await channel.SendMessageAsync("#StopCamSpam");
+            }
+
+            return messageCount;
+
+        }
+
         private Task Log(LogMessage msg)
         {
             Console.WriteLine(msg.ToString());
