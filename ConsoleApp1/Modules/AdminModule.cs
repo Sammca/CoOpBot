@@ -158,7 +158,10 @@ namespace CoOpBot.Modules.Admin
 
                     if (!roleExists)
                     {
-                        await RoleCreate(server, curRoleName, channel, true);
+                        string errorMessage = $"Role {curRoleName} does not exist";
+                        output += errorMessage;
+                        throw new Exception(errorMessage);
+                        //await RoleCreate(server, curRoleName, channel, true);
                     }
 
                     foreach (SocketRole curRole in server.Roles)
@@ -184,9 +187,12 @@ namespace CoOpBot.Modules.Admin
                 Console.WriteLine(ex.Message);
                 return;
             }
-            if (channel != null && outputMessages)
+            finally
             {
-                await ReplyAsync(output);
+                if (channel != null && outputMessages)
+                {
+                    await ReplyAsync(output);
+                }
             }
         }
         
