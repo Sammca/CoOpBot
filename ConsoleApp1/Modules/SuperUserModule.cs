@@ -45,7 +45,7 @@ namespace CoOpBot.Modules
                 xmlParameters.Load(FileLocations.gwItemNames());
                 xmlParameters.Save(FileLocations.gwItemNamesBackup());
 
-                await ReplyAsync($"GW item names file backed up to {FileLocations.gwItemNamesBackup()}");
+                await ReplyAsync($"XML database file backed up to {FileLocations.gwItemNamesBackup()}");
             }
             catch (Exception ex)
             {
