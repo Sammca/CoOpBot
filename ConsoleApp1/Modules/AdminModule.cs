@@ -46,7 +46,7 @@ namespace CoOpBot.Modules.Admin
             }
         }
 
-        [Command("DeleteRoll")]
+        [Command("DeleteRole")]
         [Alias("dr")]
         [Summary("Deletes a Role.")]
         [RequireUserPermission(GuildPermission.ManageRoles)]
