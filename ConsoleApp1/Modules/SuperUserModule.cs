@@ -9,6 +9,7 @@ namespace CoOpBot.Modules
 {
     [Name("SuperUser")]
     [Group("su")]
+    [RequireUserPermission(GuildPermission.Administrator)]
     public class SuperUserModule : ModuleBase
     {
         #region Commands
@@ -16,7 +17,6 @@ namespace CoOpBot.Modules
         [Command("BackupXML")]
         [Alias("backup")]
         [Summary("Creates a backup of the XML parameters file.")]
-        [RequireUserPermission(GuildPermission.Administrator)]
         private async Task BackupXMLCommand()
         {
             XmlDocument xmlParameters = new XmlDocument();
@@ -35,7 +35,6 @@ namespace CoOpBot.Modules
 
         [Command("BackupGW")]
         [Summary("Creates a backup of the GW items file.")]
-        [RequireUserPermission(GuildPermission.Administrator)]
 
         private async Task BackupDBCommand()
         {
@@ -54,7 +53,6 @@ namespace CoOpBot.Modules
         }
         [Command("BackupDB")]
         [Summary("Creates a backup of the XML database file.")]
-        [RequireUserPermission(GuildPermission.Administrator)]
 
         private async Task BackupGWCommand()
         {
@@ -74,7 +72,6 @@ namespace CoOpBot.Modules
 
         [Command("BackupAll")]
         [Summary("Creates a backup of all XML files.")]
-        [RequireUserPermission(GuildPermission.Administrator)]
         private async Task BackupAllCommand()
         {
             XmlDocument xmlParameters = new XmlDocument();
@@ -92,7 +89,6 @@ namespace CoOpBot.Modules
 
         [Command("RestoreXML")]
         [Summary("Restores a backup of the XML parameters file.")]
-        [RequireUserPermission(GuildPermission.Administrator)]
         private async Task RestoreXMLCommand()
         {
             XmlDocument xmlParameters = new XmlDocument();
@@ -111,7 +107,6 @@ namespace CoOpBot.Modules
 
         [Command("RestoreDB")]
         [Summary("Restores a backup of the XML parameters file.")]
-        [RequireUserPermission(GuildPermission.Administrator)]
         private async Task RestoreDBCommand()
         {
             XmlDocument xmlParameters = new XmlDocument();
@@ -130,7 +125,6 @@ namespace CoOpBot.Modules
 
         [Command("RestoreAll")]
         [Summary("Restores all files from their backups.")]
-        [RequireUserPermission(GuildPermission.Administrator)]
         private async Task RestoreAllCommand()
         {
             XmlDocument xmlParameters = new XmlDocument();
@@ -156,7 +150,6 @@ namespace CoOpBot.Modules
         [Command("ShutDown")]
         [Alias("TurnOff")]
         [Summary("Turns the bot off.")]
-        [RequireUserPermission(GuildPermission.Administrator)]
         private async Task ShutDownCommand()
         {
             try
@@ -173,7 +166,6 @@ namespace CoOpBot.Modules
 
         [Command("Restart")]
         [Summary("Restarts the bot.")]
-        [RequireUserPermission(GuildPermission.Administrator)]
         private async Task RestartCommand()
         {
             try
@@ -192,7 +184,6 @@ namespace CoOpBot.Modules
 
         [Command("sendXML")]
         [Summary("Makes the bot send a copy of the XML parameters file to the chat.")]
-        [RequireUserPermission(GuildPermission.Administrator)]
         private async Task sendXMLCommand()
         {
             try
@@ -207,7 +198,6 @@ namespace CoOpBot.Modules
 
         [Command("sendDB")]
         [Summary("Makes the bot send a copy of the XML database file to the chat.")]
-        [RequireUserPermission(GuildPermission.Administrator)]
         private async Task sendDBCommand()
         {
             try
@@ -222,7 +212,6 @@ namespace CoOpBot.Modules
 
         [Command("sendGWItemsXML")]
         [Summary("Makes the bot send a copy of the GW items file to the chat.")]
-        [RequireUserPermission(GuildPermission.Administrator)]
         private async Task sendGWItemsXMLCommand()
         {
             try
@@ -236,6 +225,56 @@ namespace CoOpBot.Modules
         }
 
         #endregion
+
+        [Name("Set parameters")]
+        [Group("set")]
+        public class setParams : ModuleBase
+        {
+            [Command("SpamTimer")]
+            [Alias("st")]
+            [Summary("Sets the number of seconds messages are counted for to check for spamming.")]
+            private async Task setSpamTimerCommand(int newTime)
+            {
+                try
+                {
+                    XmlDocument xmlParameters = new XmlDocument();
+                    xmlParameters.Load(FileLocations.xmlParameters());
+                    XmlNode root = xmlParameters.DocumentElement;
+
+                    CoOpGlobal.xmlUpdateOrCreateChildNode(xmlParameters, root, "SpamTimer", newTime.ToString());
+
+                    await ReplyAsync($"Spam message timer changed to {newTime} seconds");
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+
+            [Command("SpamMessageCount")]
+            [Alias("smc")]
+            [Summary("Sets the number of messages within the time limit that counts as spamming.")]
+            private async Task setSpamMessageCountCommand(int newCount)
+            {
+                try
+                {
+                    XmlDocument xmlParameters = new XmlDocument();
+                    xmlParameters.Load(FileLocations.xmlParameters());
+                    XmlNode root = xmlParameters.DocumentElement;
+
+                    CoOpGlobal.xmlUpdateOrCreateChildNode(xmlParameters, root, "SpamMessageCount", newCount.ToString());
+
+                    await ReplyAsync($"Spam message count threshold changed to {newCount} messages");
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+
+        };
     };
 };
 

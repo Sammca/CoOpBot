@@ -18,6 +18,8 @@ namespace CoOpBot
         XmlDocument xmlParameters = new XmlDocument();
         XmlDocument xmlDatabase = new XmlDocument();
         char prefixCharacter;
+        int spamTimer;
+        int spamMessageCount;
         NameValueCollection userRecentMessageCounter = new NameValueCollection();
         string token;
 
@@ -113,16 +115,20 @@ namespace CoOpBot
 
                 messageSender = message.Author as SocketGuildUser;
                 channel = message.Channel;
+                xmlParameters.Load(FileLocations.xmlParameters());
+                XmlNode root = xmlParameters.DocumentElement;
+                XmlNode spamTimerNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "SpamTimer", "8");
+                spamTimer = int.Parse(spamTimerNode.InnerText);
 
                 // Check to make sure that a bot is not the author
                 // Also check if admin, since admins ignore the channel permission override
-                if (!messageSender.GuildPermissions.Administrator && !messageSender.IsBot)
+                if (/*!messageSender.GuildPermissions.Administrator && */!messageSender.IsBot)
                 {
                     // Increment the counter by 1
                     await Task.Factory.StartNew(async () => { await CountMessage(messageSender, channel, 1); });
 
-                    // Decrese the counter by 1 after 8 seconds
-                    await Task.Factory.StartNew(async () => { await CountMessage(messageSender, channel, -1, 8); });
+                    // Decrese the counter by 1 after parameteriesed number of seconds (default 8)
+                    await Task.Factory.StartNew(async () => { await CountMessage(messageSender, channel, -1, spamTimer); });
                 }
             };
         }
@@ -205,9 +211,16 @@ namespace CoOpBot
             Console.WriteLine(string.Format("{0}: {1}", messageSender.Username, messageCount));
 
             // TODO try to find a way to mute people here
-            if (messageCount == 3 && changeAmount == 1)
+            if (changeAmount == 1)
             {
-                await channel.SendMessageAsync("#StopCamSpam");
+                xmlParameters.Load(FileLocations.xmlParameters());
+                XmlNode root = xmlParameters.DocumentElement;
+                XmlNode spamMessageCountNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "SpamMessageCount", "3");
+                spamMessageCount = int.Parse(spamMessageCountNode.InnerText);
+                if (messageCount == spamMessageCount)
+                {
+                    await channel.SendMessageAsync("#StopCamSpam");
+                }
             }
 
             return messageCount;
@@ -284,11 +297,17 @@ namespace CoOpBot
             xmlParameters.Load(FileLocations.xmlParameters());
             XmlNode root = xmlParameters.DocumentElement;
             XmlNode botTokenNode = root.SelectSingleNode("descendant::BotToken");
+            XmlNode spamTimerNode;
+            XmlNode spamMessageCountNode;
             token = botTokenNode.InnerText;
 
             prefixNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "PrefixChar", "!");
+            spamTimerNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "SpamTimer", "8");
+            spamMessageCountNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "SpamMessageCount", "3");
 
             prefixCharacter = Convert.ToChar(prefixNode.InnerText);
+            spamTimer = int.Parse(spamTimerNode.InnerText);
+            spamMessageCount = int.Parse(spamMessageCountNode.InnerText);
         }
 
         private Task Log(LogMessage msg)
