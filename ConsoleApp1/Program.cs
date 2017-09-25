@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Xml;
 using System.IO;
 using System.Collections.Specialized;
+using System.Collections.Generic;
 
 namespace CoOpBot
 {
@@ -21,6 +22,7 @@ namespace CoOpBot
         int spamTimer;
         int spamMessageCount;
         NameValueCollection userRecentMessageCounter = new NameValueCollection();
+        Random goodBotRNG = new Random();
         string token;
 
         public static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();
@@ -168,6 +170,19 @@ namespace CoOpBot
                             break;
                         case "new number":
                             responseText = "Who dis?";
+                            break;
+                        case "good bot":
+                            List<string> goodBotResponseList = new List<string>();
+
+                            goodBotResponseList.Add("Ayyy, lmao");
+                            goodBotResponseList.Add("Good human");
+                            goodBotResponseList.Add("Why thank you!");
+                            goodBotResponseList.Add("What is \"good\"? Baby don't hurt me");
+                            goodBotResponseList.Add("(◠﹏◠✿)");
+                            goodBotResponseList.Add("ｖ(◠ｏ◠)ｖ");
+                            goodBotResponseList.Add("( ͡° ͜ʖ ͡°)");
+
+                            responseText = goodBotResponseList[goodBotRNG.Next(goodBotResponseList.Count)];
                             break;
                         default:
                             break;
