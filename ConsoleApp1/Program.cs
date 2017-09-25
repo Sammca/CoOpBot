@@ -177,7 +177,6 @@ namespace CoOpBot
                             goodBotResponseList.Add("Ayyy, lmao");
                             goodBotResponseList.Add("Good human");
                             goodBotResponseList.Add("Why thank you!");
-                            goodBotResponseList.Add("What is \"good\"? Baby don't hurt me");
                             goodBotResponseList.Add("(◠﹏◠✿)");
                             goodBotResponseList.Add("ｖ(◠ｏ◠)ｖ");
                             goodBotResponseList.Add("( ͡° ͜ʖ ͡°)");
