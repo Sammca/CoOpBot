@@ -224,6 +224,27 @@ namespace CoOpBot.Modules
             }
         }
 
+        [Command("say")]
+        [Summary("Makes the bot send a message to the channel you tell it to.")]
+        private async Task sayCommand(ITextChannel textChannel, params string[] text)
+        {
+            try
+            {
+                string output = "";
+
+                foreach (string s in text)
+                {
+                    output += $"{s} ";
+                }
+
+                await textChannel.SendMessageAsync(output);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
         #endregion
 
         [Name("Set parameters")]
