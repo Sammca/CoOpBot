@@ -222,7 +222,7 @@ namespace CoOpBot
             messageCount = int.Parse(userRecentMessageCounter[messageSender.Username]) + changeAmount;
             userRecentMessageCounter[messageSender.Username] = messageCount.ToString();
 
-            Console.WriteLine(string.Format("{0}: {1}", messageSender.Username, messageCount));
+            //Console.WriteLine(string.Format("{0}: {1}", messageSender.Username, messageCount));
 
             // TODO try to find a way to mute people here
             if (changeAmount == 1)
