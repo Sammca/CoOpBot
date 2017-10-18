@@ -167,7 +167,6 @@ namespace CoOpBot
             return childNode;
         }
 
-
         public static XmlElement xmlFindOrCreateNodeFromAttribute(XmlDocument file, XmlNode parentNode, string attributeName, string attributeValue, string childNodeName)
         {
             IEnumerator nodeEnumerator = parentNode.GetEnumerator();
@@ -199,6 +198,34 @@ namespace CoOpBot
             }
 
             return foundNode;
+        }
+
+        public static Boolean xmlSearchChildNodes(XmlDocument file, XmlNode parent, string searchValue)
+        {
+            XmlNodeList searchNodes = parent.ChildNodes;
+
+            foreach (XmlNode childNode in searchNodes)
+            {
+                if (childNode.InnerText == searchValue)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        public static Boolean xmlCreateChildNode(XmlDocument file, XmlNode parent, string newNodeName, string value)
+        {
+            XmlNode newNode;
+            string filePath = new Uri(file.BaseURI).LocalPath;
+
+            newNode = file.CreateElement(newNodeName) as XmlNode;
+            newNode.InnerText = value;
+
+            parent.AppendChild(newNode);
+            file.Save(filePath);
+
+            return false;
         }
     }
 

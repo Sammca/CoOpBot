@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace CoOpBot.Modules.Admin
 {
@@ -17,10 +18,14 @@ namespace CoOpBot.Modules.Admin
         [Command("AddRole")]
         [Alias("AddMe", "ar")]
         [Summary("Adds the user(s) to the requested Role.")]
-        [RequireUserPermission(GuildPermission.ManageRoles)]
         private async Task AddRoleCommand(IRole role, params IUser[] users)
         {
             List<IRole> roleList = new List<IRole>();
+            if (!isPermitted())
+            {
+                await ReplyAsync("Command access denied");
+                return;
+            }
 
             roleList.Add(role);
             try
@@ -71,10 +76,15 @@ namespace CoOpBot.Modules.Admin
         [Command("NewRole")]
         [Alias("nr", "CreateRole")]
         [Summary("Creates a new Role containing no users.")]
-        [RequireUserPermission(GuildPermission.ManageRoles)]
         private async Task NewRoleCommand(params string[] RoleName)
         {
             string fullRoleName = "";
+
+            if (!isPermitted())
+            {
+                await ReplyAsync("Command access denied");
+                return;
+            }
 
             try
             {
@@ -94,7 +104,6 @@ namespace CoOpBot.Modules.Admin
         [Command("RoleMembers")]
         [Alias("rm", "listRole", "WhoIs", "in")]
         [Summary("Returns a list of users with requested Roles. Roleplay is not permitted.")]
-        [RequireUserPermission(GuildPermission.ManageRoles)]
         private async Task RoleListCommand(IRole role)
         {
             string output = "";
@@ -276,6 +285,21 @@ namespace CoOpBot.Modules.Admin
             return null;
         }
 
+        private Boolean isPermitted()
+        {
+            XmlDocument xmlDatabase = new XmlDocument();
+            ulong callerID = this.Context.User.Id;
+
+            xmlDatabase.Load(FileLocations.xmlDatabase());
+            XmlNode root = xmlDatabase.DocumentElement;
+            XmlNode revokedRoleCommandAccessUsersNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, root, "RevokedRoleCommandAccessUsers");
+
+            if (CoOpGlobal.xmlSearchChildNodes(xmlDatabase, revokedRoleCommandAccessUsersNode, $"{callerID}"))
+            {
+                return false;
+            }
+            return true;
+        }
         #endregion
     };
 };

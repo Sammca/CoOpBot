@@ -245,6 +245,79 @@ namespace CoOpBot.Modules
             }
         }
 
+        [Command("revoke")]
+        [Summary("Revokes permissions for the user to use role commands.")]
+        private async Task revokeCommand(IUser user)
+        {
+
+            try
+            {
+                string output = "";
+                XmlDocument xmlDatabase = new XmlDocument();
+                ulong callerID = user.Id;
+
+                xmlDatabase.Load(FileLocations.xmlDatabase());
+                XmlNode root = xmlDatabase.DocumentElement;
+                XmlNode revokedRoleCommandAccessUsersNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, root, "RevokedRoleCommandAccessUsers");
+
+                if (CoOpGlobal.xmlSearchChildNodes(xmlDatabase, revokedRoleCommandAccessUsersNode, $"{callerID}"))
+                {
+                    output += "User already on list";
+                }
+                else
+                {
+                    CoOpGlobal.xmlCreateChildNode(xmlDatabase, revokedRoleCommandAccessUsersNode, "bannedUser", $"{callerID}");
+                    output += "User added to list";
+                }
+
+                await ReplyAsync(output);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        [Command("unrevoke")]
+        [Summary("Unrevokes permissions for the user to use role commands.")]
+        private async Task unrevokeCommand(IUser user)
+        {
+
+            try
+            {
+                string output = "";
+                XmlDocument xmlDatabase = new XmlDocument();
+                ulong callerID = user.Id;
+
+                xmlDatabase.Load(FileLocations.xmlDatabase());
+                XmlNode root = xmlDatabase.DocumentElement;
+                XmlNode revokedRoleCommandAccessUsersNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, root, "RevokedRoleCommandAccessUsers");
+
+                if (CoOpGlobal.xmlSearchChildNodes(xmlDatabase, revokedRoleCommandAccessUsersNode, $"{callerID}"))
+                {
+                    foreach (XmlNode curNode in revokedRoleCommandAccessUsersNode.ChildNodes)
+                    {
+                        if (curNode.InnerText == $"{callerID}")
+                        {
+                            revokedRoleCommandAccessUsersNode.RemoveChild(curNode);
+                            xmlDatabase.Save(FileLocations.xmlDatabase());
+
+                            output += "User removed from the list";
+                        }
+                    }
+                }
+                else
+                {
+                    output += "User not found on the list";
+                }
+
+                await ReplyAsync(output);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
         #endregion
 
         [Name("Set parameters")]
