@@ -116,23 +116,24 @@ namespace CoOpBot
             {
                 SocketGuildUser messageSender;
                 ISocketMessageChannel channel;
+                SocketGuild guild;
 
                 messageSender = message.Author as SocketGuildUser;
                 channel = message.Channel;
+                guild = (message.Channel as IGuildChannel).Guild as SocketGuild;
                 xmlParameters.Load(FileLocations.xmlParameters());
                 XmlNode root = xmlParameters.DocumentElement;
                 XmlNode spamTimerNode = CoOpGlobal.XML.findOrCreateChild(xmlParameters, root, "SpamTimer", "8");
                 spamTimer = int.Parse(spamTimerNode.InnerText);
 
                 // Check to make sure that a bot is not the author
-                // Also check if admin, since admins ignore the channel permission override
-                if (/*!messageSender.GuildPermissions.Administrator && */!messageSender.IsBot)
+                if (!messageSender.IsBot)
                 {
                     // Increment the counter by 1
-                    await Task.Factory.StartNew(async () => { await CountMessage(messageSender, channel, 1); });
+                    await Task.Factory.StartNew(async () => { await CountMessage(messageSender, guild, channel, 1); });
 
                     // Decrese the counter by 1 after parameteriesed number of seconds (default 8)
-                    await Task.Factory.StartNew(async () => { await CountMessage(messageSender, channel, -1, spamTimer); });
+                    await Task.Factory.StartNew(async () => { await CountMessage(messageSender, guild, channel, -1, spamTimer); });
                 }
             };
         }
@@ -210,7 +211,7 @@ namespace CoOpBot
          * 
         ************************************************/
 
-        private async Task<int> CountMessage(SocketGuildUser messageSender, ISocketMessageChannel channel, int changeAmount, int delaySeconds = 0)
+        private async Task<int> CountMessage(SocketGuildUser messageSender, SocketGuild guild, ISocketMessageChannel channel, int changeAmount, int delaySeconds = 0)
         {
             int messageCount;
 
@@ -223,19 +224,75 @@ namespace CoOpBot
 
             messageCount = int.Parse(userRecentMessageCounter[messageSender.Username]) + changeAmount;
             userRecentMessageCounter[messageSender.Username] = messageCount.ToString();
-
-            //Console.WriteLine(string.Format("{0}: {1}", messageSender.Username, messageCount));
-
-            // TODO try to find a way to mute people here
+            
             if (changeAmount == 1)
             {
                 xmlParameters.Load(FileLocations.xmlParameters());
                 XmlNode root = xmlParameters.DocumentElement;
                 XmlNode spamMessageCountNode = CoOpGlobal.XML.findOrCreateChild(xmlParameters, root, "SpamMessageCount", "3");
                 spamMessageCount = int.Parse(spamMessageCountNode.InnerText);
+
                 if (messageCount == spamMessageCount)
                 {
+                    CoOpBot.Modules.Admin.RolesModule roleModule = new Modules.Admin.RolesModule();
+
                     await channel.SendMessageAsync("#StopCamSpam");
+
+                    List<IRole> roleList = new List<IRole>();
+                    List<ulong> userList = new List<ulong>();
+
+                    // Check if the Muted role exists (case sensitve [I think])
+                    foreach (IRole curRole in guild.Roles)
+                    {
+                        if (curRole.Name == "Muted")
+                        {
+                            roleList.Add(curRole);
+                        }
+                    }
+                    
+                    userList.Add(messageSender.Id);
+                    // Mute the user
+                    if (roleList.Count == 1 && userList.Count == 1)
+                    {
+                        try
+                        {
+                            await roleModule.RoleAddUsers(guild, userList, roleList);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                        }
+                    }
+                }
+            }
+            else if (changeAmount == -1 && messageCount == 0)
+            {
+                CoOpBot.Modules.Admin.RolesModule roleModule = new Modules.Admin.RolesModule();
+
+                List<IRole> roleList = new List<IRole>();
+                List<ulong> userList = new List<ulong>();
+
+                // Check if the Muted role exists (case sensitve [I think])
+                foreach (IRole curRole in guild.Roles)
+                {
+                    if (curRole.Name == "Muted")
+                    {
+                        roleList.Add(curRole);
+                    }
+                }
+
+                userList.Add(messageSender.Id);
+                // Unmute the user
+                if (roleList.Count == 1 && userList.Count == 1)
+                {
+                    try
+                    {
+                        await roleModule.RoleRemoveUsers(guild, userList, roleList);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
                 }
             }
 

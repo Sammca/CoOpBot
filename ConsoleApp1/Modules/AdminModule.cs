@@ -148,7 +148,7 @@ namespace CoOpBot.Modules.Admin
 
 
         #region Functions
-        private async Task RoleAddUsers(SocketGuild server, List<ulong> userList, List<IRole> roleList, SocketChannel channel = null, bool outputMessages = false)
+        public async Task RoleAddUsers(SocketGuild server, List<ulong> userList, List<IRole> roleList, SocketChannel channel = null, bool outputMessages = false)
         {
             // Define variables
             string output;
@@ -182,7 +182,7 @@ namespace CoOpBot.Modules.Admin
             }
         }
 
-        private async Task RoleRemoveUsers(SocketGuild server, List<ulong> userList, List<IRole> roleList, SocketChannel channel = null, bool outputMessages = false)
+        public async Task RoleRemoveUsers(SocketGuild server, List<ulong> userList, List<IRole> roleList, SocketChannel channel = null, bool outputMessages = false)
         {
             // Define variables
             string output;
@@ -212,7 +212,7 @@ namespace CoOpBot.Modules.Admin
             }
         }
 
-        private async Task RoleCreate(SocketGuild server, string roleName, SocketChannel channel = null, bool outputMessages = false)
+        public async Task RoleCreate(SocketGuild server, string roleName, SocketChannel channel = null, bool outputMessages = false)
         {
             // Define variables
             string output;
@@ -243,8 +243,8 @@ namespace CoOpBot.Modules.Admin
                 await ReplyAsync(output);
             }
         }
-        
-        private async Task RoleDelete(SocketGuild server, IRole role, SocketChannel channel = null, bool outputMessages = false)
+
+        public async Task RoleDelete(SocketGuild server, IRole role, SocketChannel channel = null, bool outputMessages = false)
         {
             // Define variables
             string output;
@@ -269,7 +269,7 @@ namespace CoOpBot.Modules.Admin
             }
         }
 
-        private IRole FindRoleFromName(string roleName, SocketGuild server)
+        public IRole FindRoleFromName(string roleName, SocketGuild server)
         {
             IRole role;
 
