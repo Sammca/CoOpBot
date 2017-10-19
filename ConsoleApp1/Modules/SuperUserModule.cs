@@ -258,15 +258,15 @@ namespace CoOpBot.Modules
 
                 xmlDatabase.Load(FileLocations.xmlDatabase());
                 XmlNode root = xmlDatabase.DocumentElement;
-                XmlNode revokedRoleCommandAccessUsersNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, root, "RevokedRoleCommandAccessUsers");
+                XmlNode revokedRoleCommandAccessUsersNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, root, "RevokedRoleCommandAccessUsers");
 
-                if (CoOpGlobal.xmlSearchChildNodes(xmlDatabase, revokedRoleCommandAccessUsersNode, $"{callerID}"))
+                if (CoOpGlobal.XML.searchChildNodes(xmlDatabase, revokedRoleCommandAccessUsersNode, $"{callerID}"))
                 {
                     output += "User already on list";
                 }
                 else
                 {
-                    CoOpGlobal.xmlCreateChildNode(xmlDatabase, revokedRoleCommandAccessUsersNode, "bannedUser", $"{callerID}");
+                    CoOpGlobal.XML.createChildNode(xmlDatabase, revokedRoleCommandAccessUsersNode, "bannedUser", $"{callerID}");
                     output += "User added to list";
                 }
 
@@ -291,9 +291,9 @@ namespace CoOpBot.Modules
 
                 xmlDatabase.Load(FileLocations.xmlDatabase());
                 XmlNode root = xmlDatabase.DocumentElement;
-                XmlNode revokedRoleCommandAccessUsersNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, root, "RevokedRoleCommandAccessUsers");
+                XmlNode revokedRoleCommandAccessUsersNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, root, "RevokedRoleCommandAccessUsers");
 
-                if (CoOpGlobal.xmlSearchChildNodes(xmlDatabase, revokedRoleCommandAccessUsersNode, $"{callerID}"))
+                if (CoOpGlobal.XML.searchChildNodes(xmlDatabase, revokedRoleCommandAccessUsersNode, $"{callerID}"))
                 {
                     foreach (XmlNode curNode in revokedRoleCommandAccessUsersNode.ChildNodes)
                     {
@@ -335,7 +335,7 @@ namespace CoOpBot.Modules
                     xmlParameters.Load(FileLocations.xmlParameters());
                     XmlNode root = xmlParameters.DocumentElement;
 
-                    CoOpGlobal.xmlUpdateOrCreateChildNode(xmlParameters, root, "SpamTimer", newTime.ToString());
+                    CoOpGlobal.XML.updateOrCreateChildNode(xmlParameters, root, "SpamTimer", newTime.ToString());
 
                     await ReplyAsync($"Spam message timer changed to {newTime} seconds");
 
@@ -357,7 +357,7 @@ namespace CoOpBot.Modules
                     xmlParameters.Load(FileLocations.xmlParameters());
                     XmlNode root = xmlParameters.DocumentElement;
 
-                    CoOpGlobal.xmlUpdateOrCreateChildNode(xmlParameters, root, "SpamMessageCount", newCount.ToString());
+                    CoOpGlobal.XML.updateOrCreateChildNode(xmlParameters, root, "SpamMessageCount", newCount.ToString());
 
                     await ReplyAsync($"Spam message count threshold changed to {newCount} messages");
 

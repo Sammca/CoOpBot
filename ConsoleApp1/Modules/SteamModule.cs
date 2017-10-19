@@ -33,9 +33,9 @@ namespace CoOpBot.Modules.Steam
             xmlParameters.Load(FileLocations.xmlParameters());
             paramsRoot = xmlParameters.DocumentElement;
 
-            usersNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, dbRoot, "Users");
+            usersNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, dbRoot, "Users");
 
-            steamKeyNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, paramsRoot, "SteamToken");
+            steamKeyNode = CoOpGlobal.XML.findOrCreateChild(xmlParameters, paramsRoot, "SteamToken");
             steamKey = steamKeyNode.InnerText;
         }
 
@@ -53,9 +53,9 @@ namespace CoOpBot.Modules.Steam
         private async Task RegisterTokenCommand(string key)
         {
             XmlElement userDetails;
-            userDetails = CoOpGlobal.xmlFindOrCreateNodeFromAttribute(xmlDatabase, usersNode, "id", this.Context.Message.Author.Id.ToString(), "User");
+            userDetails = CoOpGlobal.XML.findOrCreateNodeFromAttribute(xmlDatabase, usersNode, "id", this.Context.Message.Author.Id.ToString(), "User");
 
-            CoOpGlobal.xmlUpdateOrCreateChildNode(xmlDatabase, userDetails, "steamID", key);
+            CoOpGlobal.XML.updateOrCreateChildNode(xmlDatabase, userDetails, "steamID", key);
 
             await ReplyAsync("Your Steam profile has been updated");
         }

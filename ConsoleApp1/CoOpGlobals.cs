@@ -121,111 +121,117 @@ namespace CoOpBot
 
     public static class CoOpGlobal
     {
-        public static XmlNode xmlFindOrCreateChild(XmlDocument file, XmlNode parent, string childName, string defaultValue = "")
+        public static DateTime bootupDateTime { get; set; }
+
+        public static class XML
         {
-            XmlNode childNode;
-            string filePath = new Uri(file.BaseURI).LocalPath;
-
-            childNode = parent.SelectSingleNode($"descendant::{childName}");
-
-            if (childNode == null)
+            public static XmlNode findOrCreateChild(XmlDocument file, XmlNode parent, string childName, string defaultValue = "")
             {
-                childNode = file.CreateElement(childName);
-
-                if (defaultValue != "")
-                {
-                    childNode.InnerText = defaultValue;
-                }
-
-                parent.AppendChild(childNode);
-                file.Save(filePath);
-            }
-
-            return childNode;
-        }
-
-        public static XmlNode xmlUpdateOrCreateChildNode(XmlDocument file, XmlNode parent, string childName, string newValue)
-        {
-            XmlNode childNode;
-            string filePath = new Uri(file.BaseURI).LocalPath;
-
-            childNode = parent.SelectSingleNode($"descendant::{childName}");
-
-            if (childNode == null)
-            {
-                childNode = file.CreateElement(childName);
-                childNode.InnerText = newValue;
-                parent.AppendChild(childNode);
-            }
-            else
-            {
-                childNode.InnerText = newValue;
-            }
-
-            file.Save(filePath);
-
-            return childNode;
-        }
-
-        public static XmlElement xmlFindOrCreateNodeFromAttribute(XmlDocument file, XmlNode parentNode, string attributeName, string attributeValue, string childNodeName)
-        {
-            IEnumerator nodeEnumerator = parentNode.GetEnumerator();
-            Boolean nodeExists = false;
-            XmlElement foundNode = null;
-
-            while (nodeEnumerator.MoveNext() && !nodeExists)
-            {
-                XmlElement curNode = nodeEnumerator.Current as XmlElement;
-
-                if (curNode.GetAttribute(attributeName) == attributeValue)
-                {
-                    foundNode = curNode;
-                    nodeExists = true;
-                }
-            }
-
-            if (!nodeExists)
-            {
-                XmlElement newNode;
+                XmlNode childNode;
                 string filePath = new Uri(file.BaseURI).LocalPath;
 
-                newNode = file.CreateElement(childNodeName);
-                newNode.SetAttribute(attributeName, attributeValue);
+                childNode = parent.SelectSingleNode($"descendant::{childName}");
 
-                foundNode = parentNode.AppendChild(newNode) as XmlElement;
+                if (childNode == null)
+                {
+                    childNode = file.CreateElement(childName);
+
+                    if (defaultValue != "")
+                    {
+                        childNode.InnerText = defaultValue;
+                    }
+
+                    parent.AppendChild(childNode);
+                    file.Save(filePath);
+                }
+
+                return childNode;
+            }
+
+            public static XmlNode updateOrCreateChildNode(XmlDocument file, XmlNode parent, string childName, string newValue)
+            {
+                XmlNode childNode;
+                string filePath = new Uri(file.BaseURI).LocalPath;
+
+                childNode = parent.SelectSingleNode($"descendant::{childName}");
+
+                if (childNode == null)
+                {
+                    childNode = file.CreateElement(childName);
+                    childNode.InnerText = newValue;
+                    parent.AppendChild(childNode);
+                }
+                else
+                {
+                    childNode.InnerText = newValue;
+                }
 
                 file.Save(filePath);
+
+                return childNode;
             }
 
-            return foundNode;
-        }
-
-        public static Boolean xmlSearchChildNodes(XmlDocument file, XmlNode parent, string searchValue)
-        {
-            XmlNodeList searchNodes = parent.ChildNodes;
-
-            foreach (XmlNode childNode in searchNodes)
+            public static XmlElement findOrCreateNodeFromAttribute(XmlDocument file, XmlNode parentNode, string attributeName, string attributeValue, string childNodeName)
             {
-                if (childNode.InnerText == searchValue)
+                IEnumerator nodeEnumerator = parentNode.GetEnumerator();
+                Boolean nodeExists = false;
+                XmlElement foundNode = null;
+
+                while (nodeEnumerator.MoveNext() && !nodeExists)
                 {
-                    return true;
+                    XmlElement curNode = nodeEnumerator.Current as XmlElement;
+
+                    if (curNode.GetAttribute(attributeName) == attributeValue)
+                    {
+                        foundNode = curNode;
+                        nodeExists = true;
+                    }
                 }
+
+                if (!nodeExists)
+                {
+                    XmlElement newNode;
+                    string filePath = new Uri(file.BaseURI).LocalPath;
+
+                    newNode = file.CreateElement(childNodeName);
+                    newNode.SetAttribute(attributeName, attributeValue);
+
+                    foundNode = parentNode.AppendChild(newNode) as XmlElement;
+
+                    file.Save(filePath);
+                }
+
+                return foundNode;
             }
 
-            return false;
-        }
-        public static Boolean xmlCreateChildNode(XmlDocument file, XmlNode parent, string newNodeName, string value)
-        {
-            XmlNode newNode;
-            string filePath = new Uri(file.BaseURI).LocalPath;
+            public static Boolean searchChildNodes(XmlDocument file, XmlNode parent, string searchValue)
+            {
+                XmlNodeList searchNodes = parent.ChildNodes;
 
-            newNode = file.CreateElement(newNodeName) as XmlNode;
-            newNode.InnerText = value;
+                foreach (XmlNode childNode in searchNodes)
+                {
+                    if (childNode.InnerText == searchValue)
+                    {
+                        return true;
+                    }
+                }
 
-            parent.AppendChild(newNode);
-            file.Save(filePath);
+                return false;
+            }
 
-            return false;
+            public static Boolean createChildNode(XmlDocument file, XmlNode parent, string newNodeName, string value)
+            {
+                XmlNode newNode;
+                string filePath = new Uri(file.BaseURI).LocalPath;
+
+                newNode = file.CreateElement(newNodeName) as XmlNode;
+                newNode.InnerText = value;
+
+                parent.AppendChild(newNode);
+                file.Save(filePath);
+
+                return false;
+            }
         }
     }
 

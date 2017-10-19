@@ -35,10 +35,10 @@ namespace CoOpBot.Modules.GuildWars
             root = xmlDatabase.DocumentElement;
 
             // Users
-            usersNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, root, "Users");
+            usersNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, root, "Users");
 
             // GW specific settings
-            guildWarsNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, root, "GuildWars");
+            guildWarsNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, root, "GuildWars");
 
             guildIDNode = guildWarsNode.SelectSingleNode("descendant::GuildId");
             guildAccessTokenNode = guildWarsNode.SelectSingleNode("descendant::GuildAccessToken");
@@ -55,7 +55,7 @@ namespace CoOpBot.Modules.GuildWars
             }
 
             // GW non tradeable items
-            accountBoundItemsNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, guildWarsNode, "AccountBoundItems");
+            accountBoundItemsNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, guildWarsNode, "AccountBoundItems");
         }
 
         #region Commands
@@ -66,9 +66,9 @@ namespace CoOpBot.Modules.GuildWars
         private async Task RegisterTokenCommand(string key)
         {
             XmlElement userDetails;
-            userDetails = CoOpGlobal.xmlFindOrCreateNodeFromAttribute(xmlDatabase, usersNode, "id", this.Context.Message.Author.Id.ToString(), "User");
+            userDetails = CoOpGlobal.XML.findOrCreateNodeFromAttribute(xmlDatabase, usersNode, "id", this.Context.Message.Author.Id.ToString(), "User");
 
-            CoOpGlobal.xmlUpdateOrCreateChildNode(xmlDatabase, userDetails, "gwAPIKey", key);
+            CoOpGlobal.XML.updateOrCreateChildNode(xmlDatabase, userDetails, "gwAPIKey", key);
 
             await ReplyAsync("Your API key has been updated");
         }

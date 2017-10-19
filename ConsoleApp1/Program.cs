@@ -41,6 +41,8 @@ namespace CoOpBot
             //string token = botTokenNode.InnerText;
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
+
+            CoOpGlobal.bootupDateTime = DateTime.UtcNow;
             
             // Block this task until the program is closed.
             await Task.Delay(-1);
@@ -119,7 +121,7 @@ namespace CoOpBot
                 channel = message.Channel;
                 xmlParameters.Load(FileLocations.xmlParameters());
                 XmlNode root = xmlParameters.DocumentElement;
-                XmlNode spamTimerNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "SpamTimer", "8");
+                XmlNode spamTimerNode = CoOpGlobal.XML.findOrCreateChild(xmlParameters, root, "SpamTimer", "8");
                 spamTimer = int.Parse(spamTimerNode.InnerText);
 
                 // Check to make sure that a bot is not the author
@@ -229,7 +231,7 @@ namespace CoOpBot
             {
                 xmlParameters.Load(FileLocations.xmlParameters());
                 XmlNode root = xmlParameters.DocumentElement;
-                XmlNode spamMessageCountNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "SpamMessageCount", "3");
+                XmlNode spamMessageCountNode = CoOpGlobal.XML.findOrCreateChild(xmlParameters, root, "SpamMessageCount", "3");
                 spamMessageCount = int.Parse(spamMessageCountNode.InnerText);
                 if (messageCount == spamMessageCount)
                 {
@@ -315,9 +317,9 @@ namespace CoOpBot
             XmlNode spamMessageCountNode;
             token = botTokenNode.InnerText;
 
-            prefixNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "PrefixChar", "!");
-            spamTimerNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "SpamTimer", "8");
-            spamMessageCountNode = CoOpGlobal.xmlFindOrCreateChild(xmlParameters, root, "SpamMessageCount", "3");
+            prefixNode = CoOpGlobal.XML.findOrCreateChild(xmlParameters, root, "PrefixChar", "!");
+            spamTimerNode = CoOpGlobal.XML.findOrCreateChild(xmlParameters, root, "SpamTimer", "8");
+            spamMessageCountNode = CoOpGlobal.XML.findOrCreateChild(xmlParameters, root, "SpamMessageCount", "3");
 
             prefixCharacter = Convert.ToChar(prefixNode.InnerText);
             spamTimer = int.Parse(spamTimerNode.InnerText);

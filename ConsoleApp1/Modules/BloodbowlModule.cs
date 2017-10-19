@@ -31,7 +31,7 @@ namespace CoOpBot.Modules.Bloodbowl
             rng = new Random();
 
             // Bloodbowl section of XML
-            bloodbowlNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, root, "Bloodbowl");
+            bloodbowlNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, root, "Bloodbowl");
 
             // List of all available races
             racesNode = bloodbowlNode.SelectSingleNode("descendant::Races");
@@ -121,12 +121,12 @@ namespace CoOpBot.Modules.Bloodbowl
             }
 
             // Node that stores the total number of players in tournament
-            tournamentSizeNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, bloodbowlNode, "TournamentSize", "16");
+            tournamentSizeNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, bloodbowlNode, "TournamentSize", "16");
 
             tournamentSize = int.Parse(tournamentSizeNode.InnerText);
 
             // Players registered for the tournament
-            playersNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, bloodbowlNode, "Players");
+            playersNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, bloodbowlNode, "Players");
 
             // List of races being available for random distribution in the current tournament
             tournamentRacesNode = bloodbowlNode.SelectSingleNode("descendant::TournamentRacesNode");

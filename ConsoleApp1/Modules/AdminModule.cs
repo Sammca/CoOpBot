@@ -292,9 +292,9 @@ namespace CoOpBot.Modules.Admin
 
             xmlDatabase.Load(FileLocations.xmlDatabase());
             XmlNode root = xmlDatabase.DocumentElement;
-            XmlNode revokedRoleCommandAccessUsersNode = CoOpGlobal.xmlFindOrCreateChild(xmlDatabase, root, "RevokedRoleCommandAccessUsers");
+            XmlNode revokedRoleCommandAccessUsersNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, root, "RevokedRoleCommandAccessUsers");
 
-            if (CoOpGlobal.xmlSearchChildNodes(xmlDatabase, revokedRoleCommandAccessUsersNode, $"{callerID}"))
+            if (CoOpGlobal.XML.searchChildNodes(xmlDatabase, revokedRoleCommandAccessUsersNode, $"{callerID}"))
             {
                 return false;
             }
