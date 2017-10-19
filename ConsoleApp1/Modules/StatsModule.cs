@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace CoOpBot.Modules.Stats
 {
@@ -93,6 +94,9 @@ namespace CoOpBot.Modules.Stats
                 string messageSender;
                 string output = "";
                 int actualMessageCount = 0;
+                List<KeyValuePair<string, int>> orderedList = new List<KeyValuePair<string, int>>();
+                int outputCounter = 1;
+                int userCounter = 0;
 
                 /*if (messageCount > 10000)
                 {
@@ -122,6 +126,7 @@ namespace CoOpBot.Modules.Stats
                             {
                                 userMessageCounter[messageSender] = 1;
                                 userCharacterCounter[messageSender] = curMessage.Content.Length;
+                                userCounter++;
                             }
                             else
                             {
@@ -133,11 +138,22 @@ namespace CoOpBot.Modules.Stats
                     }
                 }
 
-                output = $"In the past {actualMessageCount} messages: \n";
+                userCounter = Math.Min(10, userCounter);
 
-                foreach (KeyValuePair<string, int> entry in userMessageCounter)
+                output = $"Top {userCounter} from the past {actualMessageCount} messages: \n";
+
+                orderedList = userMessageCounter.ToList();
+
+                orderedList.Sort( delegate (KeyValuePair<string, int> pair1, KeyValuePair<string, int> pair2) { return pair2.Value.CompareTo(pair1.Value); } );
+
+                foreach (KeyValuePair<string, int> entry in orderedList)
                 {
-                    output += $"{entry.Key}: {entry.Value} messages averaging {(userCharacterCounter[entry.Key] / entry.Value)} characters per message \n";
+                    if (outputCounter > userCounter)
+                    {
+                        break;
+                    }
+                    output += $"{outputCounter}) {entry.Key} - {entry.Value} messages averaging {(userCharacterCounter[entry.Key] / entry.Value)} characters per message \n";
+                    outputCounter++;
                 }
 
                 await ReplyAsync(output);
