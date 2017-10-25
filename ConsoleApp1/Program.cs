@@ -8,6 +8,7 @@ using System.Xml;
 using System.IO;
 using System.Collections.Specialized;
 using System.Collections.Generic;
+using System.Timers;
 
 namespace CoOpBot
 {
@@ -30,6 +31,14 @@ namespace CoOpBot
 
         public async Task MainAsync()
         {
+            // Setup repeated method call
+            // 60000 = every 60 seconds
+            Timer timer = new Timer(60000);
+            // Not sure if AutoReset and Enabled are needed... but it works like this so I'm leaving it
+            // Fight me
+            timer.AutoReset = true;
+            timer.Enabled = true;
+
             client = new DiscordSocketClient();
             
             client.Log += Log;
@@ -42,12 +51,17 @@ namespace CoOpBot
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
 
+            // Set the method that runs on the timer
+            timer.Elapsed += async (sender, e) => await HandleTimer(client);
+            timer.Start();
+
+            await client.SetGameAsync("TestGameName");
+
             CoOpGlobal.bootupDateTime = DateTime.UtcNow;
             
             // Block this task until the program is closed.
             await Task.Delay(-1);
         }
-
 
         public async Task InstallCommands()
         {
@@ -57,6 +71,7 @@ namespace CoOpBot
             client.MessageReceived += HandleCommand;
             client.MessageReceived += RegisterNoveltyResponseCommands;
             RegisterAntiSpamFunctionality();
+
         }
 
         public async Task HandleCommand(SocketMessage messageParam)
@@ -136,6 +151,65 @@ namespace CoOpBot
                     await Task.Factory.StartNew(async () => { await CountMessage(messageSender, guild, channel, -1, spamTimer); });
                 }
             };
+        }
+
+        private async static Task<bool> HandleTimer(DiscordSocketClient client/*Object source, ElapsedEventArgs e*/)
+        {
+            IReadOnlyCollection<SocketGuild> guilds;
+
+            //Console.WriteLine("test");
+
+            guilds = client.Guilds;
+
+            foreach (SocketGuild curGuild in guilds)
+            {
+                IReadOnlyCollection<SocketGuildUser> users;
+                users = curGuild.Users;
+                foreach (SocketGuildUser curUser in users)
+                {
+                    if (curUser.Game.HasValue && !curUser.IsBot)
+                    {
+                        IRole gameRole;
+                        string gameName;
+                        IReadOnlyCollection<SocketRole> userRoles;
+                        CoOpBot.Modules.Admin.RolesModule roleModule = new Modules.Admin.RolesModule();
+                        Boolean userHasRole = false;
+                        List<IRole> roleList = new List<IRole>();
+                        List<ulong> userList = new List<ulong>();
+
+                        gameName = curUser.Game.Value.Name;
+
+                        gameRole = roleModule.FindRoleFromName(gameName, curGuild);
+
+                        if (gameRole == null)
+                        {
+                            await roleModule.RoleCreate(curGuild, gameName);
+
+                            gameRole = roleModule.FindRoleFromName(gameName, curGuild);
+                        }
+
+                        userRoles = curUser.Roles;
+
+                        foreach (SocketRole curRole in userRoles)
+                        {
+                            if (curRole.Name == gameRole.Name)
+                            {
+                                userHasRole = true;
+                                break;
+                            }
+                        }
+
+                        if (!userHasRole)
+                        {
+                            roleList.Add(gameRole);
+                            userList.Add(curUser.Id);
+                            await roleModule.RoleAddUsers(curGuild, userList, roleList);
+                        }
+                    }
+                }
+            }
+
+            return true;
         }
 
         /************************************************
