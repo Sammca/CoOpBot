@@ -55,7 +55,7 @@ namespace CoOpBot
             timer.Elapsed += async (sender, e) => await HandleTimer(client);
             timer.Start();
 
-            await client.SetGameAsync("TestGameName");
+            //await client.SetGameAsync("TestGameName");
 
             CoOpGlobal.bootupDateTime = DateTime.UtcNow;
             
