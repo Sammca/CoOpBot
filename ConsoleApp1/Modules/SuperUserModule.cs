@@ -35,8 +35,7 @@ namespace CoOpBot.Modules
 
         [Command("BackupGW")]
         [Summary("Creates a backup of the GW items file.")]
-
-        private async Task BackupDBCommand()
+        private async Task BackupGWCommand()
         {
             XmlDocument xmlParameters = new XmlDocument();
             try
@@ -51,10 +50,10 @@ namespace CoOpBot.Modules
                 Console.WriteLine(ex.Message);
             }
         }
+
         [Command("BackupDB")]
         [Summary("Creates a backup of the XML database file.")]
-
-        private async Task BackupGWCommand()
+        private async Task BackupDBCommand()
         {
             XmlDocument xmlParameters = new XmlDocument();
             try
