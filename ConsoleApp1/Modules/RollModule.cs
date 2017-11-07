@@ -7,14 +7,6 @@ namespace CoOpBot.Modules.Roll
     [Name("Dice rolls")]
     public class RollModule : ModuleBase
     {
-        Random rng;
-        public RollModule()
-        {
-            // Need to initialise random number generator here]
-            // If not, it keeps getting reinitialised with the same seed and always gives the same result
-            rng = new Random();
-        }
-
         [Command("Roll")]
         [Summary("Rolls a specified number of dice, with a specified number of sides. Time to Die.")]
         public async Task roll(string diceModifier = "")
@@ -180,7 +172,7 @@ namespace CoOpBot.Modules.Roll
             for (int rollNumber = 1; rollNumber <= numberOfDice; rollNumber++)
             {
                 // Add 1 to the sides on dice because upper bound is EXCLUSIVE
-                totalRoll += rng.Next(1, (sidesOnDice+1));
+                totalRoll += CoOpGlobal.rng.Next(1, (sidesOnDice+1));
             }
             
             return totalRoll;

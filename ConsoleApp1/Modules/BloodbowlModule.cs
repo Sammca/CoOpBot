@@ -22,13 +22,11 @@ namespace CoOpBot.Modules.Bloodbowl
         XmlNode tournamentRacesNode;
         XmlNode tournamentSizeNode;
         int tournamentSize;
-        Random rng;
 
         public BloodbowlModule()
         {
             xmlDatabase.Load(FileLocations.xmlDatabase());
             root = xmlDatabase.DocumentElement;
-            rng = new Random();
 
             // Bloodbowl section of XML
             bloodbowlNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, root, "Bloodbowl");
@@ -392,7 +390,7 @@ namespace CoOpBot.Modules.Bloodbowl
                 {
                     XmlElement playerNode = playersEnumerator.Current as XmlElement;
                     string race;
-                    int randomPosition = rng.Next(availableRaces.Count); // Don't add 1 to the exclusive Max becuase lists are 0 based
+                    int randomPosition = CoOpGlobal.rng.Next(availableRaces.Count); // Don't add 1 to the exclusive Max becuase lists are 0 based
                     IUser playerUser = await Context.Guild.GetUserAsync(ulong.Parse(playerNode.GetAttribute("id")));
 
                     race = availableRaces[randomPosition];
@@ -409,7 +407,7 @@ namespace CoOpBot.Modules.Bloodbowl
                 {
                     XmlElement newAINode;
                     string race;
-                    int randomPosition = rng.Next(availableRaces.Count); // Don't add 1 to the exclusive Max becuase lists are 0 based
+                    int randomPosition = CoOpGlobal.rng.Next(availableRaces.Count); // Don't add 1 to the exclusive Max becuase lists are 0 based
 
                     race = availableRaces[randomPosition];
                     availableRaces.RemoveAt(randomPosition);

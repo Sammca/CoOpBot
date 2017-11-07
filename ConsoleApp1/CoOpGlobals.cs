@@ -121,7 +121,10 @@ namespace CoOpBot
 
     public static class CoOpGlobal
     {
+        // Global variables
         public static DateTime bootupDateTime { get; set; }
+
+        public static Random rng { get; set; }
 
         public static class XML
         {

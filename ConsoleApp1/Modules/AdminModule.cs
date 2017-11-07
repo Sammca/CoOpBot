@@ -217,12 +217,11 @@ namespace CoOpBot.Modules.Admin
             // Define variables
             string output;
             Discord.Rest.RestRole newRole;
-            Random rng = new Random();
             Color roleColor;
 
             // Initialise variables
             output = "";
-            roleColor = new Color(rng.Next(257), rng.Next(257), rng.Next(257));
+            roleColor = new Color(CoOpGlobal.rng.Next(257), CoOpGlobal.rng.Next(257), CoOpGlobal.rng.Next(257));
 
 
             try

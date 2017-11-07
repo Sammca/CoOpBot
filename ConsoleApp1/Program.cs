@@ -23,7 +23,6 @@ namespace CoOpBot
         int spamTimer;
         int spamMessageCount;
         NameValueCollection userRecentMessageCounter = new NameValueCollection();
-        Random goodBotRNG = new Random();
         string token;
 
         public static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();
@@ -57,7 +56,9 @@ namespace CoOpBot
 
             //await client.SetGameAsync("TestGameName");
 
+            // Set global variables
             CoOpGlobal.bootupDateTime = DateTime.UtcNow;
+            CoOpGlobal.rng = new Random();
             
             // Block this task until the program is closed.
             await Task.Delay(-1);
@@ -258,7 +259,7 @@ namespace CoOpBot
                             goodBotResponseList.Add("ｖ(◠ｏ◠)ｖ");
                             goodBotResponseList.Add("( ͡° ͜ʖ ͡°)");
 
-                            responseText = goodBotResponseList[goodBotRNG.Next(goodBotResponseList.Count)];
+                            responseText = goodBotResponseList[CoOpGlobal.rng.Next(goodBotResponseList.Count)];
                             break;
                         default:
                             break;

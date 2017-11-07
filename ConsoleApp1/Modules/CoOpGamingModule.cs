@@ -29,7 +29,6 @@ namespace CoOpBot.Modules.CoOpGaming
                 List<int> usedPositions;
                 SocketVoiceChannel curVoiceChannel;
                 string messageOutput;
-                Random rng;
                 SocketGuildUser[] users;
                 SocketGuildUser messageAuthor;
                 List<TeamAssignment> teamAssignmentList;
@@ -37,7 +36,6 @@ namespace CoOpBot.Modules.CoOpGaming
                 List<IChannel> teamChannels;
 
                 // Initialise variables
-                rng = new Random();
                 messageOutput = "";
                 teamAssignmentList = new List<TeamAssignment> { };
                 usedPositions = new List<int> { };
@@ -69,7 +67,7 @@ namespace CoOpBot.Modules.CoOpGaming
                         // Choose a random user from who is left
                         do
                         {
-                            randomUserPosition = rng.Next(0, userCount);
+                            randomUserPosition = CoOpGlobal.rng.Next(0, userCount);
                         }
                         while (usedPositions.Contains(randomUserPosition));
 
