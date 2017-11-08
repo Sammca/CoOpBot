@@ -156,12 +156,67 @@ namespace CoOpBot.Modules.CoOpGaming
         private async Task RemoveTeamsCommand()
         {
             IReadOnlyCollection<IVoiceChannel> voiceChannels;
+            IReadOnlyCollection<IVoiceChannel> voiceChannelsSearch;
+            SocketVoiceChannel voiceChannelMoveTo = null;
+            IAsyncEnumerable<IReadOnlyCollection<IGuildUser>> channelMembersEnumerable;
+            IAsyncEnumerator<IReadOnlyCollection<IGuildUser>> channelMembersEnumerator;
+            IReadOnlyCollection<IGuildUser> channelMembers;
+            int usercount = 0;
+            Boolean emptyChannelFound = false;
+
+            voiceChannelsSearch = await this.Context.Guild.GetVoiceChannelsAsync();
+            foreach (IVoiceChannel voiceChannel in voiceChannelsSearch)
+            {
+                if (voiceChannel.Name.Substring(0, 4) != "Team")
+                {
+                    channelMembersEnumerable = voiceChannel.GetUsersAsync();
+                    channelMembersEnumerator = channelMembersEnumerable.GetEnumerator();
+
+                    while (await channelMembersEnumerator.MoveNext())
+                    {
+                        channelMembers = channelMembersEnumerator.Current;
+                        usercount = channelMembers.Count();
+
+                        if (usercount == 0)
+                        {
+                            voiceChannelMoveTo = voiceChannel as SocketVoiceChannel;
+                            emptyChannelFound = true;
+                            break;
+                        }
+                    }
+
+                    if (emptyChannelFound)
+                    {
+                        break;
+                    }
+                }
+            }
 
             voiceChannels = await this.Context.Guild.GetVoiceChannelsAsync();
             foreach (IVoiceChannel voiceChannel in voiceChannels)
             {
                 if (voiceChannel.Name.Substring(0, 4) == "Team")
                 {
+                    if (emptyChannelFound)
+                    {
+                        channelMembersEnumerable = voiceChannel.GetUsersAsync();
+                        channelMembersEnumerator = channelMembersEnumerable.GetEnumerator();
+
+                        while (await channelMembersEnumerator.MoveNext())
+                        {
+                            channelMembers = channelMembersEnumerator.Current;
+
+                            foreach (IGuildUser user in channelMembers)
+                            {
+                                await (user)?.ModifyAsync(x =>
+                                {
+                                    x.Channel = voiceChannelMoveTo;
+                                });
+                            }
+
+                        }
+                    }
+
                     await voiceChannel.DeleteAsync();
                 }
             }
