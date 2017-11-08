@@ -7,6 +7,30 @@ namespace CoOpBot.Modules.Roll
     [Name("Dice rolls")]
     public class RollModule : ModuleBase
     {
+        [Command("CoinFlip")]
+        [Alias("flip")]
+        [Summary("Flips a coin")]
+        public async Task coinFlip()
+        {
+            int rollResult;
+            string output;
+            
+            rollResult = 0;
+            output = "";
+
+            try
+            {
+                rollResult = RollDice(1, 2);
+                output = rollResult == 1 ? "Heads" : "Tails";
+
+                await ReplyAsync(output);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
         [Command("Roll")]
         [Summary("Rolls a specified number of dice, with a specified number of sides. Time to Die.")]
         public async Task roll(string diceModifier = "")
