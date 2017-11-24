@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -14,6 +15,25 @@ namespace CoOpBot.Modules.Admin
     {
 
         #region Commands
+        [Command("regexTest")]
+        [Summary("Test game name regex.")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        private async Task regexTestCommand(IRole role)
+        {
+            string output = "";
+            Regex specialCharRegex = new Regex("[^a-zA-Z0-9 ]");
+            Regex multipleSpaceRegex = new Regex("[ ]{2,}");
+            try
+            {
+                output = specialCharRegex.Replace(role.Name, "");
+                output = multipleSpaceRegex.Replace(output, " ");
+                await ReplyAsync(output);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
 
         [Command("AddRole")]
         [Alias("AddMe", "ar")]

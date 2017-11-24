@@ -9,6 +9,7 @@ using System.IO;
 using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Timers;
+using System.Text.RegularExpressions;
 
 namespace CoOpBot
 {
@@ -156,6 +157,9 @@ namespace CoOpBot
 
         private async static Task<bool> HandleTimer(DiscordSocketClient client)
         {
+            Regex specialCharRegex = new Regex("[^a-zA-Z0-9 ]");
+            Regex multipleSpaceRegex = new Regex("[ ]{2,}");
+
             try
             {
                 IReadOnlyCollection<SocketGuild> guilds;
@@ -179,6 +183,10 @@ namespace CoOpBot
                             List<ulong> userList = new List<ulong>();
 
                             gameName = curUser.Game.Value.Name;
+                            // Replace all special characters in game names
+                            gameName = specialCharRegex.Replace(gameName, "");
+                            // Remove any duplicate spaces that the previous line may have generated
+                            gameName = multipleSpaceRegex.Replace(gameName, " ");
 
                             gameRole = roleModule.FindRoleFromName(gameName, curGuild);
 
