@@ -154,60 +154,66 @@ namespace CoOpBot
             };
         }
 
-        private async static Task<bool> HandleTimer(DiscordSocketClient client/*Object source, ElapsedEventArgs e*/)
+        private async static Task<bool> HandleTimer(DiscordSocketClient client)
         {
-            IReadOnlyCollection<SocketGuild> guilds;
-
-            //Console.WriteLine("test");
-
-            guilds = client.Guilds;
-
-            foreach (SocketGuild curGuild in guilds)
+            try
             {
-                IReadOnlyCollection<SocketGuildUser> users;
-                users = curGuild.Users;
-                foreach (SocketGuildUser curUser in users)
+                IReadOnlyCollection<SocketGuild> guilds;
+                
+                guilds = client.Guilds;
+
+                foreach (SocketGuild curGuild in guilds)
                 {
-                    if (curUser.Game.HasValue && !curUser.IsBot)
+                    IReadOnlyCollection<SocketGuildUser> users;
+                    users = curGuild.Users;
+                    foreach (SocketGuildUser curUser in users)
                     {
-                        IRole gameRole;
-                        string gameName;
-                        IReadOnlyCollection<SocketRole> userRoles;
-                        CoOpBot.Modules.Admin.RolesModule roleModule = new Modules.Admin.RolesModule();
-                        Boolean userHasRole = false;
-                        List<IRole> roleList = new List<IRole>();
-                        List<ulong> userList = new List<ulong>();
-
-                        gameName = curUser.Game.Value.Name;
-
-                        gameRole = roleModule.FindRoleFromName(gameName, curGuild);
-
-                        if (gameRole == null)
+                        if (curUser.Game.HasValue && !curUser.IsBot)
                         {
-                            await roleModule.RoleCreate(curGuild, gameName);
+                            IRole gameRole;
+                            string gameName;
+                            IReadOnlyCollection<SocketRole> userRoles;
+                            CoOpBot.Modules.Admin.RolesModule roleModule = new Modules.Admin.RolesModule();
+                            Boolean userHasRole = false;
+                            List<IRole> roleList = new List<IRole>();
+                            List<ulong> userList = new List<ulong>();
+
+                            gameName = curUser.Game.Value.Name;
 
                             gameRole = roleModule.FindRoleFromName(gameName, curGuild);
-                        }
 
-                        userRoles = curUser.Roles;
-
-                        foreach (SocketRole curRole in userRoles)
-                        {
-                            if (curRole.Name == gameRole.Name)
+                            if (gameRole == null)
                             {
-                                userHasRole = true;
-                                break;
-                            }
-                        }
+                                await roleModule.RoleCreate(curGuild, gameName);
 
-                        if (!userHasRole)
-                        {
-                            roleList.Add(gameRole);
-                            userList.Add(curUser.Id);
-                            await roleModule.RoleAddUsers(curGuild, userList, roleList);
+                                gameRole = roleModule.FindRoleFromName(gameName, curGuild);
+                            }
+
+                            userRoles = curUser.Roles;
+
+                            foreach (SocketRole curRole in userRoles)
+                            {
+                                if (curRole.Name == gameRole.Name)
+                                {
+                                    userHasRole = true;
+                                    break;
+                                }
+                            }
+
+                            if (!userHasRole)
+                            {
+                                roleList.Add(gameRole);
+                                userList.Add(curUser.Id);
+                                await roleModule.RoleAddUsers(curGuild, userList, roleList);
+                            }
                         }
                     }
                 }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.InnerException);
+                return true;
             }
 
             return true;
