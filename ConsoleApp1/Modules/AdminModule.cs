@@ -163,6 +163,54 @@ namespace CoOpBot.Modules.Admin
             }
 
         }
+        
+        [Command("MergeRoles")]
+        [Alias("mr", "RoleMerge", "merge")]
+        [Summary("Merges two Roles. Second role is merged into first then deleted")]
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        private async Task MergeRolesCommand(IRole role1, IRole role2)
+        {
+            try
+            {
+                string output = "";
+                SocketGuild server;
+                IEnumerable<IGuildUser> users;
+                List<ulong> usersToMerge = new List<ulong>();
+                List<IRole> roleToMergeTo = new List<IRole>();
+                IGuildUser curUser;
+
+                server = this.Context.Guild as SocketGuild;
+                roleToMergeTo.Add(role1);
+
+
+                users = await this.Context.Guild.GetUsersAsync();
+                // Get users from Role 2 that aren't in Role 1
+                for (int i = 0; i < users.Count(); i++)
+                {
+                    curUser = users.ElementAt(i);
+
+                    if (curUser.RoleIds.Contains(role2.Id) && !curUser.RoleIds.Contains(role1.Id))
+                    {
+                        usersToMerge.Add(curUser.Id);
+                    }
+                }
+                // Add users to Role 1
+                if (usersToMerge.Count > 0)
+                {
+                    await this.RoleAddUsers(server, usersToMerge, roleToMergeTo);
+                }
+                // Delete Role 2
+                await this.RoleDelete(server, role2);
+
+                output = string.Format("Roles {0} and {1} merged", role1.Name, role2.Name);
+                await ReplyAsync(output);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+        }
 
         #endregion
 
