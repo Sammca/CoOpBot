@@ -9,7 +9,7 @@ namespace CoOpBot.Database
     {
         XmlDocument xmlDatabase = new XmlDocument();
         XmlNode root;
-        int recId;
+        string recId;
 
         public DbBase()
         {
@@ -17,15 +17,34 @@ namespace CoOpBot.Database
             root = xmlDatabase.DocumentElement;
         }
 
+        public DbBase createNewInstance()
+        {
+            var method = typeof(DbBase).GetMethod("newInstance", BindingFlags.NonPublic | BindingFlags.Instance).MakeGenericMethod(this.GetType());
+            var value = method.Invoke(this, null);
+            return (DbBase)value;
+        }
+
+        protected T newInstance<T>() where T : DbBase, new()
+        {
+            T newInstance = new T();
+            return newInstance;
+        }
+
         public virtual void insert()
         {
+            if (recId == null)
+            {
+                recId = this.newRecId();
+            }
+
             if (this.validateWrite() && this.validateInsert())
             {
                 PropertyInfo[] properties = this.GetType().GetProperties();
                 XmlNode recordXML;
 
+                recId = this.newRecId();
 
-                recordXML = CoOpGlobal.XML.createNodeWithAttribute(xmlDatabase, this.DBRootNode(), "RecId", this.newRecId(), "Record");
+                recordXML = CoOpGlobal.XML.createNodeWithAttribute(xmlDatabase, this.DBRootNode(), "RecId", recId, "Record");
 
 
                 foreach (PropertyInfo property in properties)
@@ -76,8 +95,13 @@ namespace CoOpBot.Database
         {
             return true;
         }
+
         public virtual bool validateInsert()
         {
+            if (this.existsRecId(int.Parse(recId)))
+            {
+                return false;
+            }
             return true;
         }
 
@@ -91,6 +115,11 @@ namespace CoOpBot.Database
             return CoOpGlobal.XML.findOrCreateChild(xmlDatabase, root, this.DBName());
         }
 
+        public void setRecId(string recIdToSet)
+        {
+            recId = recIdToSet;
+        }
+
         public string newRecId()
         {
             int recIdInt;
@@ -99,18 +128,41 @@ namespace CoOpBot.Database
             {
                 recIdInt = CoOpGlobal.rng.Next(999999999);
             }
-            while (this.findRecId(recIdInt) != null);
+            while (this.existsRecId(recIdInt));
 
             return $"{recIdInt}";
         }
 
-        public XmlNode findRecId(int recId)
+        public bool existsRecId(int recIdSearch)
         {
             XmlNode foundNode = null;
 
-            foundNode = CoOpGlobal.XML.findNodeWithAttribute(xmlDatabase, this.DBRootNode(), "RecId", $"{recId}", "Record");
+            foundNode = CoOpGlobal.XML.findNodeWithAttribute(xmlDatabase, this.DBRootNode(), "RecId", $"{recIdSearch}", "Record");
 
-            return foundNode;
+            return (foundNode != null);
+        }
+
+        public DbBase findRecId(string recIdSearch)
+        {
+            XmlNode foundRecord = null;
+            DbBase retObject = null;
+
+            foundRecord = CoOpGlobal.XML.findNodeWithAttribute(xmlDatabase, this.DBRootNode(), "RecId", $"{recIdSearch}", "Record");
+            if (foundRecord != null)
+            {
+                retObject = this.createNewInstance();
+
+                retObject.recId = recIdSearch;
+                IEnumerator fieldEnumerator = foundRecord.GetEnumerator();
+                while (fieldEnumerator.MoveNext())
+                {
+                    XmlNode curField = fieldEnumerator.Current as XmlNode;
+
+                    retObject.GetType().GetProperty(curField.Name).SetValue(retObject, curField.InnerText);
+                }
+            }
+
+            return retObject;
         }
 
         public bool exists(string fieldName, string value)
@@ -143,6 +195,11 @@ namespace CoOpBot.Database
             }
 
             return recordExists;
+        }
+
+        public virtual DbBase find(string value)
+        {
+            return null;
         }
     }
 }

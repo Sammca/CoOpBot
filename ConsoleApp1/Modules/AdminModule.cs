@@ -14,7 +14,6 @@ namespace CoOpBot.Modules.Admin
     [Name("Admin")]
     public class RolesModule : ModuleBase
     {
-
         #region Commands
         [Command("regexTest")]
         [Summary("Test game name regex.")]
@@ -184,10 +183,8 @@ namespace CoOpBot.Modules.Admin
 
                 roleTranslations.translateFrom = role2.Name;
                 roleTranslations.translateTo = role1.Name;
-                if (roleTranslations.validateInsert())
-                {
-                    roleTranslations.insert();
-                }
+
+                roleTranslations.insert();
 
                 server = this.Context.Guild as SocketGuild;
                 roleToMergeTo.Add(role1);
