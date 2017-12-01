@@ -171,6 +171,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CoOpGlobals.cs" />
+    <Compile Include="Database\DbBase.cs" />
+    <Compile Include="Database\RoleTranslations.cs" />
     <Compile Include="JSON.cs" />
     <Compile Include="Modules\AdminModule.cs" />
     <Compile Include="Modules\BloodbowlModule.cs" />

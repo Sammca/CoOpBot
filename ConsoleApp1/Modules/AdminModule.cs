@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using CoOpBot.Database;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using System;
@@ -178,6 +179,15 @@ namespace CoOpBot.Modules.Admin
                 List<ulong> usersToMerge = new List<ulong>();
                 List<IRole> roleToMergeTo = new List<IRole>();
                 IGuildUser curUser;
+
+                RoleTranslations roleTranslations = new RoleTranslations();
+
+                roleTranslations.translateFrom = role2.Name;
+                roleTranslations.translateTo = role1.Name;
+                if (roleTranslations.validateInsert())
+                {
+                    roleTranslations.insert();
+                }
 
                 server = this.Context.Guild as SocketGuild;
                 roleToMergeTo.Add(role1);
