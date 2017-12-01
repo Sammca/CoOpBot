@@ -197,9 +197,54 @@ namespace CoOpBot.Database
             return recordExists;
         }
 
+        public abstract string defaultFindField();
+
+        public DbBase findFieldValue(string fieldName, string value)
+        {
+            DbBase retObject = null;
+            Boolean recordExists = false;
+            Boolean stopSearching = false;
+            XmlNode dbRoot = this.DBRootNode();
+            IEnumerator recordEnumerator = dbRoot.GetEnumerator();
+
+
+            while (recordEnumerator.MoveNext() && !stopSearching)
+            {
+                XmlNode curRecord = recordEnumerator.Current as XmlNode;
+
+                IEnumerator fieldEnumerator = curRecord.GetEnumerator();
+                IEnumerator fieldEnumeratorAssign = curRecord.GetEnumerator();
+                while (fieldEnumerator.MoveNext() && !recordExists)
+                {
+                    XmlNode curField = fieldEnumerator.Current as XmlNode;
+
+                    if (curField.Name == fieldName)
+                    {
+                        if (curField.InnerText == value)
+                        {
+                            recordExists = true;
+                        }
+                        stopSearching = true;
+                    }
+                }
+
+                if (recordExists)
+                {
+                    while (fieldEnumeratorAssign.MoveNext())
+                    {
+                        XmlNode curField = fieldEnumeratorAssign.Current as XmlNode;
+
+                        retObject.GetType().GetProperty(curField.Name).SetValue(retObject, curField.InnerText);
+                    }
+                }
+            }
+
+            return retObject;
+        }
+
         public virtual DbBase find(string value)
         {
-            return null;
+            return this.findFieldValue(this.defaultFindField(), value);
         }
     }
 }

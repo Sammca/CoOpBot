@@ -10,6 +10,11 @@ namespace CoOpBot.Database
         public string translateTo { get; set; }
         #endregion
 
+        public override string defaultFindField()
+        {
+            return nameof(translateFrom);
+        }
+
         public override bool validateWrite()
         {
             // Make sure mandatory fields aren't blank
