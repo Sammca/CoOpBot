@@ -10,6 +10,7 @@ using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Timers;
 using System.Text.RegularExpressions;
+using CoOpBot.Database;
 
 namespace CoOpBot
 {
@@ -181,12 +182,20 @@ namespace CoOpBot
                             Boolean userHasRole = false;
                             List<IRole> roleList = new List<IRole>();
                             List<ulong> userList = new List<ulong>();
+                            RoleTranslations rt = new RoleTranslations();
 
                             gameName = curUser.Game.Value.Name;
                             // Replace all special characters in game names
                             gameName = specialCharRegex.Replace(gameName, "");
                             // Remove any duplicate spaces that the previous line may have generated
                             gameName = multipleSpaceRegex.Replace(gameName, " ");
+
+                            rt = rt.find(gameName) as RoleTranslations;
+
+                            if (rt != null)
+                            {
+                                gameName = rt.translateTo;
+                            }
 
                             gameRole = roleModule.FindRoleFromName(gameName, curGuild);
 
