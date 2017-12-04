@@ -15,6 +15,37 @@ namespace CoOpBot.Modules.Admin
     public class RolesModule : ModuleBase
     {
         #region Commands
+        /*[Command("test")]
+        [Summary("Test.")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        private async Task testCommand(string test)
+        {
+            string output = "";
+            RoleTranslations rt = new RoleTranslations();
+            try
+            {
+                rt = rt.find(test) as RoleTranslations;
+                output += $"RecId: {rt.recId} \n";
+                output += $"From: {rt.translateFrom} \n";
+                output += $"To: {rt.translateTo} \n";
+
+                rt.translateTo = "testChange";
+                output += $"----UPDATE----\n";
+                rt.update();
+
+                rt = rt.find(test) as RoleTranslations;
+                output += $"RecId: {rt.recId} \n";
+                output += $"From: {rt.translateFrom} \n";
+                output += $"To: {rt.translateTo} \n";
+                
+                await ReplyAsync(output);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }*/
+
         [Command("regexTest")]
         [Summary("Test game name regex.")]
         [RequireUserPermission(GuildPermission.Administrator)]

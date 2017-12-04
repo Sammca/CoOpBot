@@ -9,7 +9,7 @@ namespace CoOpBot.Database
     {
         XmlDocument xmlDatabase = new XmlDocument();
         XmlNode root;
-        string recId;
+        public string recId;
 
         public DbBase()
         {
@@ -74,13 +74,28 @@ namespace CoOpBot.Database
 
         public virtual void update()
         {
-            if (this.validateWrite())
+            try
             {
-                // TODO update
+                if (this.validateWrite())
+                {
+                    XmlNode updateNode = null;
+                    PropertyInfo[] properties = this.GetType().GetProperties();
+
+                    updateNode = CoOpGlobal.XML.findNodeWithAttribute(xmlDatabase, this.DBRootNode(), "RecId", $"{this.recId}", "Record");
+
+                    foreach (PropertyInfo property in properties)
+                    {
+                        XmlNode fieldNode = CoOpGlobal.XML.updateOrCreateChildNode(xmlDatabase, updateNode, property.Name, $"{property.GetValue(this, null)}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"{DBName()} write validation failed");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // Error
+                Console.WriteLine(ex.Message);
             }
             return;
         }
@@ -150,10 +165,13 @@ namespace CoOpBot.Database
             foundRecord = CoOpGlobal.XML.findNodeWithAttribute(xmlDatabase, this.DBRootNode(), "RecId", $"{recIdSearch}", "Record");
             if (foundRecord != null)
             {
+                // Initilaise record object
                 retObject = this.createNewInstance();
-
+                // Set Rec Id separately because it isn't a property, just a variable
                 retObject.recId = recIdSearch;
                 IEnumerator fieldEnumerator = foundRecord.GetEnumerator();
+
+                // Assign field values to object properties
                 while (fieldEnumerator.MoveNext())
                 {
                     XmlNode curField = fieldEnumerator.Current as XmlNode;
@@ -203,12 +221,11 @@ namespace CoOpBot.Database
         {
             DbBase retObject = null;
             Boolean recordExists = false;
-            Boolean stopSearching = false;
             XmlNode dbRoot = this.DBRootNode();
             IEnumerator recordEnumerator = dbRoot.GetEnumerator();
 
 
-            while (recordEnumerator.MoveNext() && !stopSearching)
+            while (recordEnumerator.MoveNext() && !recordExists)
             {
                 XmlNode curRecord = recordEnumerator.Current as XmlNode;
 
@@ -224,16 +241,21 @@ namespace CoOpBot.Database
                         {
                             recordExists = true;
                         }
-                        stopSearching = true;
                     }
                 }
 
                 if (recordExists)
                 {
+                    // Initilaise record object
+                    retObject = this.createNewInstance();
+                    // Set Rec Id separately because it isn't a property, just a variable
+                    retObject.recId = curRecord.Attributes.GetNamedItem("RecId").Value;
+
+                    // Assign field values to object properties
                     while (fieldEnumeratorAssign.MoveNext())
                     {
                         XmlNode curField = fieldEnumeratorAssign.Current as XmlNode;
-
+                        
                         retObject.GetType().GetProperty(curField.Name).SetValue(retObject, curField.InnerText);
                     }
                 }
