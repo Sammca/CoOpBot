@@ -102,7 +102,20 @@ namespace CoOpBot.Database
         
         public virtual void delete()
         {
-            // TODO delete
+            try
+            {
+                XmlNode deleteNode = null;
+
+                deleteNode = CoOpGlobal.XML.findNodeWithAttribute(xmlDatabase, this.DBRootNode(), "RecId", $"{this.recId}", "Record");
+
+                this.DBRootNode().RemoveChild(deleteNode);
+
+                xmlDatabase.Save(FileLocations.xmlDatabase());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
             return;
         }
 
