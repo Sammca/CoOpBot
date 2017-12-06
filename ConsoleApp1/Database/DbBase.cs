@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.ComponentModel;
 using System.Reflection;
 using System.Xml;
 
@@ -268,8 +269,10 @@ namespace CoOpBot.Database
                     while (fieldEnumeratorAssign.MoveNext())
                     {
                         XmlNode curField = fieldEnumeratorAssign.Current as XmlNode;
-                        
-                        retObject.GetType().GetProperty(curField.Name).SetValue(retObject, curField.InnerText);
+                        TypeConverter converter = TypeDescriptor.GetConverter(retObject.GetType().GetProperty(curField.Name).PropertyType);
+
+
+                        retObject.GetType().GetProperty(curField.Name).SetValue(retObject, converter.ConvertFromString(curField.InnerText));
                     }
                 }
             }

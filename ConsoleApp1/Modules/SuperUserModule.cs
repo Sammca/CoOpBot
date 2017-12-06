@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using CoOpBot.Database;
+using Discord;
 using Discord.Commands;
 using System;
 using System.Reflection;
@@ -252,22 +253,12 @@ namespace CoOpBot.Modules
             try
             {
                 string output = "";
-                XmlDocument xmlDatabase = new XmlDocument();
-                ulong callerID = user.Id;
+                RevokedRoleCommandAccessUsers revokedUser = new RevokedRoleCommandAccessUsers();
 
-                xmlDatabase.Load(FileLocations.xmlDatabase());
-                XmlNode root = xmlDatabase.DocumentElement;
-                XmlNode revokedRoleCommandAccessUsersNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, root, "RevokedRoleCommandAccessUsers");
+                revokedUser.userID = user.Id;
+                revokedUser.insert();
 
-                if (CoOpGlobal.XML.searchChildNodes(xmlDatabase, revokedRoleCommandAccessUsersNode, $"{callerID}"))
-                {
-                    output += "User already on list";
-                }
-                else
-                {
-                    CoOpGlobal.XML.createChildNode(xmlDatabase, revokedRoleCommandAccessUsersNode, "bannedUser", $"{callerID}");
-                    output += "User added to list";
-                }
+                output += "User added to the list";
 
                 await ReplyAsync(output);
             }
@@ -285,25 +276,14 @@ namespace CoOpBot.Modules
             try
             {
                 string output = "";
-                XmlDocument xmlDatabase = new XmlDocument();
-                ulong callerID = user.Id;
+                RevokedRoleCommandAccessUsers revokedUser = new RevokedRoleCommandAccessUsers();
 
-                xmlDatabase.Load(FileLocations.xmlDatabase());
-                XmlNode root = xmlDatabase.DocumentElement;
-                XmlNode revokedRoleCommandAccessUsersNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, root, "RevokedRoleCommandAccessUsers");
+                revokedUser = revokedUser.find($"{user.Id}") as RevokedRoleCommandAccessUsers;
 
-                if (CoOpGlobal.XML.searchChildNodes(xmlDatabase, revokedRoleCommandAccessUsersNode, $"{callerID}"))
+                if (revokedUser != null)
                 {
-                    foreach (XmlNode curNode in revokedRoleCommandAccessUsersNode.ChildNodes)
-                    {
-                        if (curNode.InnerText == $"{callerID}")
-                        {
-                            revokedRoleCommandAccessUsersNode.RemoveChild(curNode);
-                            xmlDatabase.Save(FileLocations.xmlDatabase());
-
-                            output += "User removed from the list";
-                        }
-                    }
+                    revokedUser.delete();
+                    output += "User removed from the list";
                 }
                 else
                 {
