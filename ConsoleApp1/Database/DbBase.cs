@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Xml;
@@ -43,7 +44,7 @@ namespace CoOpBot.Database
                 PropertyInfo[] properties = this.GetType().GetProperties();
                 XmlNode recordXML;
 
-                recId = this.newRecId();
+                //recId = this.newRecId();
 
                 recordXML = CoOpGlobal.XML.createNodeWithAttribute(xmlDatabase, this.DBRootNode(), "RecId", recId, "Record");
 
@@ -100,7 +101,7 @@ namespace CoOpBot.Database
             }
             return;
         }
-        
+
         public virtual void delete()
         {
             try
@@ -219,8 +220,8 @@ namespace CoOpBot.Database
                         if (curField.InnerText == value)
                         {
                             recordExists = true;
+                            stopSearching = true;
                         }
-                        stopSearching = true;
                         break;
                     }
                 }
@@ -283,6 +284,38 @@ namespace CoOpBot.Database
         public virtual DbBase find(string value)
         {
             return this.findFieldValue(this.defaultFindField(), value);
+        }
+
+        public List<T> dbAsList<T>() where T : DbBase
+        {
+            List<T> retList = new List<T>();
+            IEnumerator dbEnumerator = this.DBRootNode().GetEnumerator();
+            T curRecord;
+            XmlNode curRecXML = null;
+
+            while (dbEnumerator.MoveNext())
+            {
+                curRecXML = dbEnumerator.Current as XmlNode;
+                // Initilaise record object
+                curRecord = this.createNewInstance() as T;
+                // Set Rec Id separately because it isn't a property, just a variable
+                curRecord.recId = curRecXML.Attributes.GetNamedItem("RecId").Value;
+                IEnumerator fieldEnumerator = curRecXML.GetEnumerator();
+
+                // Assign field values to object properties
+                while (fieldEnumerator.MoveNext())
+                {
+                    XmlNode curField = fieldEnumerator.Current as XmlNode;
+                    TypeConverter converter = TypeDescriptor.GetConverter(curRecord.GetType().GetProperty(curField.Name).PropertyType);
+
+
+                    curRecord.GetType().GetProperty(curField.Name).SetValue(curRecord, converter.ConvertFromString(curField.InnerText));
+                }
+
+                retList.Add(curRecord);
+            }
+            
+            return retList;
         }
     }
 }

@@ -133,7 +133,7 @@ namespace CoOpBot
                 XmlNode childNode;
                 string filePath = new Uri(file.BaseURI).LocalPath;
 
-                childNode = parent.SelectSingleNode($"descendant::{childName}");
+                childNode = parent.SelectSingleNode($"{childName}");
 
                 if (childNode == null)
                 {
