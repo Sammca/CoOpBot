@@ -392,14 +392,12 @@ namespace CoOpBot.Modules.Admin
 
         private Boolean isPermitted()
         {
-            XmlDocument xmlDatabase = new XmlDocument();
+            RevokedRoleCommandAccessUsers revokedRoleCommandAccessUsers = new RevokedRoleCommandAccessUsers();
             ulong callerID = this.Context.User.Id;
 
-            xmlDatabase.Load(FileLocations.xmlDatabase());
-            XmlNode root = xmlDatabase.DocumentElement;
-            XmlNode revokedRoleCommandAccessUsersNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, root, "RevokedRoleCommandAccessUsers");
+            revokedRoleCommandAccessUsers = revokedRoleCommandAccessUsers.find($"{callerID}") as RevokedRoleCommandAccessUsers;
 
-            if (CoOpGlobal.XML.searchChildNodes(xmlDatabase, revokedRoleCommandAccessUsersNode, $"{callerID}"))
+            if (revokedRoleCommandAccessUsers.userID == callerID)
             {
                 return false;
             }
