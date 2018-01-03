@@ -1,7 +1,9 @@
-﻿using Discord;
+﻿using CoOpBot.Database;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -13,8 +15,37 @@ namespace CoOpBot.Modules.Admin
     [Name("Admin")]
     public class RolesModule : ModuleBase
     {
-
         #region Commands
+        /*[Command("test")]
+        [Summary("Test.")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        private async Task testCommand()
+        {
+            string output = "";
+            RoleTranslations rt = new RoleTranslations();
+            List<RoleTranslations> rtList = new List<RoleTranslations>();
+
+            try
+            {
+                rtList = rt.dbAsList<RoleTranslations>();
+
+
+                foreach (RoleTranslations curRt in rtList)
+                {
+                    //rt = rt.find(test) as RoleTranslations;
+                    output += $"RecId: {curRt.recId} \n";
+                    output += $"From: {curRt.translateFrom} \n";
+                    output += $"To: {curRt.translateTo} \n";
+                }
+                
+                await ReplyAsync(output);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }*/
+
         [Command("regexTest")]
         [Summary("Test game name regex.")]
         [RequireUserPermission(GuildPermission.Administrator)]
@@ -28,6 +59,42 @@ namespace CoOpBot.Modules.Admin
                 output = specialCharRegex.Replace(role.Name, "");
                 output = multipleSpaceRegex.Replace(output, " ");
                 await ReplyAsync(output);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        [Command("convertToNewDb")]
+        [Summary("Convert old DB to New DB.")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        private async Task convertToNewDbCommand()
+        {
+            XmlDocument xmlDatabase = new XmlDocument();
+            XmlNode dbRoot;
+            XmlNode usersNode;
+            IEnumerator usersEnumerator;
+
+            try
+            {
+                xmlDatabase.Load(FileLocations.xmlDatabase());
+                dbRoot = xmlDatabase.DocumentElement;
+                usersNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, dbRoot, "Users");
+                usersEnumerator = usersNode.GetEnumerator();
+
+                while (usersEnumerator.MoveNext())
+                {
+                    XmlElement curNode = usersEnumerator.Current as XmlElement;
+                    User user = new User();
+
+                    user.userID = ulong.Parse(curNode.GetAttribute("id"));
+                    user.steamID = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, curNode, "steamID").InnerText;// curNode.SelectSingleNode("descendant::steamID").InnerText;
+                    user.gwAPIKey = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, curNode, "gwAPIKey").InnerText;//curNode.SelectSingleNode("descendant::gwAPIKey").InnerText;
+                    user.insert();
+                }
+
+                await ReplyAsync("Done");
             }
             catch (Exception ex)
             {
@@ -178,6 +245,13 @@ namespace CoOpBot.Modules.Admin
                 List<ulong> usersToMerge = new List<ulong>();
                 List<IRole> roleToMergeTo = new List<IRole>();
                 IGuildUser curUser;
+
+                RoleTranslations roleTranslations = new RoleTranslations();
+
+                roleTranslations.translateFrom = role2.Name;
+                roleTranslations.translateTo = role1.Name;
+
+                roleTranslations.insert();
 
                 server = this.Context.Guild as SocketGuild;
                 roleToMergeTo.Add(role1);
@@ -354,14 +428,12 @@ namespace CoOpBot.Modules.Admin
 
         private Boolean isPermitted()
         {
-            XmlDocument xmlDatabase = new XmlDocument();
+            RevokedRoleCommandAccessUsers revokedRoleCommandAccessUsers = new RevokedRoleCommandAccessUsers();
             ulong callerID = this.Context.User.Id;
 
-            xmlDatabase.Load(FileLocations.xmlDatabase());
-            XmlNode root = xmlDatabase.DocumentElement;
-            XmlNode revokedRoleCommandAccessUsersNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, root, "RevokedRoleCommandAccessUsers");
+            revokedRoleCommandAccessUsers = revokedRoleCommandAccessUsers.find($"{callerID}") as RevokedRoleCommandAccessUsers;
 
-            if (CoOpGlobal.XML.searchChildNodes(xmlDatabase, revokedRoleCommandAccessUsersNode, $"{callerID}"))
+            if (revokedRoleCommandAccessUsers.userID == callerID)
             {
                 return false;
             }

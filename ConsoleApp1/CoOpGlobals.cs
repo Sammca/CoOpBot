@@ -133,7 +133,7 @@ namespace CoOpBot
                 XmlNode childNode;
                 string filePath = new Uri(file.BaseURI).LocalPath;
 
-                childNode = parent.SelectSingleNode($"descendant::{childName}");
+                childNode = parent.SelectSingleNode($"{childName}");
 
                 if (childNode == null)
                 {
@@ -174,7 +174,7 @@ namespace CoOpBot
                 return childNode;
             }
 
-            public static XmlElement findOrCreateNodeFromAttribute(XmlDocument file, XmlNode parentNode, string attributeName, string attributeValue, string childNodeName)
+            public static XmlElement findNodeWithAttribute(XmlDocument file, XmlNode parentNode, string attributeName, string attributeValue, string childNodeName)
             {
                 IEnumerator nodeEnumerator = parentNode.GetEnumerator();
                 Boolean nodeExists = false;
@@ -191,21 +191,54 @@ namespace CoOpBot
                     }
                 }
 
-                if (!nodeExists)
+                return foundNode;
+            }
+
+            public static XmlElement createNodeWithAttribute(XmlDocument file, XmlNode parentNode, string attributeName, string attributeValue, string childNodeName)
+            {
+                XmlElement foundNode = null;
+                XmlElement newNode;
+                string filePath = new Uri(file.BaseURI).LocalPath;
+
+                newNode = file.CreateElement(childNodeName);
+                newNode.SetAttribute(attributeName, attributeValue);
+
+                foundNode = parentNode.AppendChild(newNode) as XmlElement;
+
+                file.Save(filePath);
+
+                return foundNode;
+            }
+
+            public static XmlElement findOrCreateNodeFromAttribute(XmlDocument file, XmlNode parentNode, string attributeName, string attributeValue, string childNodeName)
+            {
+                XmlElement foundNode = null;
+                
+                foundNode = findNodeWithAttribute(file, parentNode, attributeName, attributeValue, childNodeName);
+
+                if (foundNode == null)
                 {
-                    XmlElement newNode;
-                    string filePath = new Uri(file.BaseURI).LocalPath;
-
-                    newNode = file.CreateElement(childNodeName);
-                    newNode.SetAttribute(attributeName, attributeValue);
-
-                    foundNode = parentNode.AppendChild(newNode) as XmlElement;
-
-                    file.Save(filePath);
+                    foundNode = createNodeWithAttribute(file, parentNode, attributeName, attributeValue, childNodeName);
                 }
 
                 return foundNode;
             }
+            
+            /*public static XmlNode findChildNode(XmlDocument file, XmlNode parent, string childNodeName)
+            {
+                XmlNode newNode;
+                string filePath = new Uri(file.BaseURI).LocalPath;
+
+                parent.
+
+                newNode = file.CreateElement(newNodeName) as XmlNode;
+                newNode.InnerText = value;
+
+                parent.AppendChild(newNode);
+                file.Save(filePath);
+
+                return newNode;
+            }*/
 
             public static Boolean searchChildNodes(XmlDocument file, XmlNode parent, string searchValue)
             {
@@ -222,7 +255,7 @@ namespace CoOpBot
                 return false;
             }
 
-            public static Boolean createChildNode(XmlDocument file, XmlNode parent, string newNodeName, string value)
+            public static XmlNode createChildNode(XmlDocument file, XmlNode parent, string newNodeName, string value)
             {
                 XmlNode newNode;
                 string filePath = new Uri(file.BaseURI).LocalPath;
@@ -233,7 +266,7 @@ namespace CoOpBot
                 parent.AppendChild(newNode);
                 file.Save(filePath);
 
-                return false;
+                return newNode;
             }
         }
     }

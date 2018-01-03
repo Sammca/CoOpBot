@@ -9,17 +9,15 @@ using System.Threading.Tasks;
 using System.Xml;
 using Procurios.Public;
 using System.Text.RegularExpressions;
+using CoOpBot.Database;
 
 namespace CoOpBot.Modules.Steam
 {
     [Group("steam")]
     public class SteamModule : ModuleBase
     {
-        XmlDocument xmlDatabase = new XmlDocument();
         XmlDocument xmlParameters = new XmlDocument();
-        XmlNode dbRoot;
         XmlNode paramsRoot;
-        XmlNode usersNode;
         string apiPrefix;
         XmlNode steamKeyNode;
         string steamKey;
@@ -27,13 +25,10 @@ namespace CoOpBot.Modules.Steam
         public SteamModule()
         {
             apiPrefix = "https://api.steampowered.com";
-
-            xmlDatabase.Load(FileLocations.xmlDatabase());
-            dbRoot = xmlDatabase.DocumentElement;
+            
             xmlParameters.Load(FileLocations.xmlParameters());
             paramsRoot = xmlParameters.DocumentElement;
-
-            usersNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, dbRoot, "Users");
+            
 
             steamKeyNode = CoOpGlobal.XML.findOrCreateChild(xmlParameters, paramsRoot, "SteamToken");
             steamKey = steamKeyNode.InnerText;
@@ -52,10 +47,21 @@ namespace CoOpBot.Modules.Steam
         [Summary("Registers your steam ID with the bot")]
         private async Task RegisterTokenCommand(string key)
         {
-            XmlElement userDetails;
-            userDetails = CoOpGlobal.XML.findOrCreateNodeFromAttribute(xmlDatabase, usersNode, "id", this.Context.Message.Author.Id.ToString(), "User");
+            User user = new User();
 
-            CoOpGlobal.XML.updateOrCreateChildNode(xmlDatabase, userDetails, "steamID", key);
+            user = user.find(this.Context.Message.Author.Id.ToString()) as User;
+
+            if (user == null)
+            {
+                user.userID = this.Context.Message.Author.Id;
+                user.steamID = key;
+                user.insert();
+            }
+            else
+            {
+                user.steamID = key;
+                user.update();
+            }
 
             await ReplyAsync("Your Steam profile has been updated");
         }
@@ -65,6 +71,7 @@ namespace CoOpBot.Modules.Steam
         private async Task RegisterhasgameCommand(params string[] appName)
         {
             string queryStr = "";
+            List<User> userList = new User().dbAsList<User>();
 
             foreach (string s in appName)
             {
@@ -75,9 +82,6 @@ namespace CoOpBot.Modules.Steam
             await ReplyAsync("Searching...");
 
             string url = apiPrefix + "/IPlayerService/GetOwnedGames/v1/?key=" + steamKey + "&steamid=";
-            IEnumerator usersEnumerator = usersNode.GetEnumerator();
-            //Boolean userNodeExists = false;
-            XmlElement userDetails = null;
             string output = "";
             string usernamesOutput = "";
 
@@ -102,21 +106,18 @@ namespace CoOpBot.Modules.Steam
 
             }
 
-            while (usersEnumerator.MoveNext())
+            foreach (User curUser in  userList)
             {
-                XmlElement curNode = usersEnumerator.Current as XmlElement;
-                //Console.WriteLine(curNode.SelectSingleNode("descendant::steamID").InnerText.Length);
 
-                if (curNode.SelectSingleNode("descendant::steamID") != null)
+                if (curUser.steamID != "")
                 {
                     Hashtable userGamesInfo;
                     int numberOfGames = 0;
                     ArrayList games;
                     string username;
-
-                    userDetails = curNode;
-                    username = await getDiscordUsername(userDetails.GetAttribute("id"));
-                    userGamesInfo = getAPIResponse(url + userDetails.SelectSingleNode("descendant::steamID").InnerText, "response", true);
+                    
+                    username = await getDiscordUsername($"{curUser.userID}");
+                    userGamesInfo = getAPIResponse(url + curUser.steamID, "response", true);
                     games = userGamesInfo["games"] as ArrayList;
                     numberOfGames = games.Count;
 
