@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using Procurios.Public;
 using System.Text.RegularExpressions;
+using CoOpBot.Database;
 
 namespace CoOpBot.Modules.GuildWars
 {
@@ -18,7 +19,6 @@ namespace CoOpBot.Modules.GuildWars
     {
         XmlDocument xmlDatabase = new XmlDocument();
         XmlNode root;
-        XmlNode usersNode;
         XmlNode guildWarsNode;
         string apiPrefix;
         XmlNode guildIDNode;
@@ -33,10 +33,7 @@ namespace CoOpBot.Modules.GuildWars
 
             xmlDatabase.Load(FileLocations.xmlDatabase());
             root = xmlDatabase.DocumentElement;
-
-            // Users
-            usersNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, root, "Users");
-
+            
             // GW specific settings
             guildWarsNode = CoOpGlobal.XML.findOrCreateChild(xmlDatabase, root, "GuildWars");
 
@@ -65,11 +62,20 @@ namespace CoOpBot.Modules.GuildWars
         [Summary("Registers your guild wars API access token with the bot")]
         private async Task RegisterTokenCommand(string key)
         {
-            XmlElement userDetails;
-            userDetails = CoOpGlobal.XML.findOrCreateNodeFromAttribute(xmlDatabase, usersNode, "id", this.Context.Message.Author.Id.ToString(), "User");
+            User user = new User();
 
-            CoOpGlobal.XML.updateOrCreateChildNode(xmlDatabase, userDetails, "gwAPIKey", key);
-
+            user = user.find(this.Context.Message.Author.Id.ToString()) as User;
+            if (user == null)
+            {
+                user.userID = this.Context.Message.Author.Id;
+                user.gwAPIKey = key;
+                user.insert();
+            }
+            else
+            {
+                user.gwAPIKey = key;
+                user.update();
+            }
             await ReplyAsync("Your API key has been updated");
         }
 
@@ -646,7 +652,10 @@ namespace CoOpBot.Modules.GuildWars
             string output = "";
             string itemName = "";
             IUser curUser;
-            IEnumerator usersEnumerator = usersNode.GetEnumerator();
+            User user = new User();
+            List<User> userList = user.dbAsList<User>();
+
+            //IEnumerator usersEnumerator = usersNode.GetEnumerator();
 
             foreach (string s in itemNameQuery)
             {
@@ -658,17 +667,15 @@ namespace CoOpBot.Modules.GuildWars
             itemId = int.Parse(closestMatch.id);
             itemName = itemNameFromId(itemId);
 
-            while (usersEnumerator.MoveNext())
+            //while (usersEnumerator.MoveNext())
+            foreach (User curUserRec in userList)
             {
-                XmlElement curUserNode = usersEnumerator.Current as XmlElement;
-                XmlNode userAPIKeyNode = curUserNode.SelectSingleNode("descendant::gwAPIKey");
-
-                if (userAPIKeyNode == null)
+                if (curUserRec.gwAPIKey == "")
                 {
                     continue;
                 }
 
-                curUser = this.Context.Guild.GetUserAsync(ulong.Parse(curUserNode.GetAttribute("id"))).Result as IUser;
+                curUser = this.Context.Guild.GetUserAsync(user.userID).Result as IUser;
 
                 if (curUser == null)
                 {
@@ -873,36 +880,17 @@ namespace CoOpBot.Modules.GuildWars
 
         private async Task<string> getUserAPIKey(IUser user)
         {
-            IEnumerator usersEnumerator = usersNode.GetEnumerator();
+            User userRec = new User();
             string apiKey;
-            Boolean userNodeExists = false;
-            XmlElement userDetails = null;
-            XmlNode apiElement;
 
-            while (usersEnumerator.MoveNext())
-            {
-                XmlElement curNode = usersEnumerator.Current as XmlElement;
+            userRec = userRec.find(user.Id.ToString()) as User;
+            apiKey = userRec.gwAPIKey;
 
-                if (curNode.GetAttribute("id") == user.Id.ToString())
-                {
-                    userDetails = curNode;
-                    userNodeExists = true;
-                }
-            }
-
-            if (!userNodeExists)
+            if (userRec == null || apiKey == "")
             {
                 await ReplyAsync($"API key not found for {user.Username}. \n Go to https://account.arena.net/applications to get a key, then use the command gw registerkey [KEY] to register it with the bot");
             }
 
-            apiElement = userDetails.SelectSingleNode("descendant::gwAPIKey");
-
-            if (apiElement == null)
-            {
-                await ReplyAsync($"API key not found for {user.Username}. \n Go to https://account.arena.net/applications to get a key, then use the command gw registerkey [KEY] to register it with the bot");
-            }
-
-            apiKey = apiElement.InnerText;
             return apiKey;
         }
 
