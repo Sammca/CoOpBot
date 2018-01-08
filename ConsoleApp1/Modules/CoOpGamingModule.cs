@@ -126,16 +126,16 @@ namespace CoOpBot.Modules.CoOpGaming
                     {
                         IGuildUser teamUser;
                         int team;
-                        SocketVoiceChannel teamChannel;
+                        IVoiceChannel teamChannel;
                         
                         teamUser = assignment.user as IGuildUser;
                         team = assignment.teamNumber;
 
-                        teamChannel = teamChannels.ElementAt(team - 1) as SocketVoiceChannel;
+                        teamChannel = teamChannels.ElementAt(team - 1) as IVoiceChannel;
 
                         await (teamUser)?.ModifyAsync(x =>
                         {
-                            x.Channel = teamChannel;
+                            x.ChannelId = teamChannel.Id;
                         });
                     }
 
