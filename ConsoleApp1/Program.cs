@@ -158,8 +158,6 @@ namespace CoOpBot
 
         private async static Task<bool> HandleTimer(DiscordSocketClient client)
         {
-            Regex specialCharRegex = new Regex("[^a-zA-Z0-9 ]");
-            Regex multipleSpaceRegex = new Regex("[ ]{2,}");
 
             try
             {
@@ -185,10 +183,6 @@ namespace CoOpBot
                             RoleTranslations rt = new RoleTranslations();
 
                             gameName = curUser.Game.Value.Name;
-                            // Replace all special characters in game names
-                            gameName = specialCharRegex.Replace(gameName, "");
-                            // Remove any duplicate spaces that the previous line may have generated
-                            gameName = multipleSpaceRegex.Replace(gameName, " ");
 
                             rt = rt.find(gameName) as RoleTranslations;
 
