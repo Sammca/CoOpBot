@@ -221,7 +221,8 @@ namespace CoOpBot
                     }
                 }
             }
-            catch(Exception ex)
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.InnerException);
                 return true;
