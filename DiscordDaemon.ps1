@@ -3,9 +3,8 @@ $loop = 1;
 while ($loop)
 
 {
-
-    $process = Start-Process "CoOpBot.exe" -Wait -NoNewWindow -PassThru
-
+    $process = Start-Process "C:\Program Files\Git\CoOpBot\ConsoleApp1\bin\Release\CoOpBot.exe" -Wait -NoNewWindow -PassThru
+    
     switch ($process.ExitCode)
 
     {
