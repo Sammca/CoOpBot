@@ -185,6 +185,7 @@
     <Compile Include="Modules\GuildWarsModule.cs" />
     <Compile Include="Modules\HelpModule.cs" />
     <Compile Include="Modules\RollModule.cs" />
+    <Compile Include="Modules\YouTubeModule.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TeamAssignment.cs" />
