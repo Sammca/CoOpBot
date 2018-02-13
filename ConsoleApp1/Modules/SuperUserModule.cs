@@ -2,6 +2,7 @@
 using Discord;
 using Discord.Commands;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Xml;
@@ -230,11 +231,28 @@ namespace CoOpBot.Modules
         {
             try
             {
+                IUserMessage message = this.Context.Message;
+                IReadOnlyCollection<IAttachment> attachments = message.Attachments;
+                IEnumerator<IAttachment> aEnum;
+                string filePath = "";
+                IAttachment attachment;
                 string output = "";
 
                 foreach (string s in text)
                 {
                     output += $"{s} ";
+                }
+
+                if (attachments.Count > 0)
+                {
+                    aEnum = attachments.GetEnumerator();
+                    aEnum.MoveNext();
+
+                    attachment = aEnum.Current;
+
+                    filePath = attachment.ProxyUrl;
+
+                    output += filePath;
                 }
 
                 await textChannel.SendMessageAsync(output);
