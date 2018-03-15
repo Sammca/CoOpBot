@@ -9,7 +9,6 @@ using System.IO;
 using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Timers;
-using System.Text.RegularExpressions;
 using CoOpBot.Database;
 
 namespace CoOpBot
@@ -33,8 +32,8 @@ namespace CoOpBot
         public async Task MainAsync()
         {
             // Setup repeated method call
-            // 60000 = every 60 seconds
-            Timer timer = new Timer(60000);
+            // 300000 = every 5 minutes
+            Timer timer = new Timer(300000);
             // Not sure if AutoReset and Enabled are needed... but it works like this so I'm leaving it
             // Fight me
             timer.AutoReset = true;
@@ -267,15 +266,22 @@ namespace CoOpBot
                         case "new number":
                             responseText = "Who dis?";
                             break;
+                        case "you":
+                            responseText = "No u";
+                            break;
                         case "good bot":
                             List<string> goodBotResponseList = new List<string>();
 
-                            goodBotResponseList.Add("Ayyy, lmao");
                             goodBotResponseList.Add("Good human");
+                            goodBotResponseList.Add("No u");
                             goodBotResponseList.Add("Why thank you!");
                             goodBotResponseList.Add("(◠﹏◠✿)");
                             goodBotResponseList.Add("ｖ(◠ｏ◠)ｖ");
                             goodBotResponseList.Add("( ͡° ͜ʖ ͡°)");
+                            goodBotResponseList.Add("Beep Boop");
+                            goodBotResponseList.Add($"Yes {userSentBy.Username}, good bot indeed");
+                            goodBotResponseList.Add("More like Gu'd bot");
+                            goodBotResponseList.Add("Bot is the Cakeob!");
 
                             responseText = goodBotResponseList[CoOpGlobal.rng.Next(goodBotResponseList.Count)];
                             break;
