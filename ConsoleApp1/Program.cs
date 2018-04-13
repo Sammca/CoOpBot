@@ -194,9 +194,12 @@ namespace CoOpBot
 
                             if (gameRole == null)
                             {
+                                return true;
+                                /*
                                 await roleModule.RoleCreate(curGuild, gameName);
 
                                 gameRole = roleModule.FindRoleFromName(gameName, curGuild);
+                                */
                             }
 
                             userRoles = curUser.Roles;
