@@ -217,7 +217,7 @@ namespace CoOpBot.Modules.Steam
                 x.Value = content;
                 x.IsInline = false;
             });
-            await Context.Channel.SendMessageAsync("\n", false, builder);
+            await Context.Channel.SendMessageAsync("\n", false, builder.Build());
         }
 
         public class gameResult

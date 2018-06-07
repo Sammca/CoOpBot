@@ -170,7 +170,7 @@ namespace CoOpBot
                     users = curGuild.Users;
                     foreach (SocketGuildUser curUser in users)
                     {
-                        if (curUser.Game.HasValue && !curUser.IsBot)
+                        if (curUser.Activity.Type == Discord.ActivityType.Playing && !curUser.IsBot)
                         {
                             IRole gameRole;
                             string gameName;
@@ -181,7 +181,7 @@ namespace CoOpBot
                             List<ulong> userList = new List<ulong>();
                             RoleTranslations rt = new RoleTranslations();
 
-                            gameName = curUser.Game.Value.Name;
+                            gameName = curUser.Activity.Name;
 
                             rt = rt.find(gameName) as RoleTranslations;
 
@@ -195,11 +195,11 @@ namespace CoOpBot
                             if (gameRole == null)
                             {
                                 return true;
-                                /*
-                                await roleModule.RoleCreate(curGuild, gameName);
+                                
+                                //await roleModule.RoleCreate(curGuild, gameName);
 
-                                gameRole = roleModule.FindRoleFromName(gameName, curGuild);
-                                */
+                                //gameRole = roleModule.FindRoleFromName(gameName, curGuild);
+                                
                             }
 
                             userRoles = curUser.Roles;
