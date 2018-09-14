@@ -433,6 +433,11 @@ namespace CoOpBot.Modules.Admin
 
             revokedRoleCommandAccessUsers = revokedRoleCommandAccessUsers.find($"{callerID}") as RevokedRoleCommandAccessUsers;
 
+            if (revokedRoleCommandAccessUsers == null)
+            {
+                return true;
+            }
+
             if (revokedRoleCommandAccessUsers.userID == callerID)
             {
                 return false;
