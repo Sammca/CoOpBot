@@ -227,23 +227,29 @@ namespace CoOpBot.Modules
 
         [Command("say")]
         [Summary("Makes the bot send a message to the channel you tell it to.")]
-        private async Task sayCommand(ITextChannel textChannel, params string[] text)
+        public async Task sayCommand(ITextChannel textChannel, params string[] text)
         {
             try
             {
-                IUserMessage message = this.Context.Message;
-                IReadOnlyCollection<IAttachment> attachments = message.Attachments;
+                IUserMessage message = null;
+                IReadOnlyCollection<IAttachment> attachments = null;
                 IEnumerator<IAttachment> aEnum;
                 string filePath = "";
                 IAttachment attachment;
                 string output = "";
+
+                if (this.Context != null)
+                {
+                    message = this.Context.Message;
+                    attachments = message.Attachments;
+                }
 
                 foreach (string s in text)
                 {
                     output += $"{s} ";
                 }
 
-                if (attachments.Count > 0)
+                if (attachments != null && attachments.Count > 0)
                 {
                     aEnum = attachments.GetEnumerator();
                     aEnum.MoveNext();

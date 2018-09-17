@@ -73,6 +73,7 @@ namespace CoOpBot
             client.MessageReceived += HandleCommand;
             client.MessageReceived += RegisterNoveltyResponseCommands;
             RegisterAntiSpamFunctionality();
+            RegisterNewUserFunctionality();
 
         }
 
@@ -152,6 +153,26 @@ namespace CoOpBot
                     // Decrese the counter by 1 after parameteriesed number of seconds (default 8)
                     await Task.Factory.StartNew(async () => { await CountMessage(messageSender, guild, channel, -1, spamTimer); });
                 }
+            };
+        }
+
+        private void RegisterNewUserFunctionality()
+        {
+            client.UserJoined += async (user) =>
+            {
+                try
+                {
+                    CoOpBot.Modules.SuperUserModule suModule = new Modules.SuperUserModule();
+                    
+                    await suModule.sayCommand(user.Guild.DefaultChannel, $"Welcome {user.Mention}! Who dis?");
+                }
+                catch (OperationCanceledException) { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.InnerException);
+                    return;
+                }
+
             };
         }
 
