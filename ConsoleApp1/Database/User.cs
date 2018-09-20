@@ -15,6 +15,8 @@ namespace CoOpBot.Database
 
         public string OriginName { get; set; }
 
+        public string battleNetName { get; set; }
+
         public string gwAPIKey { get; set; }
 
         public string name { get; set; }

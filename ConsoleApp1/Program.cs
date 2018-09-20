@@ -20,7 +20,7 @@ namespace CoOpBot
         private CommandService commands = new CommandService();
         XmlDocument xmlParameters = new XmlDocument();
         XmlDocument xmlDatabase = new XmlDocument();
-        char prefixCharacter;
+        //char prefixCharacter;
         int spamTimer;
         int spamMessageCount;
         NameValueCollection userRecentMessageCounter = new NameValueCollection();
@@ -90,7 +90,7 @@ namespace CoOpBot
             int argPos = 0;
 
             // Determine if the message is a command, based on if it starts with the prefix from the parameters file (default '!') or a mention prefix
-            if (message.Author.IsBot || (!(message.HasCharPrefix(prefixCharacter, ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))))
+            if (message.Author.IsBot || (!(message.HasCharPrefix(CoOpGlobal.prefixCharacter, ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))))
             {
                 return;
             }
@@ -123,7 +123,7 @@ namespace CoOpBot
             }
             else if (!result.IsSuccess && result.Error == CommandError.UnknownCommand)
             {
-                await context.Channel.SendMessageAsync($"Command not recognised, try {prefixCharacter}help to see the available commands");
+                await context.Channel.SendMessageAsync($"Command not recognised, try {CoOpGlobal.prefixCharacter}help to see the available commands");
             }
             return;
         }
@@ -277,7 +277,7 @@ namespace CoOpBot
             {
                 messageTextLowercase = message.Content.ToLower();
 
-                if (messageTextLowercase.Substring(0, 1) != prefixCharacter.ToString())
+                if (messageTextLowercase.Substring(0, 1) != CoOpGlobal.prefixCharacter.ToString())
                 {
                     switch (messageTextLowercase)
                     {
@@ -501,7 +501,7 @@ namespace CoOpBot
             spamTimerNode = CoOpGlobal.XML.findOrCreateChild(xmlParameters, root, "SpamTimer", "8");
             spamMessageCountNode = CoOpGlobal.XML.findOrCreateChild(xmlParameters, root, "SpamMessageCount", "3");
 
-            prefixCharacter = Convert.ToChar(prefixNode.InnerText);
+            CoOpGlobal.prefixCharacter = Convert.ToChar(prefixNode.InnerText);
             spamTimer = int.Parse(spamTimerNode.InnerText);
             spamMessageCount = int.Parse(spamMessageCountNode.InnerText);
         }

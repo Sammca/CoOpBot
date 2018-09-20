@@ -273,5 +273,35 @@ namespace CoOpBot.Modules
 
             await ReplyAsync("Origin account name set");
         }
+
+        [Command("BattleNetName")]
+        [Alias("BattleNet", "bnet")]
+        [Summary("Sets a Battle Net account name against your user record")]
+        private async Task BattleNetNameCommand(string name)
+        {
+            if (name.IndexOf('#') == -1)
+            {
+                await ReplyAsync("Please include the code at the end of your account (e.g AccoutnName#1234, not just AccountName)");
+                return;
+            }
+
+            User user = new User();
+
+            user = user.find(this.Context.Message.Author.Id.ToString()) as User;
+
+            if (user != null)
+            {
+                user.battleNetName = name;
+                user.update();
+            }
+            else
+            {
+                user.userID = this.Context.Message.Author.Id;
+                user.battleNetName = name;
+                user.insert();
+            }
+
+            await ReplyAsync("Battle Net account name set");
+        }
     }
 }

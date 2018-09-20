@@ -126,6 +126,8 @@ namespace CoOpBot
 
         public static Random rng { get; set; }
 
+        public static char prefixCharacter { get; set; }
+
         public static class API
         {
 

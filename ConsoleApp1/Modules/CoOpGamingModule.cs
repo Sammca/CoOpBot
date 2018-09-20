@@ -1,7 +1,9 @@
-﻿using Discord;
+﻿using CoOpBot.Database;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -222,12 +224,127 @@ namespace CoOpBot.Modules.CoOpGaming
             }
         }
 
-        
+        [Command("SteamUsers")]
+        [Alias("SteamNames")]
+        [Summary("Shows the Steam account names that the bot knows of")]
+        private async Task SteamUsersCommand()
+        {
+            List<User> userList = new User().dbAsList<User>();
+            EmbedBuilder builder = new EmbedBuilder();
+            List<string> outputList = new List<string>();
+
+            builder.Author = new EmbedAuthorBuilder()
+            {
+                Name = "Steam users"
+            };
+
+            builder.Footer = new EmbedFooterBuilder()
+            {
+                Text = $"Add to this list by using the command \"{CoOpGlobal.prefixCharacter}steam RegisterKey [YOUR STEAM ID KEY HERE]\""
+            };
+
+            foreach (User curUser in userList)
+            {
+                if (curUser.steamID != null && curUser.steamID != "")
+                {
+                    string userStr = "";
+                    userStr = $"{Steam.SteamModule.DisplayNameFromID(curUser.userID)}: https://steamcommunity.com/profiles/{curUser.steamID}";
+
+                    outputList.Add(userStr);
+                }
+            }
+
+            if (outputList.Count < 1)
+            {
+                await ReplyAsync($"No users have registered their Steam account with the bot yet!\r\nUse the command \"{CoOpGlobal.prefixCharacter}steam RegisterKey [YOUR STEAM ID KEY HERE]\" to register your account");
+                return;
+            }
+
+            builder.Description = string.Join("\r\n", outputList);
+
+            await ReplyAsync("", false, builder.Build());
+        }
+
+        [Command("BattleNetUsers")]
+        [Alias("BattleNetNames", "BNetUsers", "BNetNames")]
+        [Summary("Shows the Battle Net names that the bot knows of")]
+        private async Task BattleNetUsersCommand()
+        {
+            List<User> userList = new User().dbAsList<User>();
+            EmbedBuilder builder = new EmbedBuilder();
+            List<string> outputList = new List<string>();
+
+            builder.Author = new EmbedAuthorBuilder()
+            {
+                Name = "Battle Net users"
+            };
+
+            builder.Footer = new EmbedFooterBuilder()
+            {
+                Text = $"Add to this list by using the command \"{CoOpGlobal.prefixCharacter}user BattleNetName [YOUR USERNAME HERE]\""
+            };
+
+            foreach (User curUser in userList)
+            {
+                if (curUser.battleNetName != null && curUser.battleNetName != "")
+                {
+                    outputList.Add(curUser.battleNetName);
+                }
+            }
+
+            if (outputList.Count < 1)
+            {
+                await ReplyAsync($"No users have registered their Battle Net account name with the bot yet!\r\nUse the command \"{CoOpGlobal.prefixCharacter}user BattleNetName [YOUR USERNAME HERE]\" to register your username");
+                return;
+            }
+
+            builder.Description = string.Join("\r\n", outputList);
+
+            await ReplyAsync("", false, builder.Build());
+        }
+
+        [Command("OriginUsers")]
+        [Alias("OriginNames")]
+        [Summary("Shows the Origin account names that the bot knows of")]
+        private async Task OriginUsersCommand()
+        {
+            List<User> userList = new User().dbAsList<User>();
+            EmbedBuilder builder = new EmbedBuilder();
+            List<string> outputList = new List<string>();
+
+            builder.Author = new EmbedAuthorBuilder()
+            {
+                Name = "Origin users"
+            };
+
+            builder.Footer = new EmbedFooterBuilder()
+            {
+                Text = $"Add to this list by using the command \"{CoOpGlobal.prefixCharacter}user OriginName [YOUR USERNAME HERE]\""
+            };
+
+            foreach (User curUser in userList)
+            {
+                if (curUser.OriginName != null && curUser.OriginName != "")
+                {
+                    outputList.Add(curUser.OriginName);
+                }
+            }
+
+            if (outputList.Count < 1)
+            {
+                await ReplyAsync($"No users have registered their Origin account name with the bot yet!\r\nUse the command \"{CoOpGlobal.prefixCharacter}user OriginName [YOUR USERNAME HERE]\" to register your username");
+                return;
+            }
+
+            builder.Description = string.Join("\r\n", outputList);
+
+            await ReplyAsync("", false, builder.Build());
+        }
         #endregion
 
-        
+
         #region Functions
-        
+
         #endregion
     };
 };
