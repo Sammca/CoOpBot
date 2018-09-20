@@ -95,6 +95,10 @@ namespace CoOpBot.Modules
                 {
                     builder.AddField("Steam Profile", $"{Steam.SteamModule.DisplayNameFromID(user.Id)}: https://steamcommunity.com/profiles/{userRecord.steamID}");
                 }
+                if (userRecord.OriginName != null && userRecord.OriginName != "")
+                {
+                    builder.AddField("Origin Profile", userRecord.OriginName);
+                }
                 if (userRecord.gwAPIKey != null && userRecord.gwAPIKey != "")
                 {
                     builder.AddField("Guild Wars API Key", userRecord.gwAPIKey);
@@ -244,6 +248,30 @@ namespace CoOpBot.Modules
             }
 
             await ReplyAsync("Description set");
+        }
+
+        [Command("OriginName")]
+        [Alias("Origin")]
+        [Summary("Sets a, Origin account name against your user record")]
+        private async Task OriginNameCommand(string name)
+        {
+            User user = new User();
+
+            user = user.find(this.Context.Message.Author.Id.ToString()) as User;
+
+            if (user != null)
+            {
+                user.OriginName = name;
+                user.update();
+            }
+            else
+            {
+                user.userID = this.Context.Message.Author.Id;
+                user.OriginName = name;
+                user.insert();
+            }
+
+            await ReplyAsync("Name set");
         }
     }
 }
