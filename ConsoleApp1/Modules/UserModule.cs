@@ -252,7 +252,7 @@ namespace CoOpBot.Modules
 
         [Command("OriginName")]
         [Alias("Origin")]
-        [Summary("Sets a, Origin account name against your user record")]
+        [Summary("Sets an Origin account name against your user record")]
         private async Task OriginNameCommand(string name)
         {
             User user = new User();
@@ -271,7 +271,7 @@ namespace CoOpBot.Modules
                 user.insert();
             }
 
-            await ReplyAsync("Name set");
+            await ReplyAsync("Origin account name set");
         }
     }
 }
