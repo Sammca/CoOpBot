@@ -126,6 +126,30 @@ namespace CoOpBot
 
         public static Random rng { get; set; }
 
+        public static class API
+        {
+
+            public static string steamPrefix = "https://api.steampowered.com";
+
+            public static string steamKey()
+            {
+                XmlDocument xmlParameters = new XmlDocument();
+                XmlNode paramsRoot;
+                XmlNode steamKeyNode;
+                string steamKey;
+
+                xmlParameters.Load(FileLocations.xmlParameters());
+                paramsRoot = xmlParameters.DocumentElement;
+                
+                steamKeyNode = CoOpGlobal.XML.findOrCreateChild(xmlParameters, paramsRoot, "SteamToken");
+                steamKey = steamKeyNode.InnerText;
+
+                return steamKey;
+            }
+
+            public static string guildWarsPrefix = "https://api.guildwars2.com/v2";
+        }
+
         public static class XML
         {
             public static XmlNode findOrCreateChild(XmlDocument file, XmlNode parent, string childName, string defaultValue = "")

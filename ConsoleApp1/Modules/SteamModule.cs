@@ -16,30 +16,16 @@ namespace CoOpBot.Modules.Steam
     [Group("steam")]
     public class SteamModule : ModuleBase
     {
-        XmlDocument xmlParameters = new XmlDocument();
-        XmlNode paramsRoot;
-        string apiPrefix;
-        XmlNode steamKeyNode;
-        string steamKey;
-
         public SteamModule()
         {
-            apiPrefix = "https://api.steampowered.com";
-            
-            xmlParameters.Load(FileLocations.xmlParameters());
-            paramsRoot = xmlParameters.DocumentElement;
-            
-
-            steamKeyNode = CoOpGlobal.XML.findOrCreateChild(xmlParameters, paramsRoot, "SteamToken");
-            steamKey = steamKeyNode.InnerText;
         }
 
         [Command("key")]
         [Summary("Shows the steam key")]
         [RequireUserPermission(GuildPermission.Administrator)]
-        private async Task RegistersteamKeyCommand()
+        private async Task SteamKeyCommand()
         {
-            await ReplyAsync(steamKey); return;
+            await ReplyAsync(CoOpGlobal.API.steamKey()); return;
         }
 
         [Command("RegisterKey")]
@@ -81,7 +67,7 @@ namespace CoOpBot.Modules.Steam
             string appid = queryStr;
             await ReplyAsync("Searching...");
 
-            string url = apiPrefix + "/IPlayerService/GetOwnedGames/v1/?key=" + steamKey + "&steamid=";
+            string url = CoOpGlobal.API.steamPrefix + "/IPlayerService/GetOwnedGames/v1/?key=" + CoOpGlobal.API.steamKey() + "&steamid=";
             string output = "";
             string usernamesOutput = "";
 
@@ -156,7 +142,7 @@ namespace CoOpBot.Modules.Steam
                 queryStr += $"{s}";
             }
             string appid = queryStr;
-            string url = apiPrefix + "/ISteamNews/GetNewsForApp/v2/?count=1&appid=";
+            string url = CoOpGlobal.API.steamPrefix + "/ISteamNews/GetNewsForApp/v2/?count=1&appid=";
             string img = "";
             if (!Regex.IsMatch(appid, @"^\d+$"))
             {
@@ -252,7 +238,7 @@ namespace CoOpBot.Modules.Steam
             await ReplyAsync(response); return;
         }
 
-        private Hashtable getAPIResponse(string url, string responseContainerString, Boolean addSquareBrackets = false)
+        static Hashtable getAPIResponse(string url, string responseContainerString, Boolean addSquareBrackets = false)
         {
             using (WebClient wc = new WebClient())
             {
@@ -288,7 +274,7 @@ namespace CoOpBot.Modules.Steam
             string gameName;
             Hashtable gameList;
 
-            url = $"{apiPrefix}/ISteamApps/GetAppList/v2/?key={steamKey}";
+            url = $"{CoOpGlobal.API.steamPrefix}/ISteamApps/GetAppList/v2/?key={CoOpGlobal.API.steamKey()}";
             gameList = getAPIResponse(url, "applist", true);
 
             Hashtable steamGamesInfo;
@@ -327,7 +313,7 @@ namespace CoOpBot.Modules.Steam
             Hashtable gameInfo;
             string gameName;
 
-            url = $"{apiPrefix}/ISteamUserStats/GetSchemaForGame/v2/?key={steamKey}&appid={appId}";
+            url = $"{CoOpGlobal.API.steamPrefix}/ISteamUserStats/GetSchemaForGame/v2/?key={CoOpGlobal.API.steamKey()}&appid={appId}";
             gameInfo = getAPIResponse(url, "game", true);
             if (gameInfo["gameName"] == null) return "";
             gameName = gameInfo["gameName"].ToString();
@@ -378,6 +364,36 @@ namespace CoOpBot.Modules.Steam
             returnString = returnString.Replace("<p>", "");
             returnString = returnString.Replace("</p>", "\n");
             return returnString;
+        }
+
+        static string DisplayName(IGuildUser guildUser)
+        {
+            return CoOpBot.Modules.Steam.SteamModule.DisplayNameFromID(guildUser.Id);
+        }
+
+        public static string DisplayNameFromID(ulong userID)
+        {
+            string url;
+            string userName;
+            ArrayList playersAPIResponse;
+            Hashtable userAPIResponse;
+            User user = new User();
+
+            user = user.find(userID.ToString()) as User;
+
+            if (user == null || user.steamID == null || user.steamID == "")
+            {
+                return "User has not linked their steam account with the bot";
+            }
+
+            url = $"{CoOpGlobal.API.steamPrefix}/ISteamUser/GetPlayerSummaries/v0002/?key={CoOpGlobal.API.steamKey()}&steamids={user.steamID}";
+            playersAPIResponse = getAPIResponse(url, "response", true)["players"] as ArrayList;
+
+            userAPIResponse = (Hashtable) playersAPIResponse[0];
+
+            userName = userAPIResponse["personaname"].ToString();// userAPIResponse[""];
+
+            return userName;
         }
 
     }

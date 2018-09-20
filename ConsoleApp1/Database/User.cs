@@ -14,6 +14,18 @@ namespace CoOpBot.Database
         public string steamID { get; set; }
 
         public string gwAPIKey { get; set; }
+
+        public string name { get; set; }
+
+        public string description { get; set; }
+
+        public string titleText { get; set; }
+
+        public string titleURL { get; set; }
+
+        public string footerText { get; set; }
+
+        public string footerIconURL { get; set; }
         #endregion
 
         public override string defaultFindField()
@@ -33,7 +45,7 @@ namespace CoOpBot.Database
 
         public override bool validateInsert()
         {
-            // Check we aren't translating to something that is already being translated from
+            // Mase sure user record doesn't exist already
             if (this.exists(nameof(userID), $"{userID}"))
             {
                 return false;

@@ -20,7 +20,6 @@ namespace CoOpBot.Modules.GuildWars
         XmlDocument xmlDatabase = new XmlDocument();
         XmlNode root;
         XmlNode guildWarsNode;
-        string apiPrefix;
         XmlNode guildIDNode;
         XmlNode guildAccessTokenNode;
         string guildId;
@@ -29,8 +28,6 @@ namespace CoOpBot.Modules.GuildWars
 
         public GuildWarsModule()
         {
-            apiPrefix = "https://api.guildwars2.com/v2";
-
             xmlDatabase.Load(FileLocations.xmlDatabase());
             root = xmlDatabase.DocumentElement;
             
@@ -131,7 +128,7 @@ namespace CoOpBot.Modules.GuildWars
 
             apiKey = await getUserAPIKey(user);
 
-            url = apiPrefix + "/account/wallet?access_token=" + apiKey;
+            url = CoOpGlobal.API.guildWarsPrefix + "/account/wallet?access_token=" + apiKey;
 
             apiResponse = getAPIResponse(url);
 
@@ -169,7 +166,7 @@ namespace CoOpBot.Modules.GuildWars
             }
             
 
-            url = apiPrefix + "/guild/"+guildId+"?access_token=" + guildAccessToken;
+            url = CoOpGlobal.API.guildWarsPrefix + "/guild/"+guildId+"?access_token=" + guildAccessToken;
 
 
             apiResponse = getAPIResponse(url, true);
@@ -202,7 +199,7 @@ namespace CoOpBot.Modules.GuildWars
                 await ReplyAsync("Guild not found in config file");
             }
 
-            url = apiPrefix + "/guild/" + guildId + "/ranks?access_token=" + guildAccessToken;
+            url = CoOpGlobal.API.guildWarsPrefix + "/guild/" + guildId + "/ranks?access_token=" + guildAccessToken;
             
             apiResponse = getAPIResponse(url);
             for (int i = 0; i < apiResponse.Length; i++)
@@ -211,7 +208,7 @@ namespace CoOpBot.Modules.GuildWars
                 rankArray.Add(int.Parse(curRank["order"].ToString()), curRank["id"].ToString());
             }
 
-            url = apiPrefix + "/guild/" + guildId + "/members?access_token=" + guildAccessToken;
+            url = CoOpGlobal.API.guildWarsPrefix + "/guild/" + guildId + "/members?access_token=" + guildAccessToken;
 
             apiResponse = getAPIResponse(url);
             for (int i = 0; i < apiResponse.Length; i++)
@@ -260,7 +257,7 @@ namespace CoOpBot.Modules.GuildWars
             }
 
             apiKey = await getUserAPIKey(user);
-            url = apiPrefix + "/account?access_token=" + apiKey;
+            url = CoOpGlobal.API.guildWarsPrefix + "/account?access_token=" + apiKey;
             apiResponse = getAPIResponse(url, true);
             accountInfo = apiResponse.GetValue(0) as Hashtable;
             gw2Username = accountInfo["name"].ToString();
@@ -281,7 +278,7 @@ namespace CoOpBot.Modules.GuildWars
             Hashtable itemPrices;
             Dictionary<string, Dictionary<int, int>> userDonatedItems = new Dictionary<string, Dictionary<int, int>>();
             int rank = 1;
-            string upgradeListUrl = apiPrefix + "/guild/upgrades/";
+            string upgradeListUrl = CoOpGlobal.API.guildWarsPrefix + "/guild/upgrades/";
             ArrayList upgradeList = getAPIResponse(upgradeListUrl, true).GetValue(0) as ArrayList;
 
             output = "";
@@ -293,7 +290,7 @@ namespace CoOpBot.Modules.GuildWars
                 await ReplyAsync("Guild not found in config file");
             }
 
-            url = apiPrefix + "/guild/" + guildId + "/log?access_token=" + guildAccessToken;
+            url = CoOpGlobal.API.guildWarsPrefix + "/guild/" + guildId + "/log?access_token=" + guildAccessToken;
 
             apiResponse = getAPIResponse(url);
             for (int i = 0; i < apiResponse.Length; i++)
@@ -385,7 +382,7 @@ namespace CoOpBot.Modules.GuildWars
                 else if (curTransaction["type"].ToString() == "upgrade" && curTransaction["action"].ToString() == "queued" && curTransaction.ContainsKey("user") && upgradeList.Contains(curTransaction["upgrade_id"]))
                 {
                     string upgradeId = curTransaction["upgrade_id"].ToString();
-                    string upgradeUrl = apiPrefix + "/guild/upgrades/" + upgradeId;
+                    string upgradeUrl = CoOpGlobal.API.guildWarsPrefix + "/guild/upgrades/" + upgradeId;
                     Array upgradeAPIResponse;
 
                     upgradeAPIResponse = getAPIResponse(upgradeUrl, true);
@@ -514,7 +511,7 @@ namespace CoOpBot.Modules.GuildWars
                         }
                         else
                         {
-                            url = apiPrefix + "/commerce/prices?id=" + curItem;
+                            url = CoOpGlobal.API.guildWarsPrefix + "/commerce/prices?id=" + curItem;
 
                             try
                             {
@@ -531,7 +528,7 @@ namespace CoOpBot.Modules.GuildWars
                                 XmlElement newAccountBoundItemNode;
                                 Hashtable itemDetails;
                                 
-                                url = apiPrefix + "/items?id=" + curItem;
+                                url = CoOpGlobal.API.guildWarsPrefix + "/items?id=" + curItem;
                                 apiResponse = getAPIResponse(url, true);
 
                                 itemDetails = apiResponse.GetValue(0) as Hashtable;
@@ -743,7 +740,7 @@ namespace CoOpBot.Modules.GuildWars
             }
             else
             {
-                url = $"{apiPrefix}/commerce/prices?id={item.id}";
+                url = $"{CoOpGlobal.API.guildWarsPrefix}/commerce/prices?id={item.id}";
 
                 try
                 {
@@ -760,7 +757,7 @@ namespace CoOpBot.Modules.GuildWars
                     XmlElement newAccountBoundItemNode;
                     Hashtable itemDetails;
 
-                    url = $"{apiPrefix}/items?id={item.id}";
+                    url = $"{CoOpGlobal.API.guildWarsPrefix}/items?id={item.id}";
                     apiResponse = getAPIResponse(url, true);
 
                     itemDetails = apiResponse.GetValue(0) as Hashtable;
@@ -793,7 +790,7 @@ namespace CoOpBot.Modules.GuildWars
             Boolean firstId = true;
             
             // Find the IDs of the 4 daily achievements for level 80 characters with HoT
-            url = apiPrefix + "/achievements/daily";
+            url = CoOpGlobal.API.guildWarsPrefix + "/achievements/daily";
             
             apiResponse = getAPIResponse(url, true);
 
@@ -825,7 +822,7 @@ namespace CoOpBot.Modules.GuildWars
                 }
             }
 
-            url = apiPrefix + "/achievements?ids=" + dailyIds;
+            url = CoOpGlobal.API.guildWarsPrefix + "/achievements?ids=" + dailyIds;
 
             apiResponse = getAPIResponse(url);
             
@@ -1017,7 +1014,7 @@ namespace CoOpBot.Modules.GuildWars
             }
 
             apiKey = await getUserAPIKey(user);
-            url = apiPrefix + "/account/materials?access_token=" + apiKey;
+            url = CoOpGlobal.API.guildWarsPrefix + "/account/materials?access_token=" + apiKey;
             materialStorage = getAPIResponse(url);
 
             materialCount = materialStorage.Length;
@@ -1042,7 +1039,7 @@ namespace CoOpBot.Modules.GuildWars
 
                 if (gwItem == null)
                 {
-                    string itemurl = apiPrefix + "/items?id=" + curMaterial["id"].ToString();
+                    string itemurl = CoOpGlobal.API.guildWarsPrefix + "/items?id=" + curMaterial["id"].ToString();
                     Hashtable itemDetails = getAPIResponse(itemurl, true).GetValue(0) as Hashtable;
 
                     gwItem = gwItemsDocument.CreateElement($"Item");
