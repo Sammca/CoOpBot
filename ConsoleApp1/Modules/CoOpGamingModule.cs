@@ -240,7 +240,7 @@ namespace CoOpBot.Modules.CoOpGaming
 
             builder.Footer = new EmbedFooterBuilder()
             {
-                Text = $"Add to this list by using the command \"{CoOpGlobal.prefixCharacter}steam RegisterKey [YOUR STEAM ID KEY HERE]\""
+                Text = $"Add to this list by using the command \"{CoOpGlobal.prefixCharacter}steam RegisterKey [YOUR STEAM ID NUMBER HERE]\""
             };
 
             foreach (User curUser in userList)
@@ -248,19 +248,23 @@ namespace CoOpBot.Modules.CoOpGaming
                 if (curUser.steamID != null && curUser.steamID != "")
                 {
                     string userStr = "";
-                    userStr = $"{Steam.SteamModule.DisplayNameFromID(curUser.userID)}: https://steamcommunity.com/profiles/{curUser.steamID}";
-
-                    outputList.Add(userStr);
+                    IGuildUser guildUser = await curUser.guildUser(this.Context.Guild);
+                    if (guildUser != null)
+                    {
+                        userStr = $"{guildUser.Mention}: https://steamcommunity.com/profiles/{curUser.steamID}";
+                        outputList.Add(userStr);
+                    }
                 }
             }
 
             if (outputList.Count < 1)
             {
-                await ReplyAsync($"No users have registered their Steam account with the bot yet!\r\nUse the command \"{CoOpGlobal.prefixCharacter}steam RegisterKey [YOUR STEAM ID KEY HERE]\" to register your account");
+                await ReplyAsync($"No users have registered their Steam account with the bot yet!\r\nUse the command \"{CoOpGlobal.prefixCharacter}steam RegisterKey [YOUR STEAM ID NUMBER HERE]\" to register your account");
                 return;
             }
 
             builder.Description = string.Join("\r\n", outputList);
+
 
             await ReplyAsync("", false, builder.Build());
         }
@@ -288,7 +292,11 @@ namespace CoOpBot.Modules.CoOpGaming
             {
                 if (curUser.battleNetName != null && curUser.battleNetName != "")
                 {
-                    outputList.Add(curUser.battleNetName);
+                    IGuildUser guildUser = await curUser.guildUser(this.Context.Guild);
+                    if (guildUser != null)
+                    {
+                        outputList.Add($"{guildUser.Mention}: {curUser.battleNetName}");
+                    }
                 }
             }
 
@@ -326,7 +334,11 @@ namespace CoOpBot.Modules.CoOpGaming
             {
                 if (curUser.OriginName != null && curUser.OriginName != "")
                 {
-                    outputList.Add(curUser.OriginName);
+                    IGuildUser guildUser = await curUser.guildUser(this.Context.Guild);
+                    if (guildUser != null)
+                    {
+                        outputList.Add($"{guildUser.Mention}: {curUser.OriginName}");
+                    }
                 }
             }
 

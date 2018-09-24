@@ -300,5 +300,30 @@ namespace CoOpBot.Modules.HelpModule
             
             await ReplyAsync("", false, builder.Build());
         }
+
+        [Command("infoHelp")]
+        public async Task InfoHelpAsync()
+        {
+            string infoHelpString = "";
+
+            infoHelpString = $@"Information can be added to my database to help people know more about you and to make it easier to add friends on Steam, Origin and Battle Net
+
+Adding details to your user info card (all optional - this is what people see when using the '{CoOpGlobal.prefixCharacter}user info' command for you): 
+{CoOpGlobal.prefixCharacter}user title [TITLE TEXT] - Sets the title text, this can also have a URL attached (see next command).
+{CoOpGlobal.prefixCharacter}user URL [URL] - Sets the URL that your title text links to. Please keep it sensible!
+{CoOpGlobal.prefixCharacter}user description [DESCRIPTION TEXT] - Sets a description to go under the title.
+{CoOpGlobal.prefixCharacter}user footer [FOOTER TEXT] - Sets footer text, this is in a smaller font at the bottom of the output.
+{CoOpGlobal.prefixCharacter}user icon [ICON URL] - Adds a small icon in your footer next to the footer text.
+
+Adding your usernames (These all help people find you to add friends easier):
+{CoOpGlobal.prefixCharacter}steam RegisterKey [YOUR STEAM ID NUMBER HERE] - Links your Steam account.
+{CoOpGlobal.prefixCharacter}user OriginName [ORIGIN USERNAME] - Links your Origin account name.
+{CoOpGlobal.prefixCharacter}user BattleNetName [BATTLE NET USERNAME] - Links your Battle Net account name (needs the numbers at the end).
+{CoOpGlobal.prefixCharacter}user Twitch [TWITCH USERNAME] - Links your Origin account name.
+{CoOpGlobal.prefixCharacter}user Youtube [YOUTUBE CHANNEL URL] - Links your YouTube channel.
+";
+
+            await ReplyAsync(infoHelpString);
+        }
     }
 }

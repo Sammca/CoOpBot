@@ -164,7 +164,7 @@ namespace CoOpBot
                 {
                     CoOpBot.Modules.SuperUserModule suModule = new Modules.SuperUserModule();
                     
-                    await suModule.sayCommand(user.Guild.DefaultChannel, $"Welcome {user.Mention}! Who dis?");
+                    await suModule.sayCommand(user.Guild.DefaultChannel, $"Welcome {user.Mention}! Who dis?\r\n\r\nI'm your friendly neighbourhood bot, you can see all the commands you can use by typing {CoOpGlobal.prefixCharacter}help\r\nType {CoOpGlobal.prefixCharacter}infoHelp to find out how to add your info to my database (steam username, origin username, etc)\r\nYou can do either of these in a private message to me if you don't want to bother people with messages here!");
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception ex)

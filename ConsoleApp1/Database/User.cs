@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discord;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,6 +31,10 @@ namespace CoOpBot.Database
         public string footerText { get; set; }
 
         public string footerIconURL { get; set; }
+
+        public string twitchName { get; set; }
+
+        public string youtubeChannel { get; set; }
         #endregion
 
         public override string defaultFindField()
@@ -56,6 +61,22 @@ namespace CoOpBot.Database
             }
 
             return base.validateInsert();
+        }
+
+        public async Task<IGuildUser> guildUser(IGuild  guild)
+        {
+            IEnumerable<IGuildUser> users;
+            users = await guild.GetUsersAsync();
+            
+            foreach (IGuildUser curUser in users)
+            {
+                if (curUser.Id == this.userID)
+                {
+                    return curUser;
+                }
+            }
+
+            return null;
         }
     }
 }

@@ -99,10 +99,18 @@ namespace CoOpBot.Modules
                 {
                     builder.AddField("Origin Profile", userRecord.OriginName);
                 }
-                if (userRecord.gwAPIKey != null && userRecord.gwAPIKey != "")
+                if (userRecord.twitchName != null && userRecord.twitchName != "")
+                {
+                    builder.AddField("Twitch", $"https://www.twitch.tv/{userRecord.twitchName}");
+                }
+                if (userRecord.youtubeChannel != null && userRecord.youtubeChannel != "")
+                {
+                    builder.AddField("YouTube channel", userRecord.youtubeChannel);
+                }
+                /*if (userRecord.gwAPIKey != null && userRecord.gwAPIKey != "")
                 {
                     builder.AddField("Guild Wars API Key", userRecord.gwAPIKey);
-                }
+                }*/
             }
             else
             {
@@ -311,6 +319,54 @@ namespace CoOpBot.Modules
             }
 
             await ReplyAsync("Battle Net account name set");
+        }
+
+        [Command("Twitch")]
+        [Summary("Sets a Twitch account name against your user record")]
+        private async Task TwitchCommand(params string[] twitchUsername)
+        {
+            User user = new User();
+
+            user = user.find(this.Context.Message.Author.Id.ToString()) as User;
+
+            if (user != null)
+            {
+                user.twitchName = string.Join(" ", twitchUsername);
+                user.update();
+            }
+            else
+            {
+                user = new User();
+                user.userID = this.Context.Message.Author.Id;
+                user.twitchName = string.Join(" ", twitchUsername);
+                user.insert();
+            }
+
+            await ReplyAsync("Twitch account name set");
+        }
+
+        [Command("Youtube")]
+        [Summary("Sets a YouTube channel URL against your user record")]
+        private async Task NameCommand(string youtubeURL)
+        {
+            User user = new User();
+
+            user = user.find(this.Context.Message.Author.Id.ToString()) as User;
+
+            if (user != null)
+            {
+                user.youtubeChannel = youtubeURL;
+                user.update();
+            }
+            else
+            {
+                user = new User();
+                user.userID = this.Context.Message.Author.Id;
+                user.youtubeChannel = youtubeURL;
+                user.insert();
+            }
+
+            await ReplyAsync("YouTube channel URL set");
         }
     }
 }
