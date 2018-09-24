@@ -39,6 +39,7 @@ namespace CoOpBot.Modules.Steam
 
             if (user == null)
             {
+                user = new User();
                 user.userID = this.Context.Message.Author.Id;
                 user.steamID = key;
                 user.insert();

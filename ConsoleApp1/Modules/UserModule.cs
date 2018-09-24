@@ -107,6 +107,7 @@ namespace CoOpBot.Modules
             else
             {
                 await ReplyAsync($"User not found");
+                return;
             }
 
             await ReplyAsync("", false, builder.Build());
@@ -127,6 +128,7 @@ namespace CoOpBot.Modules
             }
             else
             {
+                user = new User();
                 user.userID = this.Context.Message.Author.Id;
                 user.name = string.Join(" ", name);
                 user.insert();
@@ -150,6 +152,7 @@ namespace CoOpBot.Modules
             }
             else
             {
+                user = new User();
                 user.userID = this.Context.Message.Author.Id;
                 user.description = string.Join(" ", description);
                 user.insert();
@@ -173,6 +176,7 @@ namespace CoOpBot.Modules
             }
             else
             {
+                user = new User();
                 user.userID = this.Context.Message.Author.Id;
                 user.description = string.Join(" ", title);
                 user.insert();
@@ -196,6 +200,7 @@ namespace CoOpBot.Modules
             }
             else
             {
+                user = new User();
                 user.userID = this.Context.Message.Author.Id;
                 user.titleURL = url;
                 user.insert();
@@ -219,6 +224,7 @@ namespace CoOpBot.Modules
             }
             else
             {
+                user = new User();
                 user.userID = this.Context.Message.Author.Id;
                 user.footerText = string.Join(" ", footerText);
                 user.insert();
@@ -242,6 +248,7 @@ namespace CoOpBot.Modules
             }
             else
             {
+                user = new User();
                 user.userID = this.Context.Message.Author.Id;
                 user.footerIconURL = string.Join(" ", iconURL);
                 user.insert();
@@ -266,6 +273,7 @@ namespace CoOpBot.Modules
             }
             else
             {
+                user = new User();
                 user.userID = this.Context.Message.Author.Id;
                 user.OriginName = name;
                 user.insert();
@@ -291,6 +299,7 @@ namespace CoOpBot.Modules
 
             if (user != null)
             {
+                user = new User();
                 user.battleNetName = name;
                 user.update();
             }

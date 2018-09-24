@@ -64,6 +64,7 @@ namespace CoOpBot.Modules.GuildWars
             user = user.find(this.Context.Message.Author.Id.ToString()) as User;
             if (user == null)
             {
+                user = new User();
                 user.userID = this.Context.Message.Author.Id;
                 user.gwAPIKey = key;
                 user.insert();
