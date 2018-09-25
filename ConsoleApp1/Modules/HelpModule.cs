@@ -318,8 +318,8 @@ Adding details to your user info card (all optional - this is what people see wh
 Adding your usernames (These all help people find you to add friends easier):
 {CoOpGlobal.prefixCharacter}steam RegisterKey [YOUR STEAM ID NUMBER HERE] - Links your Steam account.
 {CoOpGlobal.prefixCharacter}user OriginName [ORIGIN USERNAME] - Links your Origin account name.
-{CoOpGlobal.prefixCharacter}user BattleNetName [BATTLE NET USERNAME] - Links your Battle Net account name (needs the numbers at the end).
-{CoOpGlobal.prefixCharacter}user Twitch [TWITCH USERNAME] - Links your Origin account name.
+{CoOpGlobal.prefixCharacter}user BattleNetName [BATTLE NET USERNAME] - Links your Battle Net account name (needs the # and numbers at the end).
+{CoOpGlobal.prefixCharacter}user Twitch [TWITCH USERNAME] - Links your Twitch account name.
 {CoOpGlobal.prefixCharacter}user Youtube [YOUTUBE CHANNEL URL] - Links your YouTube channel.
 ";
 
