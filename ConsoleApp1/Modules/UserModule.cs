@@ -95,9 +95,13 @@ namespace CoOpBot.Modules
                 {
                     builder.AddField("Steam Profile", $"{Steam.SteamModule.DisplayNameFromID(user.Id)}: https://steamcommunity.com/profiles/{userRecord.steamID}");
                 }
+                if (userRecord.battleNetName != null && userRecord.battleNetName != "")
+                {
+                    builder.AddField("Battle Net username", userRecord.battleNetName);
+                }
                 if (userRecord.OriginName != null && userRecord.OriginName != "")
                 {
-                    builder.AddField("Origin Profile", userRecord.OriginName);
+                    builder.AddField("Origin username", userRecord.OriginName);
                 }
                 if (userRecord.twitchName != null && userRecord.twitchName != "")
                 {
