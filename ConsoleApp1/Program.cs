@@ -67,7 +67,7 @@ namespace CoOpBot
 
         public async Task InstallCommands()
         {
-            await commands.AddModulesAsync(Assembly.GetEntryAssembly());
+            await commands.AddModulesAsync(Assembly.GetEntryAssembly(), services: null);
 
             // Hook the MessageReceived Event into our Command Handler
             client.MessageReceived += HandleCommand;
@@ -107,7 +107,7 @@ namespace CoOpBot
                 await context.Message.AddReactionAsync(emoji);
             }
 
-            var result = await commands.ExecuteAsync(context, argPos);
+            var result = await commands.ExecuteAsync(context, argPos, services:null);
 
             if (commands.Search(context, argPos).IsSuccess)
             {

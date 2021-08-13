@@ -172,9 +172,9 @@ namespace CoOpBot.Modules.CoOpGaming
                 if (voiceChannel.Name.Substring(0, 4) != "Team")
                 {
                     channelMembersEnumerable = voiceChannel.GetUsersAsync();
-                    channelMembersEnumerator = channelMembersEnumerable.GetEnumerator();
+                    channelMembersEnumerator = channelMembersEnumerable.GetAsyncEnumerator();
 
-                    while (await channelMembersEnumerator.MoveNext())
+                    while (await channelMembersEnumerator.MoveNextAsync())
                     {
                         channelMembers = channelMembersEnumerator.Current;
                         usercount = channelMembers.Count();
@@ -202,9 +202,9 @@ namespace CoOpBot.Modules.CoOpGaming
                     if (emptyChannelFound)
                     {
                         channelMembersEnumerable = voiceChannel.GetUsersAsync();
-                        channelMembersEnumerator = channelMembersEnumerable.GetEnumerator();
+                        channelMembersEnumerator = channelMembersEnumerable.GetAsyncEnumerator();
 
-                        while (await channelMembersEnumerator.MoveNext())
+                        while (await channelMembersEnumerator.MoveNextAsync())
                         {
                             channelMembers = channelMembersEnumerator.Current;
 

@@ -108,9 +108,9 @@ namespace CoOpBot.Modules.Stats
 
                 messagesAsync = textChannel.GetMessagesAsync(messageCount);
 
-                messagesAsyncEnumerator = messagesAsync.GetEnumerator();
+                messagesAsyncEnumerator = messagesAsync.GetAsyncEnumerator();
 
-                while (await messagesAsyncEnumerator.MoveNext())
+                while (await messagesAsyncEnumerator.MoveNextAsync())
                 {
                     messages = messagesAsyncEnumerator.Current;
 

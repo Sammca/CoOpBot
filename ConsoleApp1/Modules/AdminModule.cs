@@ -368,8 +368,8 @@ namespace CoOpBot.Modules.Admin
 
             try
             {
-                newRole = await server.CreateRoleAsync(roleName, color: roleColor);
-                await newRole.ModifyAsync((rp) => {rp.Mentionable = true; });
+                newRole = await server.CreateRoleAsync(roleName, color: roleColor, isMentionable: true);
+                //await newRole.ModifyAsync((rp) => {rp.Mentionable = true; });
                 output += string.Format("New role {0} created.", roleName);
                 output += "\r\n";
             }
